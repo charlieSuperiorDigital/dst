@@ -24,23 +24,17 @@ export default function SingleQuoteLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // const [activeTab, setActiveTab] = useState("summary");
-
   const router = useRouter();
   const handleTabChange = (value: string) => {
     router.push(`?tab=${value}`);
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <div className="flex-grow overflow-auto pb-16">{children}</div>
+    <div className="flex flex-col ">
+      <div className=" pb-16">{children}</div>
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t">
         <ScrollArea className="w-full">
-          <Tabs
-            // value={activeTab}
-            onValueChange={handleTabChange}
-            className="w-full"
-          >
+          <Tabs onValueChange={handleTabChange} className="w-full">
             <TabsList className="w-full justify-start bg-gray-100">
               {tabItems.map((item) => (
                 <TabsTrigger
