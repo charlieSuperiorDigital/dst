@@ -1,11 +1,22 @@
 "use client";
 import { useSearchParams } from "next/navigation";
 import React from "react";
+import PartsListTable from "./part-list-tab/parts-list-table";
+import ReceivingTable from "./receiving-tab/receiving-table";
+import InstallationTable from "./installation-tab/installation-table";
+import BayDefinitionTable from "./bay-definition-tab/bay-definition-table";
 
 const QuoteClientSide = () => {
   const searchParams = useSearchParams();
   const tab = searchParams.get("tab");
-  return <div>table{tab}</div>;
+  return (
+    <div>
+      {tab === "part-list" && <PartsListTable />}
+      {tab === "receiving" && <ReceivingTable />}
+      {tab === "installation" && <InstallationTable />}
+      {tab === "bay-definitions" && <BayDefinitionTable />}
+    </div>
+  );
 };
 
 export default QuoteClientSide;

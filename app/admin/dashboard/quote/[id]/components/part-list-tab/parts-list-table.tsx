@@ -10,8 +10,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { EditPartDialog } from "./edit-part-modal";
-import { PartList } from "../../../entities/PartList";
+import { PartList } from "../../../../../../entities/PartList";
 import { formatCurrency } from "@/utils/format-currency";
+import { Input } from "@/components/ui/input";
+import { PartsDialog } from "./add-part-modal";
 
 const initialParts: PartList[] = [
   {
@@ -21,12 +23,13 @@ const initialParts: PartList[] = [
     color: "Std Blue",
     unitWeight: 446.0,
     totalWeight: 0,
-    unitMatLb: "$0.00",
-    unitLabor: "$446.00",
-    unitCost: 446.0,
+    unitMatLb: 2,
+    unitLabor: 446.0,
+    unitCost: 4.0,
     totalCost: 0.0,
     unitSell: 524.71,
     totalSell: 0.0,
+    laborEA: 0.1,
   },
   {
     partNo: "0002",
@@ -35,12 +38,13 @@ const initialParts: PartList[] = [
     color: "Std Blue",
     unitWeight: 333.0,
     totalWeight: 0,
-    unitMatLb: "$0.00",
-    unitLabor: "$346.32",
+    unitMatLb: 12.2,
+    unitLabor: 5,
     unitCost: 346.32,
     totalCost: 0.0,
     unitSell: 407.44,
     totalSell: 0.0,
+    laborEA: 0.2,
   },
   {
     partNo: "0003",
@@ -49,12 +53,13 @@ const initialParts: PartList[] = [
     color: "Std Blue",
     unitWeight: 220.0,
     totalWeight: 0,
-    unitMatLb: "$0.00",
-    unitLabor: "$220.00",
+    unitMatLb: 12.8,
+    unitLabor: 10.2,
     unitCost: 220.0,
     totalCost: 0.0,
     unitSell: 258.82,
     totalSell: 0.0,
+    laborEA: 0.3,
   },
   {
     partNo: "0009",
@@ -63,12 +68,13 @@ const initialParts: PartList[] = [
     color: "Std Orange",
     unitWeight: 32.0,
     totalWeight: 0,
-    unitMatLb: "$0.00",
-    unitLabor: "$32.00",
+    unitMatLb: 1,
+    unitLabor: 5,
     unitCost: 32.0,
     totalCost: 0.0,
     unitSell: 37.65,
     totalSell: 0.0,
+    laborEA: 0.4,
   },
   {
     partNo: "0010",
@@ -77,12 +83,13 @@ const initialParts: PartList[] = [
     color: "Std Orange",
     unitWeight: 39.0,
     totalWeight: 0,
-    unitMatLb: "$0.00",
-    unitLabor: "$38.61",
+    unitMatLb: 3,
+    unitLabor: 30,
     unitCost: 38.61,
     totalCost: 0.0,
     unitSell: 45.42,
     totalSell: 0.0,
+    laborEA: 0.5,
   },
 ];
 
@@ -90,6 +97,15 @@ export default function PartsListTable() {
   const [parts, setParts] = useState<PartList[]>(initialParts);
   const [selectedPart, setSelectedPart] = useState<PartList | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const filteredParts = initialParts.filter((part) =>
+      part.description.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setParts(filteredParts);
+  };
 
   const handleRowClick = (part: PartList) => {
     setSelectedPart(part);
@@ -106,6 +122,18 @@ export default function PartsListTable() {
 
   return (
     <div className="rounded-md border">
+      <div className="flex justify-between items-center p-4">
+        <form onSubmit={handleSearch} className="flex gap-2">
+          <Input
+            type="text"
+            placeholder="Search part..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-64"
+          />
+        </form>
+        <PartsDialog />
+      </div>
       <Table>
         <TableHeader>
           <TableRow>
@@ -120,6 +148,7 @@ export default function PartsListTable() {
             <TableHead className="text-right">Unit Cost</TableHead>
             <TableHead className="text-right">Total Cost</TableHead>
             <TableHead className="text-right">Unit Sell</TableHead>
+            <TableHead className="text-right">Total Man Hours</TableHead>
             {/* <TableHead className="text-right">Total Sell</TableHead> */}
           </TableRow>
         </TableHeader>
@@ -143,13 +172,20 @@ export default function PartsListTable() {
               <TableCell className="text-right">{part.unitMatLb}</TableCell>
               <TableCell className="text-right">{part.unitLabor}</TableCell>
               <TableCell className="text-right">
-                {formatCurrency(part.unitCost)}
+                {formatCurrency(
+                  part.unitWeight * part.unitMatLb + part.unitLabor
+                )}
               </TableCell>
               <TableCell className="text-right">
-                {formatCurrency(part.totalCost)}
+                {formatCurrency(
+                  (part.unitWeight * part.unitMatLb + part.unitLabor) * part.qty
+                )}
               </TableCell>
               <TableCell className="text-right">
                 {formatCurrency(part.unitSell)}
+              </TableCell>
+              <TableCell className="text-right">
+                {(part.qty * part.laborEA).toFixed(2)}
               </TableCell>
               {/* <TableCell className="text-right">{formatCurrency(part.totalSell)}</TableCell> */}
             </TableRow>

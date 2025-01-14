@@ -5,10 +5,11 @@ export interface PartList {
   color: string;
   unitWeight: number;
   totalWeight: number;
-  unitMatLb: string;
-  unitLabor: string;
+  unitMatLb: number;
+  unitLabor: number;
   unitCost: number;
   totalCost: number;
   unitSell: number;
   totalSell: number;
+  laborEA: number;
 }

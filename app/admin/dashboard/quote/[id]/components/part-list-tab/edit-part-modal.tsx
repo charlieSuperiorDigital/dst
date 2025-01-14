@@ -117,6 +117,7 @@ export function EditPartDialog({
                   totalWeight: Number(e.target.value),
                 })
               }
+              disabled={true}
               className="col-span-3"
             />
           </div>
@@ -126,9 +127,12 @@ export function EditPartDialog({
             </Label>
             <Input
               id="unitMatLb"
-              value={editedPart.unitMatLb}
+              value={editedPart.unitMatLb.toString()}
               onChange={(e) =>
-                setEditedPart({ ...editedPart, unitMatLb: e.target.value })
+                setEditedPart({
+                  ...editedPart,
+                  unitMatLb: Number(e.target.value),
+                })
               }
               className="col-span-3"
             />
@@ -139,9 +143,12 @@ export function EditPartDialog({
             </Label>
             <Input
               id="unitLabor"
-              value={editedPart.unitLabor}
+              value={editedPart.unitLabor.toString()}
               onChange={(e) =>
-                setEditedPart({ ...editedPart, unitLabor: e.target.value })
+                setEditedPart({
+                  ...editedPart,
+                  unitLabor: Number(e.target.value),
+                })
               }
               className="col-span-3"
             />
@@ -152,13 +159,11 @@ export function EditPartDialog({
             </Label>
             <Input
               id="unitCost"
-              value={editedPart.unitCost}
-              onChange={(e) =>
-                setEditedPart({
-                  ...editedPart,
-                  unitCost: Number(e.target.value),
-                })
+              value={
+                editedPart.unitWeight * editedPart.unitMatLb +
+                editedPart.unitLabor
               }
+              disabled={true}
               className="col-span-3"
             />
           </div>
@@ -168,13 +173,12 @@ export function EditPartDialog({
             </Label>
             <Input
               id="totalCost"
-              value={editedPart.totalCost}
-              onChange={(e) =>
-                setEditedPart({
-                  ...editedPart,
-                  totalCost: Number(e.target.value),
-                })
+              value={
+                (editedPart.unitWeight * editedPart.unitMatLb +
+                  editedPart.unitLabor) *
+                editedPart.qty
               }
+              disabled={true}
               className="col-span-3"
             />
           </div>
