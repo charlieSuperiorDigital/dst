@@ -49,7 +49,7 @@ export function EditDayInstallationTab({
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      day: "",
+      day: day.day,
       date: new Date(),
     },
   });
@@ -83,7 +83,7 @@ export function EditDayInstallationTab({
                 <FormItem>
                   <FormLabel>Day:</FormLabel>
                   <FormControl>
-                    <Input {...field} value={day.day} />
+                    <Input {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -96,13 +96,21 @@ export function EditDayInstallationTab({
                 <FormItem>
                   <FormLabel>Date</FormLabel>
                   <FormControl>
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      disabled={(date) =>
-                        date > new Date() || date < new Date("1900-01-01")
+                    <Input
+                      type="date"
+                      value={
+                        field.value
+                          ? new Date(field.value).toISOString().split("T")[0]
+                          : ""
                       }
+                      onChange={(e) => {
+                        const selectedDate = e.target.value
+                          ? new Date(e.target.value)
+                          : null;
+                        field.onChange(selectedDate);
+                      }}
+                      min="1900-01-01"
+                      max={new Date().toISOString().split("T")[0]}
                       className="rounded-md border shadow"
                     />
                   </FormControl>
