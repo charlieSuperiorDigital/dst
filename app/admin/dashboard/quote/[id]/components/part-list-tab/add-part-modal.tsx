@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, ChevronsUpDown } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -23,11 +23,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 
 interface Part {
   id: string;
@@ -104,81 +99,10 @@ export function PartsDialog() {
             <FormField
               control={form.control}
               name="partId"
-              render={({ field }) => (
+              render={() => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Search Part</FormLabel>
-                  <Popover open={commandOpen} onOpenChange={setCommandOpen}>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          className={`w-full justify-between ${
-                            !field.value && "text-muted-foreground"
-                          }`}
-                        >
-                          {field.value
-                            ? searchResults.find(
-                                (result) => result.id === field.value
-                              )?.name
-                            : "Select part"}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[300px] p-0">
-                      <div className="relative w-full">
-                        <input
-                          type="text"
-                          placeholder="Search part..."
-                          onChange={(e) => handleSearch(e.target.value)}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                        />
-                        {searchResults.length === 0 ? (
-                          <div className="mt-2 p-2 text-sm text-gray-500 bg-gray-100 border border-gray-300 rounded-md">
-                            No part found.
-                          </div>
-                        ) : (
-                          <ul className="mt-2 max-h-48 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-sm">
-                            {searchResults.map((result) => (
-                              <li
-                                key={result.id}
-                                className={`flex items-center px-4 py-2 cursor-pointer hover:bg-blue-50 ${
-                                  form.getValues("partId") === result.id
-                                    ? "bg-blue-100"
-                                    : ""
-                                }`}
-                                onClick={() => {
-                                  form.setValue("partId", result.id);
-                                  setCommandOpen(false);
-                                }}
-                              >
-                                <svg
-                                  className={`mr-2 h-4 w-4 ${
-                                    form.getValues("partId") === result.id
-                                      ? "opacity-100 text-blue-500"
-                                      : "opacity-0"
-                                  }`}
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth="2"
-                                    d="M5 13l4 4L19 7"
-                                  />
-                                </svg>
-                                {result.name}
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+
                   <FormMessage />
                 </FormItem>
               )}
