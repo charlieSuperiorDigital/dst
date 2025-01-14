@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus } from "lucide-react";
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -12,7 +12,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -38,48 +37,45 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 interface Props {
-  onAdd: (load: Load) => void;
-  loads: Load[];
+  onEdit: (load: Load) => void;
+  load: Load;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onDelete: (load: Load) => void;
 }
 
-export function AddLoadReceivingTab({ onAdd, loads }: Props) {
-  const [open, setOpen] = useState(false);
+export function EditLoadReceivingTab({
+  onEdit,
+  load,
+  open,
+  onOpenChange,
+  onDelete,
+}: Props) {
+  const [loadToEdit, setLoadToEdit] = useState<Load | null>(load);
+  //   const [open, setOpen] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      bol: "",
-      carrier: "",
-      date: new Date(),
-    },
   });
+  const handleEdit = (values: FormValues) => {
+    const updatedLoad = { ...loadToEdit, ...values, id: load.id } as Load;
+    setLoadToEdit(updatedLoad);
+    onEdit(updatedLoad);
+  };
 
-  const handleAdd = (values: FormValues) => {
-    const currentMaxId = Math.max(0, ...loads.map((load) => Number(load.id)));
-
-    const newLoad = {
-      id: currentMaxId + 1,
-      ...values,
-    };
-
-    onAdd(newLoad as Load);
-    setOpen(false);
-    form.reset();
+  const handleDelete = () => {
+    onDelete(load);
+    onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button onClick={() => setOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" /> Add Load
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add Load</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleAdd)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleEdit)} className="space-y-4">
             <FormField
               control={form.control}
               name="bol"
@@ -87,7 +83,7 @@ export function AddLoadReceivingTab({ onAdd, loads }: Props) {
                 <FormItem>
                   <FormLabel>BOL:</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} value={loadToEdit?.bol} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -100,7 +96,7 @@ export function AddLoadReceivingTab({ onAdd, loads }: Props) {
                 <FormItem>
                   <FormLabel>Carrier</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} value={loadToEdit?.carrier} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -115,7 +111,7 @@ export function AddLoadReceivingTab({ onAdd, loads }: Props) {
                   <FormControl>
                     <Calendar
                       mode="single"
-                      selected={field.value}
+                      selected={load.date}
                       onSelect={field.onChange}
                       disabled={(date) =>
                         date > new Date() || date < new Date("1900-01-01")
@@ -127,7 +123,12 @@ export function AddLoadReceivingTab({ onAdd, loads }: Props) {
                 </FormItem>
               )}
             />
-            <Button type="submit">Add Load</Button>
+            <div className="space-x-4">
+              <Button type="submit">Edit Load</Button>
+              <Button type="button" onClick={() => handleDelete}>
+                Delete Load
+              </Button>
+            </div>
           </form>
         </Form>
       </DialogContent>

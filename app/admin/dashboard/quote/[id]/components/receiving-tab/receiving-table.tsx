@@ -13,6 +13,8 @@ import { PartRecieve } from "@/app/entities/PartRecieve";
 import { Load } from "@/app/entities/Load";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { EditLoadReceivingTab } from "./edit-load";
+import { EditPartReceivingTab } from "./edit-part";
 
 const initialParts: PartRecieve[] = [
   {
@@ -65,6 +67,10 @@ const ReceivingTable = () => {
   const [receivedQuantities, setReceivedQuantities] = useState<{
     [key: string]: { [key: string]: number };
   }>({});
+  const [loadToEdit, setLoadToEdit] = useState<Load | null>(null);
+  const [partToEdit, setPartToEdit] = useState<PartRecieve | null>(null);
+  const [isLoadDialogOpen, setIsLoadDialogOpen] = useState(false);
+  const [isPartDialogOpen, setIsPartDialogOpen] = useState(false);
 
   const handleAddPart = (part: PartRecieve) => {
     setParts((prevParts) => [...prevParts, part]);
@@ -103,11 +109,55 @@ const ReceivingTable = () => {
     return part.qtyOrdered - totalReceived;
   };
 
+  const handleLoadToEdit = (load: Load) => {
+    console.log(load);
+    setLoadToEdit(load);
+  };
+
+  const handleOpenModal = (load: Load) => {
+    console.log(load);
+    setLoadToEdit(load);
+    setIsLoadDialogOpen(true);
+  };
+  const handleDelete = (load: Load) => {
+    console.log("delete", load);
+  };
+
+  const handleOpenEditPart = (part: PartRecieve) => {
+    console.log(part);
+    setPartToEdit(part);
+    setIsPartDialogOpen(true);
+  };
+  const handleEditPart = (part: PartRecieve) => {
+    console.log(part);
+  };
+  const deletePart = (part: PartRecieve) => {
+    console.log(part);
+  };
+
   return (
     <div>
       <div className="flex space-x-4">
         <AddPartReceivingTab onAdd={handleAddPart} />
         <AddLoadReceivingTab onAdd={handleLoad} loads={loads} />
+        {loadToEdit && (
+          <EditLoadReceivingTab
+            onEdit={handleLoadToEdit}
+            load={loadToEdit}
+            open={isLoadDialogOpen}
+            onOpenChange={setIsLoadDialogOpen}
+            onDelete={handleDelete}
+          />
+        )}
+        {partToEdit && (
+          <EditPartReceivingTab
+            open={isPartDialogOpen}
+            onOpenChange={setIsPartDialogOpen}
+            partToEdit={partToEdit}
+            onEdit={handleEditPart}
+            onDelete={deletePart}
+          />
+        )}
         <Button onClick={() => console.log("save")}>Save</Button>
       </div>
       <Table>
@@ -121,15 +171,23 @@ const ReceivingTable = () => {
             <TableHead>Qty Received</TableHead>
             <TableHead>Balance Due</TableHead>
             {loads.map((load) => (
-              <TableHead key={load.id}>Load {load.id}</TableHead>
+              <TableHead
+                key={load.id}
+                onClick={() => handleOpenModal(load)}
+                className="cursor-pointer"
+              >
+                Load {load.id}
+              </TableHead>
             ))}
           </TableRow>
         </TableHeader>
         <TableBody>
           {parts.map((part) => (
-            <TableRow key={part.id}>
+            <TableRow key={part.id} className="cursor-pointer">
               <TableCell>{part.id}</TableCell>
-              <TableCell>{part.description}</TableCell>
+              <TableCell onClick={() => handleOpenEditPart(part)}>
+                {part.description}
+              </TableCell>
               <TableCell>-</TableCell>
               <TableCell>{part.qtyRequired}</TableCell>
               <TableCell>{part.qtyOrdered}</TableCell>
