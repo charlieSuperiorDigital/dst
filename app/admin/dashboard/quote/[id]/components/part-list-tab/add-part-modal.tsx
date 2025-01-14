@@ -24,23 +24,23 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
-interface Part {
-  id: string;
-  name: string;
-}
+// interface Part {
+//   id: string;
+//   name: string;
+// }
 
 // This is a mock function. Replace it with your actual search function.
-const searchParts = async (query: string): Promise<Part[]> => {
-  // Simulating an API call
-  await new Promise((resolve) => setTimeout(resolve, 500));
-  return [
-    { id: "1", name: "Part A" },
-    { id: "2", name: "Part B" },
-    { id: "3", name: "Part C" },
-    { id: "4", name: "Part D" },
-    { id: "5", name: "Part E" },
-  ].filter((part) => part.name.toLowerCase().includes(query.toLowerCase()));
-};
+// const searchParts = async (query: string): Promise<Part[]> => {
+//   // Simulating an API call
+//   await new Promise((resolve) => setTimeout(resolve, 500));
+//   return [
+//     { id: "1", name: "Part A" },
+//     { id: "2", name: "Part B" },
+//     { id: "3", name: "Part C" },
+//     { id: "4", name: "Part D" },
+//     { id: "5", name: "Part E" },
+//   ].filter((part) => part.name.toLowerCase().includes(query.toLowerCase()));
+// };
 
 const formSchema = z.object({
   partId: z.string().min(1, "Please select a part"),
@@ -50,9 +50,8 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export function PartsDialog() {
-  const [searchResults, setSearchResults] = useState<Part[]>([]);
   const [open, setOpen] = useState(false);
-  const [commandOpen, setCommandOpen] = useState(false);
+  const [commandOpen] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -64,10 +63,9 @@ export function PartsDialog() {
 
   const handleSearch = async (value: string) => {
     if (value) {
-      const results = await searchParts(value);
-      setSearchResults(results);
+      // setSearchResults(results);
     } else {
-      setSearchResults([]);
+      // setSearchResults([]);
     }
   };
 
