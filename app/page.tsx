@@ -17,7 +17,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function LoginForm() {
-  const [login, setLogin] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -31,7 +31,7 @@ export default function LoginForm() {
     try {
       const result = await signIn("credentials", {
         redirect: false,
-        login,
+        email,
         password,
       });
 
@@ -57,21 +57,21 @@ export default function LoginForm() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Log in to your account</CardTitle>
-          <CardDescription>Enter your user name</CardDescription>
+          <CardDescription>Enter your email</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit}>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">User name</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
-                  id="login"
-                  name="login"
-                  type="text"
-                  placeholder="doe"
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="doe@example"
                   required
-                  value={login}
-                  onChange={(e) => setLogin(e.target.value)}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
               <div className="space-y-2">
@@ -80,6 +80,7 @@ export default function LoginForm() {
                   id="password"
                   name="password"
                   type="password"
+                  placeholder="********"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}

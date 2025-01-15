@@ -4,11 +4,7 @@ import type {
   User as NextAuthUser,
   Session as NextAuthSession,
 } from "next-auth";
-
-// Extend the RequestInit type to include the agent property
-interface ExtendedRequestInit extends RequestInit {
-  agent?: unknown;
-}
+import axios from "axios";
 
 interface User extends NextAuthUser {
   role: string;
@@ -23,50 +19,39 @@ interface Session extends NextAuthSession {
   } & NextAuthSession["user"];
 }
 
-async function customFetch(url: string, options: ExtendedRequestInit = {}) {
-  const { Agent } = await import("https");
-  options.agent = new Agent({ rejectUnauthorized: false });
-
-  return fetch(url, options as RequestInit);
-}
-
 export const authOptions: AuthOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        login: { label: "login", type: "text" },
-        password: { label: "password", type: "password" },
+        email: { label: "Email", type: "text" },
+        password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.login || !credentials?.password) {
+        if (!credentials?.email || !credentials?.password) {
           throw new Error("Email and password are required");
         }
 
         try {
-          const res = await customFetch(
+          const response = await axios.post(
             `${process.env.NEXT_PUBLIC_API_URL}/authorization/login`,
             {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                login: credentials.login,
-                password: credentials.password,
-              }),
+              email: credentials.email,
+              password: credentials.password,
             }
           );
 
-          if (!res.ok) {
-            const errorData = await res.json();
-            throw new Error(errorData.errorMessage || "Authentication failed");
+          if (response.data.errorMessage) {
+            throw new Error(
+              response.data.errorMessage || "Authentication failed"
+            );
           }
 
-          const data = await res.json();
           return {
-            id: data.userId,
-            email: data.email,
-            name: data.fullname,
-            token: data.token,
+            id: response.data.userId,
+            email: response.data.email,
+            name: response.data.fullname,
+            token: response.data.token,
           };
         } catch (error) {
           console.error("Authorization error:", error);
@@ -87,24 +72,23 @@ export const authOptions: AuthOptions = {
       }
       return token;
     },
-
     async session({ session, token }) {
       const extendedSession = session as Session;
       if (extendedSession.user) {
         extendedSession.user.id = token.id as string;
         extendedSession.user.email = token.email as string;
         extendedSession.user.name = token.name as string;
-        extendedSession.user.role = token.role as string;
         extendedSession.user.accessToken = token.accessToken as string;
       }
       return extendedSession;
     },
   },
   pages: {
-    signIn: "/login",
+    signIn: "/",
   },
   session: {
     strategy: "jwt",
   },
+
   secret: process.env.NEXTAUTH_SECRET,
 };
