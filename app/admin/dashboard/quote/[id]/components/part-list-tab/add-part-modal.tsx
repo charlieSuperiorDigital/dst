@@ -23,33 +23,15 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { apiRequest } from "@/utils/client-side-api";
+import { Part } from "@/app/entities/Part";
 
 const formSchema = z.object({
-  partId: z.string().min(1, "Please select a part"),
+  partId: z.number().min(1, "Please select a part"),
   quantity: z.number().min(1, "Quantity must be at least 1"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
-
-type Part = {
-  id: string;
-  name: string;
-};
-
-// Simulated API call function for fetching parts
-const fetchParts = async (query: string): Promise<Part[]> => {
-  await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate delay
-  const mockData = [
-    { id: "1", name: "Part A" },
-    { id: "2", name: "Part B" },
-    { id: "3", name: "Part C" },
-    { id: "4", name: "Part D" },
-    { id: "5", name: "Part E" },
-  ];
-  return mockData.filter((part) =>
-    part.name.toLowerCase().includes(query.toLowerCase())
-  );
-};
 
 export function PartsDialog() {
   const [open, setOpen] = useState(false);
@@ -61,18 +43,22 @@ export function PartsDialog() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      partId: "",
+      partId: 0,
       quantity: 1,
     },
   });
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
-    setSelectedPart(null); // Reset selected part when searching
+    setSelectedPart(null);
     if (query) {
       setLoading(true);
-      const parts = await fetchParts(query);
-      setFilteredParts(parts);
+      const response = await apiRequest({
+        method: "get",
+        url: `/api/part/1/10?search=${query}`,
+      });
+      console.log(response.parts);
+      setFilteredParts(response.parts);
       setLoading(false);
     } else {
       setFilteredParts([]);
@@ -81,8 +67,8 @@ export function PartsDialog() {
 
   const handlePartSelect = (part: Part) => {
     setSelectedPart(part);
-    form.setValue("partId", part.id); // Set selected part ID in the form
-    setFilteredParts([]); // Clear dropdown
+    form.setValue("partId", part.id);
+    setFilteredParts([]);
   };
 
   const handleAdd = (values: FormValues) => {
@@ -115,7 +101,9 @@ export function PartsDialog() {
                     <Input
                       type="text"
                       placeholder="Type to search for parts..."
-                      value={selectedPart ? selectedPart.name : searchQuery}
+                      value={
+                        selectedPart ? selectedPart.description : searchQuery
+                      }
                       onChange={(e) => handleSearch(e.target.value)}
                     />
                   </FormControl>
@@ -133,7 +121,7 @@ export function PartsDialog() {
                             className="px-4 py-2 cursor-pointer hover:bg-gray-100"
                             onClick={() => handlePartSelect(part)}
                           >
-                            {part.name}
+                            {part.description}
                           </div>
                         ))
                       ) : (
