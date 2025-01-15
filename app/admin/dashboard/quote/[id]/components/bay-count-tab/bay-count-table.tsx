@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/table";
 import { AddBayDefinitonTab } from "../bay-definition-tab/add-bay-definition";
 import { Button } from "@/components/ui/button";
+import { apiRequest } from "@/utils/client-side-api";
 
 type Bay = {
   id: number;
@@ -31,14 +32,8 @@ const mockRows: Row[] = [
   { id: "row005", name: "Row E" },
 ];
 
-const mockBays: Bay[] = [
-  { id: 1, name: "Assembly Bay A" },
-  { id: 2, name: "Assembly Bay B" },
-  { id: 3, name: "Paint Bay" },
-];
-
 const BayCounts = () => {
-  const [baysDefinition, setBaysDefinition] = useState<Bay[]>(mockBays);
+  const [baysDefinition, setBaysDefinition] = useState<Bay[]>([]);
   const [rows, setRows] = useState<Row[]>(mockRows);
   const [counts, setCounts] = useState<{
     [key: string]: { [key: string]: number };
@@ -61,13 +56,20 @@ const BayCounts = () => {
       0
     );
   };
-  const handleAddBayDefinition = (value) => {
-    const bayToAdd = {
-      id: baysDefinition.length + 1,
-      name: value.name,
-    };
-
-    setBaysDefinition((prevBays) => [...prevBays, bayToAdd]);
+  const handleAddBay = async (value) => {
+    try {
+      const response = await apiRequest({
+        url: `/api/definition/bay/${value.name}`,
+        method: "post",
+      });
+      const bayToAdd = {
+        id: response,
+        name: value.name,
+      };
+      setBaysDefinition((prevBays) => [...prevBays, bayToAdd]);
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   const handleSave = () => {
@@ -77,7 +79,7 @@ const BayCounts = () => {
   return (
     <div className="container mx-auto p-4">
       <div className=" flex  align-middle space-x-4">
-        <AddBayDefinitonTab onAdd={handleAddBayDefinition} />
+        <AddBayDefinitonTab onAdd={handleAddBay} />
         <Button onClick={handleSave} className="mb-4">
           Save
         </Button>
