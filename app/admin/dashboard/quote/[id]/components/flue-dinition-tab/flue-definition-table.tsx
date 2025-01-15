@@ -104,7 +104,7 @@ export type FlueDefinition = {
 };
 const flueDefinition = [{ id: 1, name: "FlueLine 1" }];
 
-const FrameLineDefinitionTable = () => {
+const FlueDefinitionTable = () => {
   const [parts] = useState<Part[]>(initialParts);
   const [selectedFlueDefinition, setSelecetedFlueDefinition] =
     useState<FlueDefinition | null>(null);
@@ -235,4 +235,4 @@ const FrameLineDefinitionTable = () => {
   );
 };
 
-export default FrameLineDefinitionTable;
+export default FlueDefinitionTable;
