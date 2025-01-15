@@ -7,6 +7,9 @@ import InstallationTable from "./installation-tab/installation-table";
 import BayDefinitionTable from "./bay-definition-tab/bay-definition-table";
 import FrameLineDefinitionTable from "./frameline-definition-tab/frame-definition-table";
 import FlueDefinitionTable from "./flue-dinition-tab/flue-definition-table";
+import BayCounts from "./bay-count-tab/bay-count-table";
+import FrameLineCounts from "./frameline-count-tab/frameline-count-table";
+import FlueCounts from "./flue-count-tab/flue-count";
 
 const QuoteClientSide = () => {
   const searchParams = useSearchParams();
@@ -19,6 +22,9 @@ const QuoteClientSide = () => {
       {tab === "bay-definitions" && <BayDefinitionTable />}
       {tab === "frameline-definition" && <FrameLineDefinitionTable />}
       {tab === "flue-definition" && <FlueDefinitionTable />}
+      {tab === "bay-count" && <BayCounts />}
+      {tab === "frameline-count" && <FrameLineCounts />}
+      {tab === "flue-counts" && <FlueCounts />}
     </div>
   );
 };

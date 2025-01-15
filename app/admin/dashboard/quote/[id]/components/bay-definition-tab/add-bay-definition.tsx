@@ -56,7 +56,7 @@ export function AddBayDefinitonTab({ onAdd }: Props) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button onClick={() => setOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" /> Add Day
+          <Plus className="mr-2 h-4 w-4" /> Add Bay
         </Button>
       </DialogTrigger>
       <DialogContent>

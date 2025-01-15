@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Part } from "@/app/entities/Part";
-import { AddBayDefinitonTab } from "./add-frameline-definition";
+import { AddFrameLineDefinitonTab } from "./add-frameline-definition";
 import { EditBayDefinitionTab } from "./edit-frame-definition";
 
 const initialParts: Part[] = [
@@ -170,7 +170,7 @@ const FrameLineDefinitionTable = () => {
   return (
     <div className="space-y-4">
       <div className="flex align-center space-x-4">
-        <AddBayDefinitonTab onAdd={handleAddFramelineDef} />
+        <AddFrameLineDefinitonTab onAdd={handleAddFramelineDef} />
         {selectedFrameLineDefinition && (
           <EditBayDefinitionTab
             bay={selectedFrameLineDefinition}
