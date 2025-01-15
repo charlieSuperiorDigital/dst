@@ -68,7 +68,7 @@ export function EditBayDefinitionTab({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit FramelineDefinition definition</DialogTitle>
+          <DialogTitle>Edit Flue definition</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form
@@ -88,10 +88,8 @@ export function EditBayDefinitionTab({
                 </FormItem>
               )}
             />
-            <Button type="submit">Edit FramelineDefinition Definition</Button>
-            <Button onClick={handleDelete}>
-              Delete FramelineDefinition Definition
-            </Button>
+            <Button type="submit">Edit Flue definition Definition</Button>
+            <Button onClick={handleDelete}>Edit Flue definition</Button>
           </form>
         </Form>
       </DialogContent>

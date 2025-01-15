@@ -56,12 +56,12 @@ export function AddBayDefinitonTab({ onAdd }: Props) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button onClick={() => setOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" /> Add Frameline Definition
+          <Plus className="mr-2 h-4 w-4" /> Add Flue Definition
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add Frameline Definition</DialogTitle>
+          <DialogTitle> Add Flue Definition</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleAdd)} className="space-y-4">
@@ -78,7 +78,7 @@ export function AddBayDefinitonTab({ onAdd }: Props) {
                 </FormItem>
               )}
             />
-            <Button type="submit">Add Frameline Definition</Button>
+            <Button type="submit"> Add Flue Definition</Button>
           </form>
         </Form>
       </DialogContent>
