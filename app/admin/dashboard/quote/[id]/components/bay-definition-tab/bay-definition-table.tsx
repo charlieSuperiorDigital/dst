@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Part } from "@/app/entities/Part";
 import { AddBayDefinitonTab } from "./add-bay-definition";
 import { EditBayDefinitionTab } from "./edit-bay-definition";
+import { apiRequest } from "@/utils/client-side-api";
 
 const initialParts: Part[] = [
   {
@@ -102,15 +103,14 @@ export type BayDefinition = {
   id: number;
   name: string;
 };
-const bayDefinition = [{ id: 1, name: "Bay 1" }];
+// const bayDefinition = [{ id: 1, name: "Bay 1" }];
 
 const BayDefinitionTable = () => {
   const [parts] = useState<Part[]>(initialParts);
   const [selectedBayDefinition, setSelecetedBayDefinition] =
     useState<BayDefinition | null>(null);
   const [isEditDefinitionOpen, setIsEditDefinitionOpen] = useState(false);
-  const [baysDefinition, setBaysDefinition] =
-    useState<BayDefinition[]>(bayDefinition);
+  const [baysDefinition, setBaysDefinition] = useState<BayDefinition[]>([]);
   const [quantities, setQuantities] = useState<{
     [key: number]: { [key: number]: number };
   }>({});
@@ -128,13 +128,20 @@ const BayDefinitionTable = () => {
       },
     }));
   };
-  const handleAddBay = (value) => {
-    const bayToAdd = {
-      id: baysDefinition.length + 1,
-      name: value.name,
-    };
-
-    setBaysDefinition((prevBays) => [...prevBays, bayToAdd]);
+  const handleAddBay = async (value) => {
+    try {
+      const response = await apiRequest({
+        url: `/api/definition/bay/${value.name}`,
+        method: "post",
+      });
+      const bayToAdd = {
+        id: response,
+        name: value.name,
+      };
+      setBaysDefinition((prevBays) => [...prevBays, bayToAdd]);
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   const handleUpdateBay = (value) => {
@@ -191,9 +198,9 @@ const BayDefinitionTable = () => {
               <TableHead className="w-[100px]">Part No.</TableHead>
               <TableHead>Description</TableHead>
               <TableHead>Finish</TableHead>
-              {baysDefinition.map((bay) => (
+              {baysDefinition.map((bay, index) => (
                 <TableHead
-                  key={bay.id}
+                  key={index}
                   className="text-center"
                   onClick={() => handleOpenUpdateModal(bay)}
                 >

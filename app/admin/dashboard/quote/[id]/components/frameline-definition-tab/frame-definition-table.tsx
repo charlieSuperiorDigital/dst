@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Part } from "@/app/entities/Part";
 import { AddFrameLineDefinitonTab } from "./add-frameline-definition";
 import { EditBayDefinitionTab } from "./edit-frame-definition";
+import { apiRequest } from "@/utils/client-side-api";
 
 const initialParts: Part[] = [
   {
@@ -102,15 +103,15 @@ export type FrameLineDefinition = {
   id: number;
   name: string;
 };
-const framelineDefinition = [{ id: 1, name: "FrameLine 1" }];
 
 const FrameLineDefinitionTable = () => {
   const [parts] = useState<Part[]>(initialParts);
   const [selectedFrameLineDefinition, setSelecetedFrameDefinition] =
     useState<FrameLineDefinition | null>(null);
   const [isEditDefinitionOpen, setIsEditDefinitionOpen] = useState(false);
-  const [framelinesDefinition, setFramelinesDefinition] =
-    useState<FrameLineDefinition[]>(framelineDefinition);
+  const [framelinesDefinition, setFramelinesDefinition] = useState<
+    FrameLineDefinition[]
+  >([]);
   const [quantities, setQuantities] = useState<{
     [key: number]: { [key: number]: number };
   }>({});
@@ -128,13 +129,20 @@ const FrameLineDefinitionTable = () => {
       },
     }));
   };
-  const handleAddFramelineDef = (value) => {
-    const bayframeDefToAdd = {
-      id: framelineDefinition.length + 1,
-      name: value.name,
-    };
-
-    setFramelinesDefinition((prevBays) => [...prevBays, bayframeDefToAdd]);
+  const handleAddFramelineDef = async (value) => {
+    try {
+      const response = await apiRequest({
+        url: `/api/definition/frameLine/${value.name.trim()}`,
+        method: "post",
+      });
+      const bayToAdd = {
+        id: response,
+        name: value.name,
+      };
+      setFramelinesDefinition((prevBays) => [...prevBays, bayToAdd]);
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   const handleUpdateBay = (value) => {

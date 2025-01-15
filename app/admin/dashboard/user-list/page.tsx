@@ -23,7 +23,15 @@ interface User {
 }
 
 export default function UserListPage() {
-  const { users, totalPages, isLoading, isSaving, error, fetchUsers, updateUserDetails } = useUsers();
+  const {
+    users,
+    totalPages,
+    isLoading,
+    isSaving,
+    error,
+    fetchUsers,
+    updateUserDetails,
+  } = useUsers();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -85,39 +93,41 @@ export default function UserListPage() {
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {users && users.length > 0 ? (
-              users.map((user) => (
-                <Card 
-                  key={user.id} 
-                  className={`${!user.active ? "opacity-60" : ""} cursor-pointer hover:shadow-lg transition-shadow`}
-                  onClick={() => handleUserClick(user)}
-                >
-                  <CardHeader>
-                    <CardTitle>{user.fullName}</CardTitle>
-                    <CardDescription>{user.login}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-gray-500">{user.email}</p>
-                    <div className="flex gap-2 mt-2">
-                      {user.verified && (
-                        <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded">
-                          Verified
-                        </span>
-                      )}
-                      {!user.active && (
-                        <span className="px-2 py-1 text-xs bg-red-100 text-red-800 rounded">
-                          Inactive
-                        </span>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            ) : !isLoading && (
-              <div className="col-span-3 text-center py-8 text-gray-500">
-                No users found
-              </div>
-            )}
+            {users && users.length > 0
+              ? users.map((user) => (
+                  <Card
+                    key={user.id}
+                    className={`${
+                      !user.active ? "opacity-60" : ""
+                    } cursor-pointer hover:shadow-lg transition-shadow`}
+                    onClick={() => handleUserClick(user)}
+                  >
+                    <CardHeader>
+                      <CardTitle>{user.fullName}</CardTitle>
+                      {/* <CardDescription>{user.login}</CardDescription> */}
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-gray-500">{user.email}</p>
+                      <div className="flex gap-2 mt-2">
+                        {user.verified && (
+                          <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded">
+                            Verified
+                          </span>
+                        )}
+                        {!user.active && (
+                          <span className="px-2 py-1 text-xs bg-red-100 text-red-800 rounded">
+                            Inactive
+                          </span>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              : !isLoading && (
+                  <div className="col-span-3 text-center py-8 text-gray-500">
+                    No users found
+                  </div>
+                )}
           </div>
 
           {totalPages > 1 && (
@@ -150,4 +160,4 @@ export default function UserListPage() {
       />
     </div>
   );
-} 
+}

@@ -10,12 +10,14 @@ import FlueDefinitionTable from "./flue-dinition-tab/flue-definition-table";
 import BayCounts from "./bay-count-tab/bay-count-table";
 import FrameLineCounts from "./frameline-count-tab/frameline-count-table";
 import FlueCounts from "./flue-count-tab/flue-count";
+import RownCountSummary from "./row-count-summary-tab/row-count-summary";
 
 const QuoteClientSide = () => {
   const searchParams = useSearchParams();
   const tab = searchParams.get("tab");
   return (
     <div>
+      {tab === "summary" && <RownCountSummary />}
       {tab === "part-list" && <PartsListTable />}
       {tab === "receiving" && <ReceivingTable />}
       {tab === "installation" && <InstallationTable />}

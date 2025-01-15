@@ -76,7 +76,7 @@ export function UserEditModal({
               className="col-span-3"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
+          {/* <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="login" className="text-right">
               Login
             </Label>
@@ -86,7 +86,7 @@ export function UserEditModal({
               className="col-span-3"
               disabled
             />
-          </div>
+          </div> */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="email" className="text-right">
               Email
@@ -131,4 +131,4 @@ export function UserEditModal({
       </DialogContent>
     </Dialog>
   );
-} 
+}

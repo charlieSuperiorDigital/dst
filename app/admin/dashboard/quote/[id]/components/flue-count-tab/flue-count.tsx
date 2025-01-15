@@ -13,6 +13,7 @@ import {
 import { FlueDefinition } from "../flue-dinition-tab/flue-definition-table";
 import { AddFlueDefinitonTab } from "../flue-dinition-tab/add-flue-definition";
 import { Button } from "@/components/ui/button";
+import { apiRequest } from "@/utils/client-side-api";
 
 type Row = {
   id: string;
@@ -27,15 +28,8 @@ const mockRows: Row[] = [
   { id: "row005", name: "Row E" },
 ];
 
-const mockFrame: FlueDefinition[] = [
-  { id: 1, name: "Assembly Flue A" },
-  { id: 2, name: "Assembly Flue B" },
-  { id: 3, name: "Paint Flue" },
-];
-
 const FlueCounts = () => {
-  const [flueDefinition, setFlueDefinition] =
-    useState<FlueDefinition[]>(mockFrame);
+  const [flueDefinition, setFlueDefinition] = useState<FlueDefinition[]>([]);
   const [rows, setRows] = useState<Row[]>(mockRows);
   const [counts, setCounts] = useState<{
     [key: string]: { [key: string]: number };
@@ -58,14 +52,22 @@ const FlueCounts = () => {
       0
     );
   };
-  const handleAddBayDefinition = (value) => {
-    const bayToAdd = {
-      id: flueDefinition.length + 1,
-      name: value.name,
-    };
-
-    setFlueDefinition((prevBays) => [...prevBays, bayToAdd]);
+  const handleAddFlue = async (value) => {
+    try {
+      const response = await apiRequest({
+        url: `/api/definition/Flue/${value.name}`,
+        method: "post",
+      });
+      const bayToAdd = {
+        id: response,
+        name: value.name,
+      };
+      setFlueDefinition((prevBays) => [...prevBays, bayToAdd]);
+    } catch (err) {
+      console.log(err);
+    }
   };
+
   const handleSave = () => {
     console.log("Save");
   };
@@ -73,7 +75,7 @@ const FlueCounts = () => {
   return (
     <div className="container mx-auto p-4">
       <div className=" flex space-x-4">
-        <AddFlueDefinitonTab onAdd={handleAddBayDefinition} />
+        <AddFlueDefinitonTab onAdd={handleAddFlue} />
         <Button onClick={handleSave} className="mb-4">
           Save
         </Button>

@@ -14,6 +14,7 @@ import { AddBayDefinitonTab } from "../bay-definition-tab/add-bay-definition";
 import { FrameLineDefinition } from "../frameline-definition-tab/frame-definition-table";
 import { AddFrameLineDefinitonTab } from "../frameline-definition-tab/add-frameline-definition";
 import { Button } from "@/components/ui/button";
+import { apiRequest } from "@/utils/client-side-api";
 
 type Row = {
   id: string;
@@ -28,15 +29,10 @@ const mockRows: Row[] = [
   { id: "row005", name: "Row E" },
 ];
 
-const mockFrame: FrameLineDefinition[] = [
-  { id: 1, name: "Assembly Frame A" },
-  { id: 2, name: "Assembly Frame B" },
-  { id: 3, name: "Paint Frame" },
-];
-
 const FrameLineCounts = () => {
-  const [frameLineDefinition, setFramelineDefinition] =
-    useState<FrameLineDefinition[]>(mockFrame);
+  const [frameLineDefinition, setFramelineDefinition] = useState<
+    FrameLineDefinition[]
+  >([]);
   const [rows, setRows] = useState<Row[]>(mockRows);
   const [counts, setCounts] = useState<{
     [key: string]: { [key: string]: number };
@@ -59,14 +55,22 @@ const FrameLineCounts = () => {
       0
     );
   };
-  const handleAddBayDefinition = (value) => {
-    const bayToAdd = {
-      id: frameLineDefinition.length + 1,
-      name: value.name,
-    };
-
-    setFramelineDefinition((prevBays) => [...prevBays, bayToAdd]);
+  const handleAddFramelineDef = async (value) => {
+    try {
+      const response = await apiRequest({
+        url: `/api/definition/frameLine/${value.name.trim()}`,
+        method: "post",
+      });
+      const bayToAdd = {
+        id: response,
+        name: value.name,
+      };
+      setFramelineDefinition((prevBays) => [...prevBays, bayToAdd]);
+    } catch (err) {
+      console.log(err);
+    }
   };
+
   const handleSave = () => {
     const result = frameLineDefinition.map((bay) => ({
       ...bay,
@@ -78,7 +82,7 @@ const FrameLineCounts = () => {
   return (
     <div className="container mx-auto p-4">
       <div className=" flex  align-middle space-x-4">
-        <AddFrameLineDefinitonTab onAdd={handleAddBayDefinition} />
+        <AddFrameLineDefinitonTab onAdd={handleAddFramelineDef} />
         <Button onClick={handleSave} className="mb-4">
           Save
         </Button>

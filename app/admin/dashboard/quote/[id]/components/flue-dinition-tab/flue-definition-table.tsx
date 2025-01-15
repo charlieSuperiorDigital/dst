@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Part } from "@/app/entities/Part";
 import { AddFlueDefinitonTab } from "./add-flue-definition";
 import { EditBayDefinitionTab } from "./edit-flue-definition";
+import { apiRequest } from "@/utils/client-side-api";
 
 const initialParts: Part[] = [
   {
@@ -128,13 +129,20 @@ const FlueDefinitionTable = () => {
       },
     }));
   };
-  const handleAddFramelineDef = (value) => {
-    const bayframeDefToAdd = {
-      id: fluesDefinition.length + 1,
-      name: value.name,
-    };
-
-    setFluesDefinition((prevFlue) => [...prevFlue, bayframeDefToAdd]);
+  const handleAddFlue = async (value) => {
+    try {
+      const response = await apiRequest({
+        url: `/api/Definition/Flue/${value.name.trim()}`,
+        method: "post",
+      });
+      const bayToAdd = {
+        id: response,
+        name: value.name,
+      };
+      setFluesDefinition((prevBays) => [...prevBays, bayToAdd]);
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   const handleUpdateBay = (value) => {
@@ -168,7 +176,7 @@ const FlueDefinitionTable = () => {
   return (
     <div className="space-y-4">
       <div className="flex align-center space-x-4">
-        <AddFlueDefinitonTab onAdd={handleAddFramelineDef} />
+        <AddFlueDefinitonTab onAdd={handleAddFlue} />
         {selectedFlueDefinition && (
           <EditBayDefinitionTab
             bay={selectedFlueDefinition}
