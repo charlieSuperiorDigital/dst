@@ -147,7 +147,7 @@ export function QuotesTable({ initialQuotes }: ExtensibleTableProps) {
 
   const handleRedirect = (e, quote) => {
     e.preventDefault();
-    router.push(`/admin/dashboard/quote/${quote.id}`);
+    router.push(`/admin/dashboard/quote/${quote.id}?tab=summary`);
   };
 
   const totalPages = Math.ceil(
