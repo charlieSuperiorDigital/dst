@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Part } from "@/app/entities/Part";
-import { AddBayDefinitonTab } from "./add-flue-definition";
+import { AddFlueDefinitonTab } from "./add-flue-definition";
 import { EditBayDefinitionTab } from "./edit-flue-definition";
 
 const initialParts: Part[] = [
@@ -168,7 +168,7 @@ const FlueDefinitionTable = () => {
   return (
     <div className="space-y-4">
       <div className="flex align-center space-x-4">
-        <AddBayDefinitonTab onAdd={handleAddFramelineDef} />
+        <AddFlueDefinitonTab onAdd={handleAddFramelineDef} />
         {selectedFlueDefinition && (
           <EditBayDefinitionTab
             bay={selectedFlueDefinition}

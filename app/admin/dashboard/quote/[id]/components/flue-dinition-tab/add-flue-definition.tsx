@@ -36,7 +36,7 @@ interface Props {
   onAdd: (fluedef: FlueDefinition) => void;
 }
 
-export function AddBayDefinitonTab({ onAdd }: Props) {
+export function AddFlueDefinitonTab({ onAdd }: Props) {
   const [open, setOpen] = useState(false);
 
   const form = useForm<FormValues>({

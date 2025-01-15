@@ -36,7 +36,7 @@ interface Props {
   onAdd: (framedef: FrameLineDefinition) => void;
 }
 
-export function AddBayDefinitonTab({ onAdd }: Props) {
+export function AddFrameLineDefinitonTab({ onAdd }: Props) {
   const [open, setOpen] = useState(false);
 
   const form = useForm<FormValues>({
