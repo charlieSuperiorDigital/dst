@@ -66,7 +66,6 @@ export const authOptions: AuthOptions = {
             id: data.userId,
             email: data.email,
             name: data.fullname,
-            role: data.roles[0],
             token: data.token,
           };
         } catch (error) {
