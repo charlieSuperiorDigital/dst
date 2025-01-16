@@ -17,6 +17,7 @@ import { PartsDialog } from "./add-part-modal";
 
 const initialParts: PartList[] = [
   {
+    id: 1,
     partNo: "0001",
     qty: 3,
     description: "445-312-42 Frame, boxed both legs 164/164, w/ WRR, WPP4",
@@ -32,6 +33,7 @@ const initialParts: PartList[] = [
     laborEA: 0.1,
   },
   {
+    id: 2,
     partNo: "0002",
     qty: 0,
     description: "335-312-42 Frame, boxed 096/096, w/WRR, WPP4",
@@ -47,6 +49,7 @@ const initialParts: PartList[] = [
     laborEA: 0.2,
   },
   {
+    id: 3,
     partNo: "0003",
     qty: 0,
     description: "335-240-42 DOCK Frame,NO BASE PLATES",
@@ -62,6 +65,7 @@ const initialParts: PartList[] = [
     laborEA: 0.3,
   },
   {
+    id: 9,
     partNo: "0009",
     qty: 0,
     description: "335-96 Beam, 4200 lbs cap/level",
@@ -77,6 +81,7 @@ const initialParts: PartList[] = [
     laborEA: 0.4,
   },
   {
+    id: 10,
     partNo: "0010",
     qty: 0,
     description: "445-96 Beam, 7700 lbs cap/level",
@@ -115,7 +120,7 @@ export default function PartsListTable() {
   const handleSave = (updatedPart: PartList) => {
     setParts(
       parts.map((part) =>
-        part.partNo === updatedPart.partNo ? updatedPart : part
+        part.id === updatedPart.id ? updatedPart : part
       )
     );
   };
@@ -155,7 +160,7 @@ export default function PartsListTable() {
         <TableBody>
           {parts.map((part) => (
             <TableRow
-              key={part.partNo}
+              key={part.id}
               className="cursor-pointer hover:bg-muted"
               onClick={() => handleRowClick(part)}
             >

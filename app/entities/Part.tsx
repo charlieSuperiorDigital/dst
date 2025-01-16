@@ -2,6 +2,7 @@ import { Color } from "./color";
 
 export interface Part {
   id: number;
+  partNumber: string;
   color: Color;
   description: string;
   colorId: number;

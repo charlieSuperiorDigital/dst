@@ -5,10 +5,10 @@ import { toast } from "sonner";
 interface User {
   id: string;
   fullName: string;
-  login: string;
   email: string;
   active: boolean;
   verified: boolean;
+  password?: string;
 }
 
 interface UseUsersReturn {
@@ -52,11 +52,12 @@ export function useUsers(): UseUsersReturn {
         email: user.email,
         active: user.active,
         verified: user.verified,
+        password: user.password,
       });
 
-      // Update the local state
+      // Update the local state with cleared password
       setUsers((prevUsers) =>
-        prevUsers.map((u) => (u.id === user.id ? user : u))
+        prevUsers.map((u) => (u.id === user.id ? { ...user, password: "" } : u))
       );
 
       toast.success("User updated successfully");

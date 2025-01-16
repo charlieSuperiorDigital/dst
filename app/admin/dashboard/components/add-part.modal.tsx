@@ -24,6 +24,7 @@ export function AddPartDialog({ isOpen, onClose, onAdd }: AddPartDialogProps) {
   const [newPart, setNewPart] = useState<Partial<Part>>({
     description: "",
     colorId: 1,
+    partNumber: "",
     laborEA: 0,
     unitCost: 0,
     unitLabor: 0,
@@ -50,7 +51,7 @@ export function AddPartDialog({ isOpen, onClose, onAdd }: AddPartDialogProps) {
     const { name, value } = e.target;
     setNewPart({
       ...newPart,
-      [name]: name === "description" ? value : parseFloat(value),
+      [name]: name === "description" || name === "partNumber" ? value : parseFloat(value),
     });
   };
 
@@ -67,6 +68,16 @@ export function AddPartDialog({ isOpen, onClose, onAdd }: AddPartDialogProps) {
           <DialogTitle>Add New Part</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label htmlFor="partNumber">Part Number</Label>
+            <Input
+              id="partNumber"
+              name="partNumber"
+              value={newPart.partNumber}
+              onChange={handleChange}
+              required
+            />
+          </div>
           <div>
             <Label htmlFor="description">Description</Label>
             <Input

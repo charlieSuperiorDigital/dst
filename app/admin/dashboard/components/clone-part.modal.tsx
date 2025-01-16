@@ -1,14 +1,13 @@
-"use client";
-
-import { Part } from "@/app/entities/Part";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
+import { Part } from "@/app/entities/Part";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
@@ -16,44 +15,44 @@ import { PaintTypeDropdown } from "./paint-type-dropdow";
 import { paintTypes } from "@/app/entities/colors-enum";
 import { ErrorModal } from "./error-modal";
 
-interface EditPartDialogProps {
-  part: Part | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSave: (updatedPart: Part) => void;
-  onClone?: (part: Part) => void;
+interface Props {
+  part: Part;
+  isOpen: boolean;
+  onClose: () => void;
+  onClone: (part: Part) => Promise<void>;
 }
 
-export function UpdatePartDialog({
-  part,
-  open,
-  onOpenChange,
-  onSave,
-  onClone,
-}: EditPartDialogProps) {
+export function ClonePartDialog({ part, isOpen, onClose, onClone }: Props) {
   const [editedPart, setEditedPart] = useState<Part | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Initialize state when modal opens
   useEffect(() => {
-    if (part) {
+    if (isOpen && part) {
       setEditedPart({ ...part });
+      setError(null);
     }
-  }, [part]);
+  }, [isOpen, part]);
 
-  if (!editedPart) return null;
+  const handleClose = () => {
+    setEditedPart(null);
+    setError(null);
+    onClose();
+  };
 
-  const handleSave = () => {
+  const handleClone = async () => {
     try {
-      onSave(editedPart);
-      onOpenChange(false);
+      if (!editedPart) return;
+      await onClone(editedPart);
+      handleClose();
     } catch (error) {
-      console.error("Error saving part:", error);
-      setError("Failed to save part. Please try again.");
+      console.error("Error cloning part:", error);
+      setError("Failed to clone part. Please try again.");
     }
   };
 
   const handleColorChange = (colorId: string) => {
-    if (colorId) {
+    if (colorId && editedPart) {
       setEditedPart({
         ...editedPart,
         colorId: Number(colorId),
@@ -66,14 +65,34 @@ export function UpdatePartDialog({
     }
   };
 
+  if (!editedPart) return null;
+
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
+      <Dialog open={isOpen} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Part: {editedPart.partNumber}</DialogTitle>
+            <DialogTitle>Clone Part</DialogTitle>
+            <DialogDescription>
+              Create a copy of part number {part.partNumber} with new properties.
+            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="partNumber" className="text-right">
+                Part Number *
+              </Label>
+              <Input
+                id="partNumber"
+                value={editedPart.partNumber}
+                onChange={(e) => {
+                  setEditedPart({ ...editedPart, partNumber: e.target.value });
+                  setError(null);
+                }}
+                className="col-span-3"
+                placeholder="Enter part number"
+              />
+            </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="description" className="text-right">
                 Description
@@ -81,10 +100,12 @@ export function UpdatePartDialog({
               <Input
                 id="description"
                 value={editedPart.description}
-                onChange={(e) =>
-                  setEditedPart({ ...editedPart, description: e.target.value })
-                }
+                onChange={(e) => {
+                  setEditedPart({ ...editedPart, description: e.target.value });
+                  setError(null);
+                }}
                 className="col-span-3"
+                placeholder="Enter description"
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
@@ -120,6 +141,7 @@ export function UpdatePartDialog({
               </Label>
               <Input
                 id="unitMatLb"
+                type="number"
                 value={editedPart.unitMatLb}
                 onChange={(e) =>
                   setEditedPart({
@@ -136,6 +158,7 @@ export function UpdatePartDialog({
               </Label>
               <Input
                 id="unitLabor"
+                type="number"
                 value={editedPart.unitLabor}
                 onChange={(e) =>
                   setEditedPart({
@@ -147,34 +170,28 @@ export function UpdatePartDialog({
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="partNumber" className="text-right">
-                Part Number
+              <Label htmlFor="laborEA" className="text-right">
+                Labor EA
               </Label>
               <Input
-                id="partNumber"
-                value={editedPart.partNumber}
+                id="laborEA"
+                type="number"
+                value={editedPart.laborEA}
                 onChange={(e) =>
                   setEditedPart({
                     ...editedPart,
-                    partNumber: e.target.value,
+                    laborEA: Number(e.target.value),
                   })
                 }
                 className="col-span-3"
               />
             </div>
           </div>
-          <DialogFooter className="flex justify-between">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => onClone && part && onClone(part)}
-              className="mr-auto"
-            >
-              Clone Part
+          <DialogFooter>
+            <Button variant="outline" onClick={handleClose}>
+              Cancel
             </Button>
-            <Button type="submit" onClick={handleSave}>
-              Save changes
-            </Button>
+            <Button onClick={handleClone}>Clone Part</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -185,4 +202,4 @@ export function UpdatePartDialog({
       />
     </>
   );
-}
+} 
