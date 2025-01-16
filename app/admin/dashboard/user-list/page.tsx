@@ -16,10 +16,10 @@ import { UserEditModal } from "@/components/users/user-edit-modal";
 interface User {
   id: string;
   fullName: string;
-  login: string;
   email: string;
   active: boolean;
   verified: boolean;
+  password?: string;
 }
 
 export default function UserListPage() {
@@ -45,12 +45,16 @@ export default function UserListPage() {
   };
 
   const handleCloseModal = () => {
+    if (selectedUser) {
+      selectedUser.password = "";
+    }
     setSelectedUser(null);
   };
 
   const handleSaveChanges = async (editedUser: User) => {
     const success = await updateUserDetails(editedUser);
     if (success) {
+      editedUser.password = "";
       handleCloseModal();
     }
   };

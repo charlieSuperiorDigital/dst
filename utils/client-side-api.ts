@@ -10,7 +10,6 @@ interface ApiRequestOptions {
 interface User {
   id: string;
   fullName: string;
-  login: string;
   email: string;
   active: boolean;
   verified: boolean;
@@ -22,6 +21,7 @@ interface UserVM {
   email: string;
   active?: boolean;
   verified?: boolean;
+  password?: string;
 }
 
 interface PaginatedUsers {

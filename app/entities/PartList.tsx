@@ -1,4 +1,5 @@
 export interface PartList {
+  id: number;
   partNo: string;
   qty: number;
   description: string;
