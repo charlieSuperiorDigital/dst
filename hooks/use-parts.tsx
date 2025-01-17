@@ -12,6 +12,8 @@ export const useParts = (initialPartsResponse) => {
         method: "get",
         url: `/api/part/${page}/10?search=${search}`,
       });
+
+      console.log("Parts response:", response);
       setPartsResponse(response);
     } catch (error) {
       console.error("Error fetching parts:", error);

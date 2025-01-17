@@ -17,7 +17,7 @@ export default async function Page({
   return (
     <div>
       <QuoteHeader quote={quote.result} />
-      <QuoteClientSide />
+      <QuoteClientSide quoteId={id} />
     </div>
   );
 }

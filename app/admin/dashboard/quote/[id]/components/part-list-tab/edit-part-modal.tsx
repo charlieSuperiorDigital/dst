@@ -18,6 +18,7 @@ interface EditPartDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (updatedPart: PartList) => void;
+  onDelete: (id: string) => void;
 }
 
 export function EditPartDialog({
@@ -25,6 +26,7 @@ export function EditPartDialog({
   open,
   onOpenChange,
   onSave,
+  onDelete,
 }: EditPartDialogProps) {
   const [editedPart, setEditedPart] = useState<PartList | null>(null);
 
@@ -41,11 +43,16 @@ export function EditPartDialog({
     onOpenChange(false);
   };
 
+  const handleDelete = () => {
+    onDelete(editedPart.id);
+    onOpenChange(false);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Edit Part: {editedPart.partNo}</DialogTitle>
+          <DialogTitle>Edit Part: {editedPart.id}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
@@ -61,7 +68,7 @@ export function EditPartDialog({
               className="col-span-3"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
+          {/* <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="description" className="text-right">
               Description
             </Label>
@@ -73,8 +80,8 @@ export function EditPartDialog({
               }
               className="col-span-3"
             />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
+          </div> */}
+          {/* <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="color" className="text-right">
               Color
             </Label>
@@ -86,8 +93,8 @@ export function EditPartDialog({
               }
               className="col-span-3"
             />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
+          </div> */}
+          {/* <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="unitWeight" className="text-right">
               Unit Weight
             </Label>
@@ -103,8 +110,8 @@ export function EditPartDialog({
               }
               className="col-span-3"
             />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
+          </div> */}
+          {/* <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="totalWeight" className="text-right">
               Total Weight
             </Label>
@@ -120,8 +127,8 @@ export function EditPartDialog({
               disabled={true}
               className="col-span-3"
             />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
+          </div> */}
+          {/* <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="unitMatLb" className="text-right">
               Unit Mat/lb
             </Label>
@@ -136,8 +143,8 @@ export function EditPartDialog({
               }
               className="col-span-3"
             />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
+          </div> */}
+          {/* <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="unitLabor" className="text-right">
               Unit Labor
             </Label>
@@ -152,8 +159,8 @@ export function EditPartDialog({
               }
               className="col-span-3"
             />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
+          </div> */}
+          {/* <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="unitCost" className="text-right">
               Unit Cost
             </Label>
@@ -166,8 +173,8 @@ export function EditPartDialog({
               disabled={true}
               className="col-span-3"
             />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
+          </div> */}
+          {/* <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="totalCost" className="text-right">
               Total Cost
             </Label>
@@ -181,8 +188,8 @@ export function EditPartDialog({
               disabled={true}
               className="col-span-3"
             />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
+          </div> */}
+          {/* <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="unitSell" className="text-right">
               Unit Sell
             </Label>
@@ -197,8 +204,8 @@ export function EditPartDialog({
               }
               className="col-span-3"
             />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
+          </div> */}
+          {/* <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="totalSell" className="text-right">
               Total Sell
             </Label>
@@ -213,12 +220,17 @@ export function EditPartDialog({
               }
               className="col-span-3"
             />
-          </div>
+          </div> */}
         </div>
         <DialogFooter>
-          <Button type="submit" onClick={handleSave}>
-            Save changes
-          </Button>
+          <div className="flex space-x-4">
+            <Button type="submit" onClick={handleSave}>
+              Save changes
+            </Button>
+            <Button type="submit" onClick={handleDelete}>
+              Delete part
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -142,7 +142,7 @@ export default function PartsTable({ initialPartsResponse }: Props) {
                 className="cursor-pointer hover:bg-muted"
                 onClick={() => handleRowClick(part)}
               >
-                <TableCell className="font-medium">{part.id}</TableCell>
+                <TableCell className="font-medium">{part.partNumber}</TableCell>
                 <TableCell>{part.description}</TableCell>
                 {/* <TableCell>{part.color.name}</TableCell> */}
                 <TableCell className="text-right">
