@@ -71,7 +71,7 @@ export default function RownCountSummary() {
             onChange={(e) => setNewItem(e.target.value)}
             placeholder="Enter scope "
           />
-          <Button onClick={handleAddItem} className="w-full">
+          <Button onClick={handleAddItem} variant="success" className="w-full">
             <Plus className="w-4 h-4 mr-2" />
             Add Scope Item
           </Button>

@@ -166,15 +166,20 @@ export function UpdatePartDialog({
           <DialogFooter className="flex justify-between">
             <Button
               type="button"
-              variant="secondary"
+              variant="success"
               onClick={() => onClone && part && onClone(part)}
               className="mr-auto"
             >
               Clone Part
             </Button>
-            <Button type="submit" onClick={handleSave}>
-              Save changes
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="destructive" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" onClick={handleSave}>
+                Save changes
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -188,7 +188,7 @@ export function ClonePartDialog({ part, isOpen, onClose, onClone }: Props) {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={handleClose}>
+            <Button variant="destructive" onClick={handleClose}>
               Cancel
             </Button>
             <Button onClick={handleClone}>Clone Part</Button>

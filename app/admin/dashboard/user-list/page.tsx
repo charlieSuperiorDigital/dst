@@ -12,6 +12,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useUsers } from "@/hooks/use-users";
 import { UserEditModal } from "@/components/users/user-edit-modal";
+import { DeleteConfirmationModal } from "@/components/users/delete-confirmation-modal";
+import { ErrorModal } from "@/components/error-modal";
+import { Plus, Trash2 } from "lucide-react";
 
 interface User {
   id: string;
@@ -20,6 +23,11 @@ interface User {
   active: boolean;
   verified: boolean;
   password?: string;
+}
+
+interface ErrorState {
+  title: string;
+  message: string;
 }
 
 export default function UserListPage() {
@@ -31,10 +39,14 @@ export default function UserListPage() {
     error,
     fetchUsers,
     updateUserDetails,
+    registerUser,
+    deleteUser,
   } = useUsers();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [errorState, setErrorState] = useState<ErrorState | null>(null);
 
   useEffect(() => {
     fetchUsers(search, page);
@@ -52,25 +64,72 @@ export default function UserListPage() {
   };
 
   const handleSaveChanges = async (editedUser: User) => {
-    const success = await updateUserDetails(editedUser);
-    if (success) {
-      editedUser.password = "";
-      handleCloseModal();
+    try {
+      const success = await updateUserDetails(editedUser);
+      if (success) {
+        editedUser.password = "";
+        handleCloseModal();
+      }
+    } catch (error: any) {
+      setErrorState({
+        title: "Error Updating User",
+        message: error.message || "Failed to update user. Please try again.",
+      });
+    }
+  };
+
+  const handleRegisterUser = async (user: { fullName: string; email: string; password: string; confirmPassword: string }) => {
+    try {
+      const success = await registerUser(user);
+      if (success) {
+        handleCloseModal();
+        return true;
+      }
+      return false;
+    } catch (error: any) {
+      setErrorState({
+        title: "Error Creating User",
+        message: error.message || "Failed to create user. Please try again.",
+      });
+      return false;
+    }
+  };
+
+  const handleDeleteUser = async (e: React.MouseEvent, user: User) => {
+    e.stopPropagation(); // Prevent card click event
+    setUserToDelete(user);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (userToDelete) {
+      try {
+        const success = await deleteUser(userToDelete.id);
+        if (success) {
+          setUserToDelete(null);
+        }
+      } catch (error: any) {
+        setErrorState({
+          title: "Error Deleting User",
+          message: error.message || "Failed to delete user. Please try again.",
+        });
+      }
     }
   };
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">User List</h1>
-        <div className="flex gap-4">
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <form className="flex gap-2">
           <Input
             placeholder="Search users..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-64"
           />
-        </div>
+        </form>
+        <Button variant="success" onClick={() => handleUserClick({ id: '', fullName: '', email: '', active: true, verified: false })}>
+          <Plus className="mr-2 h-4 w-4" /> Add User
+        </Button>
       </div>
 
       {error && (
@@ -103,14 +162,20 @@ export default function UserListPage() {
                     key={user.id}
                     className={`${
                       !user.active ? "opacity-60" : ""
-                    } cursor-pointer hover:shadow-lg transition-shadow`}
+                    } cursor-pointer hover:shadow-lg transition-shadow relative group`}
                     onClick={() => handleUserClick(user)}
                   >
-                    <CardHeader>
-                      <CardTitle>{user.fullName}</CardTitle>
-                      {/* <CardDescription>{user.login}</CardDescription> */}
+                    <CardHeader className="p-4">
+                      <div className="flex items-center gap-2">
+                        <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
+                          <span className="text-gray-500 text-sm">
+                            {user.fullName.charAt(0)}
+                          </span>
+                        </div>
+                        <CardTitle className="text-base">{user.fullName}</CardTitle>
+                      </div>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="p-4 pt-0">
                       <p className="text-sm text-gray-500">{user.email}</p>
                       <div className="flex gap-2 mt-2">
                         {user.verified && (
@@ -125,6 +190,13 @@ export default function UserListPage() {
                         )}
                       </div>
                     </CardContent>
+                    <button
+                      onClick={(e) => handleDeleteUser(e, user)}
+                      className="absolute top-2 right-2 p-2 text-red-500"
+                      title="Delete user"
+                    >
+                      <Trash2 className="h-5 w-5" />
+                    </button>
                   </Card>
                 ))
               : !isLoading && (
@@ -161,6 +233,22 @@ export default function UserListPage() {
         isSaving={isSaving}
         onClose={handleCloseModal}
         onSave={handleSaveChanges}
+        onRegister={handleRegisterUser}
+      />
+
+      <DeleteConfirmationModal
+        isOpen={!!userToDelete}
+        userName={userToDelete?.fullName || ""}
+        onClose={() => setUserToDelete(null)}
+        onConfirm={handleConfirmDelete}
+        isDeleting={isSaving}
+      />
+
+      <ErrorModal
+        isOpen={!!errorState}
+        title={errorState?.title}
+        error={errorState?.message || ""}
+        onClose={() => setErrorState(null)}
       />
     </div>
   );
