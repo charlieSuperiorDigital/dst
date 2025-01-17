@@ -3,9 +3,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
 import { Plus, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import CostBreakdownTable from "./cost-breakdown-table";
+import MarginTaxes from "./margin-taxes";
 
 interface ScopeItem {
   id: string;
@@ -34,8 +35,8 @@ export default function RownCountSummary() {
   };
 
   return (
-    <div className="container p-6 space-y-6 max-w-[500px] ">
-      <Card>
+    <div className=" flex p-6 gap-1  w-full ">
+      <Card className="w-[500px]">
         <CardHeader>
           <CardTitle>Scope Items</CardTitle>
         </CardHeader>
@@ -76,6 +77,12 @@ export default function RownCountSummary() {
             Add Scope Item
           </Button>
         </CardContent>
+      </Card>
+      <Card className="w-[500px]">
+        <CostBreakdownTable />
+      </Card>
+      <Card className="w-[500px]">
+        <MarginTaxes />
       </Card>
     </div>
   );

@@ -115,6 +115,7 @@ export function UserEditModal({
     if (user) {
       user.password = "";  // Clear the password in the parent state
       user.confirmPassword = "";
+      user.password = ""; // Clear the password in the parent state
     }
     onClose();
   };
@@ -129,7 +130,6 @@ export function UserEditModal({
         <DialogHeader>
           <DialogTitle>{isNewUser ? 'Create User' : 'Edit User Details'}</DialogTitle>
           <DialogDescription>
-            {isNewUser ? 'Create a new user account.' : 'Make changes to the user\'s information below.'}
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">

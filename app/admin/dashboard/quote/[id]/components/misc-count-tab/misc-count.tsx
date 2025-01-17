@@ -13,11 +13,9 @@ import {
 import { AddBayDefinitonTab } from "../bay-definition-tab/add-bay-definition";
 import { Button } from "@/components/ui/button";
 import { apiRequest } from "@/utils/client-side-api";
-
-type Bay = {
-  id: number;
-  name: string;
-};
+import { AddPartList } from "../add-parts-list";
+import { set } from "react-hook-form";
+import { Part } from "@/app/entities/Part";
 
 type Row = {
   id: string;
@@ -32,14 +30,14 @@ const mockRows: Row[] = [
   { id: "row005", name: "Row E" },
 ];
 
-const BayCounts = () => {
-  const [baysDefinition, setBaysDefinition] = useState<Bay[]>([]);
+const MiscCount = () => {
+  const [misc, setMisc] = useState<Part[]>([]);
   const [rows, setRows] = useState<Row[]>(mockRows);
   const [counts, setCounts] = useState<{
     [key: string]: { [key: string]: number };
   }>({});
 
-  const handleInputChange = (bayId: number, rowId: string, value: string) => {
+  const handleInputChange = (bayId: string, rowId: string, value: string) => {
     const numValue = parseInt(value) || 0;
     setCounts((prevCounts) => ({
       ...prevCounts,
@@ -50,62 +48,23 @@ const BayCounts = () => {
     }));
   };
 
-  const calculateTotal = (bayId: number) => {
+  const calculateTotal = (bayId: string) => {
     return Object.values(counts[bayId] || {}).reduce(
       (sum, count) => sum + count,
       0
     );
   };
-  const handleAddBay = async (value) => {
-    try {
-      const response = await apiRequest({
-        url: `/api/definition/bay/${value.name}`,
-        method: "post",
-      });
-      const bayToAdd = {
-        id: response,
-        name: value.name,
-      };
-      setBaysDefinition((prevBays) => [...prevBays, bayToAdd]);
-    } catch (err) {
-      console.log(err);
-    }
+
+  const handleAddPartlist = (part: Part, qty: number) => {
+    setMisc((prevMisc) => [...prevMisc, part]);
   };
 
-  const handleSave = async () => {
-    try {
-      const requests: Promise<unknown>[] = [];
-
-      baysDefinition.forEach((bay) => {
-        rows.forEach((row) => {
-          const quantity = counts[bay.id]?.[row.id] || 0;
-          if (quantity > 0) {
-            requests.push(
-              apiRequest({
-                url: "/api/Row/Bay/AddToRow",
-                method: "post",
-                data: {
-                  rowId: row.id,
-                  id: bay.id,
-                  quantity,
-                },
-              })
-            );
-          }
-        });
-      });
-
-      await Promise.all(requests);
-      console.log("Save successful");
-    } catch (err) {
-      console.error("Error saving data:", err);
-    }
-  };
+  const handleSave = async () => {};
 
   return (
     <div className="container mx-auto p-4">
       <div className=" flex  align-middle space-x-4">
-        <AddBayDefinitonTab onAdd={handleAddBay} />
+        <AddPartList onAdd={handleAddPartlist} />
         <Button onClick={handleSave} className="mb-4">
           Save
         </Button>
@@ -113,7 +72,8 @@ const BayCounts = () => {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[200px]">Bay Name</TableHead>
+            <TableHead className="w-[200px]">Part Nro</TableHead>
+            <TableHead className="w-[200px]">Description</TableHead>
             <TableHead className="w-[100px]">Total</TableHead>
             {mockRows.map((row) => (
               <TableHead key={row.id} className="text-center">
@@ -123,20 +83,22 @@ const BayCounts = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {baysDefinition.map((bay) => (
-            <TableRow key={bay.id}>
-              <TableCell className="font-medium">{bay.name}</TableCell>
+          {misc.map((misc) => (
+            <TableRow key={misc.id}>
+              <TableCell className="font-medium">{misc.id}</TableCell>
+              <TableCell className="font-medium">{misc.description}</TableCell>
+
               <TableCell className="font-bold text-center">
-                {calculateTotal(bay.id)}
+                {calculateTotal(misc.id)}
               </TableCell>
               {rows.map((row) => (
                 <TableCell key={row.id} className="text-center">
                   <Input
                     type="number"
                     className="w-16 mx-auto text-center"
-                    value={counts[bay.id]?.[row.id] || ""}
+                    value={counts[misc.id]?.[row.id] || ""}
                     onChange={(e) =>
-                      handleInputChange(bay.id, row.id, e.target.value)
+                      handleInputChange(misc.id, row.id, e.target.value)
                     }
                     min="0"
                   />
@@ -150,4 +112,4 @@ const BayCounts = () => {
   );
 };
 
-export default BayCounts;
+export default MiscCount;

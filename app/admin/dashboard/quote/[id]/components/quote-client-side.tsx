@@ -11,13 +11,20 @@ import BayCounts from "./bay-count-tab/bay-count-table";
 import FrameLineCounts from "./frameline-count-tab/frameline-count-table";
 import FlueCounts from "./flue-count-tab/flue-count";
 import RownCountSummary from "./row-count-summary-tab/row-count-summary";
+import RowCounts from "./row-count-tab/row-counts-table";
+import MiscCount from "./misc-count-tab/misc-count";
 
-const QuoteClientSide = () => {
+type Props = {
+  quoteId: string;
+};
+
+const QuoteClientSide = ({ quoteId }: Props) => {
   const searchParams = useSearchParams();
   const tab = searchParams.get("tab");
   return (
     <div>
       {tab === "summary" && <RownCountSummary />}
+      {tab === "row-count" && <RowCounts quoteId={quoteId} />}
       {tab === "part-list" && <PartsListTable />}
       {tab === "receiving" && <ReceivingTable />}
       {tab === "installation" && <InstallationTable />}
@@ -27,6 +34,7 @@ const QuoteClientSide = () => {
       {tab === "bay-count" && <BayCounts />}
       {tab === "frameline-count" && <FrameLineCounts />}
       {tab === "flue-counts" && <FlueCounts />}
+      {tab === "misc-counts" && <MiscCount />}
     </div>
   );
 };
