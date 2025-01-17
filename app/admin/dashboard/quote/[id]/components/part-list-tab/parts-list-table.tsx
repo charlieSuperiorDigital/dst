@@ -126,28 +126,33 @@ export default function PartsListTable() {
     setParts(parts.filter((part) => part.id !== id));
   };
 
-  // const handleAdd = (part: Part, qty: number) => {
-  //   setParts((prevParts) => {
-  //     const existingPartIndex = prevParts.findIndex((p) => p.id === part.id);
+  const handleAdd = (part: Part, qty: number) => {
+    const partToAdd: PartList = {
+      ...part,
+      qty,
+    };
 
-  //     if (existingPartIndex !== -1) {
-  //       const updatedParts = [...prevParts];
-  //       updatedParts[existingPartIndex] = {
-  //         ...updatedParts[existingPartIndex],
-  //         qty: updatedParts[existingPartIndex].qty + qty,
-  //       };
-  //       return updatedParts;
-  //     } else {
-  //       return [
-  //         ...prevParts,
-  //         {
-  //           ...part,
-  //           qty,
-  //         },
-  //       ];
-  //     }
-  //   });
-  // };
+    setParts((prevParts) => {
+      const existingPartIndex = prevParts.findIndex((p) => p.id === part.id);
+
+      if (existingPartIndex !== -1) {
+        const updatedParts = [...prevParts];
+        updatedParts[existingPartIndex] = {
+          ...updatedParts[existingPartIndex],
+          qty: updatedParts[existingPartIndex].qty + qty,
+        };
+        return updatedParts;
+      } else {
+        return [
+          ...prevParts,
+          {
+            ...part,
+            qty,
+          },
+        ];
+      }
+    });
+  };
   const handleSavePartList = async () => {};
 
   const totalSell = parts.reduce(
@@ -173,7 +178,7 @@ export default function PartsListTable() {
         </form>
         <div className=" flex gap-3">
           <Button onClick={() => handleSavePartList}>Save</Button>
-          {/* <PartsDialog onAdd={handleAdd} /> */}
+          <PartsDialog onAdd={handleAdd} />
         </div>
       </div>
       <Table>
@@ -208,7 +213,7 @@ export default function PartsListTable() {
               className="cursor-pointer hover:bg-muted"
               onClick={() => handleRowClick(part)}
             >
-              <TableCell className="font-medium">{part.id}</TableCell>
+              <TableCell className="font-medium">{part.partNumber}</TableCell>
               <TableCell>{part.qty}</TableCell>
               <TableCell>{part.description}</TableCell>
               <TableCell>

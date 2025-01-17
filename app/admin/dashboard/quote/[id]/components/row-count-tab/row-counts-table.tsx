@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/table";
 import React, { useState } from "react";
 import { AddRowsTab } from "./add-row";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiRequest } from "@/utils/client-side-api";
 
 type Props = {

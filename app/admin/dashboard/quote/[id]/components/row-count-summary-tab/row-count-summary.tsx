@@ -13,9 +13,48 @@ interface ScopeItem {
   content: string;
 }
 
+export interface MarginTax {
+  name: string;
+  price: number;
+}
+
+export interface CostItem {
+  item: string;
+  price: number;
+  highlight?: boolean;
+  note?: string;
+}
+
+const mockMarginTaxes: MarginTax[] = [
+  {
+    name: "Material Margin",
+    price: 15, // 15%
+  },
+  {
+    name: "Sales Tax Rate",
+    price: 8.25, // 20.5%
+  },
+  {
+    name: "Permits Cost Plus",
+    price: 5.75, // 5.75%
+  },
+];
+
 export default function RownCountSummary() {
   const [scopeItems, setScopeItems] = useState<ScopeItem[]>([]);
   const [newItem, setNewItem] = useState("");
+  const [marginTaxes, setMarginTaxes] = useState<MarginTax[]>(mockMarginTaxes);
+  const [costItems, setCostItems] = useState<CostItem[]>([
+    { item: "Material", price: 0 },
+    { item: "Freight", price: 19618 },
+    { item: "Installation (non union)", price: 62750 },
+    { item: "Rentals", price: 8900 },
+    {
+      item: "Calculations",
+      price: 2800,
+      highlight: true,
+    },
+  ]);
 
   const handleAddItem = () => {
     if (newItem.trim()) {
@@ -79,10 +118,17 @@ export default function RownCountSummary() {
         </CardContent>
       </Card>
       <Card className="w-[500px]">
-        <CostBreakdownTable />
+        <CostBreakdownTable
+          marginTaxes={marginTaxes}
+          costItems={costItems}
+          setCostItems={setCostItems}
+        />
       </Card>
       <Card className="w-[500px]">
-        <MarginTaxes />
+        <MarginTaxes
+          marginTaxes={marginTaxes}
+          setMarginTaxes={setMarginTaxes}
+        />
       </Card>
     </div>
   );

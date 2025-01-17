@@ -61,9 +61,9 @@ export function EditPartDialog({
             </Label>
             <Input
               id="partNo"
-              value={editedPart.partNo}
+              value={editedPart.partNumber}
               onChange={(e) =>
-                setEditedPart({ ...editedPart, partNo: e.target.value })
+                setEditedPart({ ...editedPart, partNumber: e.target.value })
               }
               className="col-span-3"
             />
