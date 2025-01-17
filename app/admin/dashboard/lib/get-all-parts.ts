@@ -6,6 +6,6 @@ import { getServerSideApiClient } from "@/utils/server-side-api-client";
 export const getAllParts = async () => {
   const apiClient = await getServerSideApiClient();
   return adaptRequest<PaginatedResponse<Part, "parts">>(
-    apiClient.get("/api/Part/1/10")
+    apiClient.get("/api/Part/1/15")
   );
 };

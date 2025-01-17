@@ -130,7 +130,7 @@ export default function PartsTable({ initialPartsResponse }: Props) {
             className="w-64"
           />
         </form>
-        <Button onClick={() => setIsAddDialogOpen(true)}>
+        <Button variant="success" onClick={() => setIsAddDialogOpen(true)}>
           <Plus className="mr-2 h-4 w-4" /> Add Part
         </Button>
       </div>
@@ -155,7 +155,7 @@ export default function PartsTable({ initialPartsResponse }: Props) {
             {partsResponse.parts?.map((part) => (
               <TableRow
                 key={part.id}
-                className="cursor-pointer hover:bg-muted"
+                className="cursor-pointer hover:bg-muted even:bg-gray-50"
                 onClick={() => handleRowClick(part)}
               >
                 <TableCell className="font-medium">{part.partNumber}</TableCell>
@@ -182,7 +182,11 @@ export default function PartsTable({ initialPartsResponse }: Props) {
                 <TableCell className="text-right">{part.laborEA}</TableCell>
 
                 <TableCell className="text-left">
-                  <Trash2 size={20} onClick={(e) => handleRowDelete(e, part)} />
+                  <Trash2 
+                    size={20} 
+                    onClick={(e) => handleRowDelete(e, part)} 
+                    className="text-red-500"
+                  />
                 </TableCell>
               </TableRow>
             ))}
