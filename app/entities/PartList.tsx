@@ -2,6 +2,7 @@ import { Color } from "./color";
 
 export interface PartList {
   id: string;
+  partNo: string;
   qty: number;
   description: string;
   color: Color | null;

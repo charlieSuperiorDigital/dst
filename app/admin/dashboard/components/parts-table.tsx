@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/pagination";
 import { Input } from "@/components/ui/input";
 import { useParts } from "@/hooks/use-parts";
+import { ClonePartDialog } from "./clone-part.modal";
 
 interface Props {
   initialPartsResponse: PaginatedResponse<Part, "parts">;
@@ -38,6 +39,7 @@ export default function PartsTable({ initialPartsResponse }: Props) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isCloneDialogOpen, setIsCloneDialogOpen] = useState(false);
   const {
     partsResponse,
     currentPage,
@@ -97,6 +99,20 @@ export default function PartsTable({ initialPartsResponse }: Props) {
     e.preventDefault();
     setCurrentPage(1);
     fetchParts(1, searchTerm);
+  };
+
+  const handleClone = async (partToClone: Part) => {
+    try {
+      await apiRequest<number>({
+        method: "post",
+        url: "/api/part",
+        data: partToClone,
+      });
+      fetchParts(currentPage, searchTerm);
+      setIsCloneDialogOpen(false);
+    } catch (error) {
+      console.error("Error cloning part:", error);
+    }
   };
 
   const totalPages = Math.ceil(
@@ -208,6 +224,7 @@ export default function PartsTable({ initialPartsResponse }: Props) {
             open={isEditDialogOpen}
             onOpenChange={setIsEditDialogOpen}
             onSave={handleUpdate}
+            onClone={() => setIsCloneDialogOpen(true)}
           />
         )}
 
@@ -222,6 +239,15 @@ export default function PartsTable({ initialPartsResponse }: Props) {
             part={selectedPart}
             onClose={() => setIsDeleteDialogOpen(false)}
             onDelete={handleDelete}
+          />
+        )}
+
+        {selectedPart && (
+          <ClonePartDialog
+            isOpen={isCloneDialogOpen}
+            part={selectedPart}
+            onClose={() => setIsCloneDialogOpen(false)}
+            onClone={handleClone}
           />
         )}
       </div>

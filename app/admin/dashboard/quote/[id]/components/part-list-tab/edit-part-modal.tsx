@@ -56,6 +56,19 @@ export function EditPartDialog({
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="partNo" className="text-right">
+              Part Number
+            </Label>
+            <Input
+              id="partNo"
+              value={editedPart.partNo}
+              onChange={(e) =>
+                setEditedPart({ ...editedPart, partNo: e.target.value })
+              }
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="qty" className="text-right">
               Quantity
             </Label>

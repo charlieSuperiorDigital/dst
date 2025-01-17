@@ -7,17 +7,19 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Eye, EyeOff } from "lucide-react";
 
 interface User {
   id: string;
   fullName: string;
-  login: string;
   email: string;
+  password?: string;
   active: boolean;
   verified: boolean;
 }
@@ -38,6 +40,7 @@ export function UserEditModal({
   onSave,
 }: UserEditModalProps) {
   const [editedUser, setEditedUser] = useState<User | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Reset edited user when modal opens with new user
   if (user && !editedUser) {
@@ -51,6 +54,10 @@ export function UserEditModal({
 
   const handleClose = () => {
     setEditedUser(null);
+    setShowPassword(false);
+    if (user) {
+      user.password = ""; // Clear the password in the parent state
+    }
     onClose();
   };
 
@@ -61,6 +68,9 @@ export function UserEditModal({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Edit User Details</DialogTitle>
+          <DialogDescription>
+            <p>It&apos;s important to escape single quotes in JSX.</p>
+          </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
@@ -76,17 +86,6 @@ export function UserEditModal({
               className="col-span-3"
             />
           </div>
-          {/* <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="login" className="text-right">
-              Login
-            </Label>
-            <Input
-              id="login"
-              value={editedUser.login}
-              className="col-span-3"
-              disabled
-            />
-          </div> */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="email" className="text-right">
               Email
@@ -100,6 +99,33 @@ export function UserEditModal({
               }
               className="col-span-3"
             />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="password" className="text-right">
+              Password
+            </Label>
+            <div className="col-span-3 relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={editedUser.password || ""}
+                onChange={(e) =>
+                  setEditedUser({ ...editedUser, password: e.target.value })
+                }
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2"
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4 text-gray-500" />
+                ) : (
+                  <Eye className="h-4 w-4 text-gray-500" />
+                )}
+              </button>
+            </div>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label className="text-right">Active</Label>
