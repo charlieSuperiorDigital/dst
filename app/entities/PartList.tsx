@@ -1,16 +1,17 @@
+import { Color } from "./color";
+
 export interface PartList {
-  id: number;
+  id: string;
   partNo: string;
   qty: number;
   description: string;
-  color: string;
+  color: Color | null;
+  colorId: number;
   unitWeight: number;
-  totalWeight: number;
   unitMatLb: number;
   unitLabor: number;
   unitCost: number;
-  totalCost: number;
   unitSell: number;
-  totalSell: number;
+  totalSell?: number;
   laborEA: number;
 }

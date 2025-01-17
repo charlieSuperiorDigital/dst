@@ -3,6 +3,7 @@ import { getAllQoutes } from "./lib/get-all-quotes";
 
 const quotes = async () => {
   const quotesResponse = await getAllQoutes();
+  console.log(quotesResponse);
   if (!quotesResponse.result) {
     return <div>Error loading quotes</div>;
   }

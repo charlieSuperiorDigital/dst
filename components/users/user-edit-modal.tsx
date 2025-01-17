@@ -56,7 +56,7 @@ export function UserEditModal({
     setEditedUser(null);
     setShowPassword(false);
     if (user) {
-      user.password = "";  // Clear the password in the parent state
+      user.password = ""; // Clear the password in the parent state
     }
     onClose();
   };
@@ -69,7 +69,7 @@ export function UserEditModal({
         <DialogHeader>
           <DialogTitle>Edit User Details</DialogTitle>
           <DialogDescription>
-            Make changes to the user's information below.
+            <p>It&apos;s important to escape single quotes in JSX.</p>
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">

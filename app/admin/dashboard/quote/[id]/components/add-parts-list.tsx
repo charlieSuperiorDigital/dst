@@ -37,7 +37,7 @@ type Props = {
   onAdd: (part: Part, qty: number) => void;
 };
 
-export function PartsDialog({ onAdd }: Props) {
+export function AddPartList({ onAdd }: Props) {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);

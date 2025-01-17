@@ -18,7 +18,8 @@ import { apiRequest } from "@/utils/client-side-api";
 
 const initialParts: Part[] = [
   {
-    id: 1,
+    id: "1",
+    partNumber: "445-312-42",
     description: "445-312-42 Frame, boxed both legs 164/164, w/ WRR, WPP4",
     colorId: 1,
     color: {
@@ -34,7 +35,8 @@ const initialParts: Part[] = [
     laborEA: 0.1,
   },
   {
-    id: 2,
+    id: "2",
+    partNumber: "823-124-18",
     description: "823-124-18 Frame, single leg, w/ WRR, WPP3",
     colorId: 2,
     color: {
@@ -50,7 +52,8 @@ const initialParts: Part[] = [
     laborEA: 0.12,
   },
   {
-    id: 3,
+    id: "3",
+    partNumber: "111-11",
     description: "912-812-78 Frame, boxed triple legs 200/200, w/ WRR, WPP5",
     colorId: 3,
     color: {
@@ -66,7 +69,8 @@ const initialParts: Part[] = [
     laborEA: 0.15,
   },
   {
-    id: 4,
+    id: "4",
+    partNumber: "645-928-31",
     description: "645-928-31 Frame, boxed dual legs 150/150, w/ WRR, WPP2",
     colorId: 4,
     color: {
@@ -82,7 +86,8 @@ const initialParts: Part[] = [
     laborEA: 0.11,
   },
   {
-    id: 5,
+    id: "5",
+    partNumber: "13123-123",
     description: "322-675-90 Frame, single leg, w/ WRR, WPP1",
     colorId: 5,
     color: {
@@ -117,7 +122,7 @@ const FrameLineDefinitionTable = () => {
   }>({});
 
   const handleQuantityChange = (
-    partId: number,
+    partId: string,
     bayId: number,
     quantity: number
   ) => {
