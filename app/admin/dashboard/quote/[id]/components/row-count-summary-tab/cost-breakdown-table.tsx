@@ -8,30 +8,89 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { CostItem, MarginTax } from "./row-count-summary";
 
-interface CostItem {
-  item: string;
-  price: number;
-  highlight?: boolean;
-  note?: string;
-}
+type Props = {
+  marginTaxes: MarginTax[];
+  costItems: CostItem[];
+  setCostItems: (costItems: CostItem[]) => void;
+};
 
-export default function CostBreakdownTable() {
-  const costItems: CostItem[] = [
-    { item: "Material", price: 0 },
-    { item: "Freight", price: 19618, highlight: true },
-    { item: "Installation (non union)", price: 62750, highlight: true },
-    { item: "Rentals", price: 8900 },
-    { item: "Sales Tax 8.25%", price: 7761 },
-    {
-      item: "Calculations",
-      price: 2800,
-      note: "Permits Cost Plus 10%",
-      highlight: true,
-    },
-  ];
+export default function CostBreakdownTable({
+  marginTaxes,
+  costItems,
+  setCostItems,
+}: Props) {
+  const handlePriceChange = (index: number, newPrice: string) => {
+    const updatedItems = [...costItems];
+    updatedItems[index].price = parseFloat(newPrice) || 0;
+    setCostItems(updatedItems);
+  };
 
-  const total = costItems.reduce((sum, item) => sum + item.price, 0);
+  // Calculate total and additional costs based on marginTaxes
+  const calculateWithMargins = () => {
+    let totalBeforeTaxes = 0;
+    let totalSalesTax = 0;
+    let totalTaxableSales = 0;
+
+    const updatedItems = costItems.map((item) => {
+      let taxAmount = 0;
+
+      if (item.item.toLowerCase().includes("material")) {
+        // Apply Material Margin
+        const materialMargin = marginTaxes.find((tax) =>
+          tax.name.toLowerCase().includes("material margin")
+        );
+        taxAmount = (item.price * (materialMargin?.price || 0)) / 100;
+      } else if (item.item.toLowerCase().includes("calculations")) {
+        // Apply Permits Cost Plus
+        const permitsCostPlus = marginTaxes.find((tax) =>
+          tax.name.toLowerCase().includes("permits cost plus")
+        );
+        taxAmount = (item.price * (permitsCostPlus?.price || 0)) / 100;
+      }
+
+      const totalWithTax = item.price + taxAmount;
+      totalBeforeTaxes += totalWithTax;
+
+      return {
+        ...item,
+        totalWithTax,
+      };
+    });
+
+    // Apply Sales Tax Rate
+    const salesTaxRate = marginTaxes.find((tax) =>
+      tax.name.toLowerCase().includes("sales tax rate")
+    );
+    totalSalesTax = (totalBeforeTaxes * (salesTaxRate?.price || 0)) / 100;
+
+    // Apply Taxable Sales
+    const taxableSalesRate = marginTaxes.find((tax) =>
+      tax.name.toLowerCase().includes("taxable sales")
+    );
+    totalTaxableSales =
+      (totalBeforeTaxes * (taxableSalesRate?.price || 0)) / 100;
+
+    const grandTotal = totalBeforeTaxes + totalSalesTax + totalTaxableSales;
+
+    return {
+      updatedItems,
+      totalBeforeTaxes,
+      totalSalesTax,
+      totalTaxableSales,
+      grandTotal,
+    };
+  };
+
+  const {
+    updatedItems,
+    totalBeforeTaxes,
+    totalSalesTax,
+    totalTaxableSales,
+    grandTotal,
+  } = calculateWithMargins();
 
   return (
     <div className="container mx-auto p-6 max-w-3xl">
@@ -40,23 +99,49 @@ export default function CostBreakdownTable() {
           <TableRow>
             <TableHead className="w-[200px]">Item</TableHead>
             <TableHead className="text-right">Price</TableHead>
+            <TableHead className="text-right">Total w/ Margin or Tax</TableHead>
             <TableHead className="w-[300px]"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {costItems.map((item, index) => (
+          {updatedItems.map((item, index) => (
             <TableRow key={index}>
               <TableCell className="font-medium">{item.item}</TableCell>
               <TableCell className="text-right">
-                ${item.price.toLocaleString()}
+                <Input
+                  type="number"
+                  value={item.price}
+                  onChange={(e) => handlePriceChange(index, e.target.value)}
+                  className="w-32 text-right"
+                />
+              </TableCell>
+              <TableCell className="text-right">
+                ${item.totalWithTax.toLocaleString()}
               </TableCell>
               <TableCell>{item.note}</TableCell>
             </TableRow>
           ))}
           <TableRow className="font-bold">
-            <TableCell>TOTAL</TableCell>
+            <TableCell>Total Before Taxes</TableCell>
+            <TableCell></TableCell>
             <TableCell className="text-right">
-              ${total.toLocaleString()}
+              ${totalBeforeTaxes.toLocaleString()}
+            </TableCell>
+            <TableCell></TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell>Sales Tax</TableCell>
+            <TableCell></TableCell>
+            <TableCell className="text-right">
+              ${totalSalesTax.toLocaleString()}
+            </TableCell>
+            <TableCell></TableCell>
+          </TableRow>
+          <TableRow className="font-bold">
+            <TableCell>Grand Total</TableCell>
+            <TableCell></TableCell>
+            <TableCell className="text-right">
+              ${grandTotal.toLocaleString()}
             </TableCell>
             <TableCell></TableCell>
           </TableRow>

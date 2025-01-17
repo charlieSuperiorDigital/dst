@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Table,
   TableBody,
@@ -8,30 +9,24 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useState } from "react";
+import { Input } from "@/components/ui/input";
 
-interface MarginTaxes {
+interface MarginTax {
   name: string;
   price: number;
 }
 
-const mockMarginTaxes: MarginTaxes[] = [
-  {
-    name: "Material Margin",
-    price: 15, // 15%
-  },
-  {
-    name: "Sales Tax Rate",
-    price: 20.5, // 20.5%
-  },
-  {
-    name: "Taxable Sales",
-    price: 5.75, // 5.75%
-  },
-];
+type Props = {
+  marginTaxes: MarginTax[];
+  setMarginTaxes: (marginTaxes: MarginTax[]) => void;
+};
 
-export default function MarginTaxes() {
-  const [marginTaxes] = useState<MarginTaxes[]>(mockMarginTaxes);
+export default function MarginTaxes({ marginTaxes, setMarginTaxes }: Props) {
+  const handlePriceChange = (index: number, newPrice: string) => {
+    const updatedMarginTaxes = [...marginTaxes];
+    updatedMarginTaxes[index].price = parseFloat(newPrice) || 0;
+    setMarginTaxes(updatedMarginTaxes);
+  };
 
   return (
     <div className="container mx-auto p-6 max-w-3xl">
@@ -43,10 +38,20 @@ export default function MarginTaxes() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {marginTaxes.map((marginTaxe, index) => (
+          {marginTaxes.map((marginTax, index) => (
             <TableRow key={index}>
-              <TableCell className="font-medium">{marginTaxe.name}</TableCell>
-              <TableCell>{marginTaxe.price.toFixed(2)}%</TableCell>
+              <TableCell className="font-medium">{marginTax.name}</TableCell>
+              <TableCell>
+                <Input
+                  type="number"
+                  value={marginTax.price}
+                  onChange={(e) => handlePriceChange(index, e.target.value)}
+                  className="w-24"
+                  step="0.01"
+                  min="0"
+                  max="100"
+                />
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
