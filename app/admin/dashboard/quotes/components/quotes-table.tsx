@@ -160,7 +160,7 @@ export function QuotesTable({ initialQuotes }: ExtensibleTableProps) {
         <form onSubmit={handleSearch} className="flex gap-2">
           <Input
             type="text"
-            placeholder="Search Quote Name..."
+            placeholder="Search Quotes..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-64"
@@ -168,13 +168,13 @@ export function QuotesTable({ initialQuotes }: ExtensibleTableProps) {
         </form>
         <Dialog>
           <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" /> Add New
+            <Button variant="success">
+              <Plus className="mr-2 h-4 w-4" /> Add Quote
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add New Item</DialogTitle>
+              <DialogTitle>Add New Quote</DialogTitle>
             </DialogHeader>
             <Form {...form}>
               <form
@@ -229,7 +229,7 @@ export function QuotesTable({ initialQuotes }: ExtensibleTableProps) {
               <TableRow
                 key={item.id}
                 onClick={(e) => handleRedirect(e, item)}
-                className="cursor-pointer"
+                className="cursor-pointer even:bg-gray-50 hover:bg-muted"
               >
                 <TableCell>{item.id}</TableCell>
                 <TableCell>{item.name}</TableCell>
@@ -240,11 +240,12 @@ export function QuotesTable({ initialQuotes }: ExtensibleTableProps) {
                     <Pencil
                       size={20}
                       onClick={(e) => handleEditOnClick(e, item)}
-                      className="cursor-pointer"
+                      className="cursor-pointer text-orange-500"
                     />
                     <Trash2
                       size={20}
                       onClick={(e) => handleRowDelete(e, item)}
+                      className="text-red-500"
                     />
                   </div>
                 </TableCell>
