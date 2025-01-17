@@ -16,6 +16,10 @@ const eslintConfig = [
     rules: {
       "@typescript-eslint/no-unused-vars": "warn",
       "react-hooks/exhaustive-deps": "warn",
+      "@typescript-eslint/no-explicit-any": [
+        "error",
+        { fixToUnknown: false, ignoreRestArgs: false },
+      ],
     },
   },
 ];

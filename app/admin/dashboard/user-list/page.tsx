@@ -48,6 +48,10 @@ export default function UserListPage() {
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [errorState, setErrorState] = useState<ErrorState | null>(null);
 
+  const isError = (error: unknown): error is Error => {
+    return error instanceof Error;
+  };
+
   useEffect(() => {
     fetchUsers(search, page);
   }, [page, search]);
@@ -70,15 +74,27 @@ export default function UserListPage() {
         editedUser.password = "";
         handleCloseModal();
       }
-    } catch (error: any) {
-      setErrorState({
-        title: "Error Updating User",
-        message: error.message || "Failed to update user. Please try again.",
-      });
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setErrorState({
+          title: "Error Updating User",
+          message: error.message || "Failed to update user. Please try again.",
+        });
+      } else {
+        setErrorState({
+          title: "Error Updating User",
+          message: "Failed to update user. Please try again.",
+        });
+      }
     }
   };
 
-  const handleRegisterUser = async (user: { fullName: string; email: string; password: string; confirmPassword: string }) => {
+  const handleRegisterUser = async (user: {
+    fullName: string;
+    email: string;
+    password: string;
+    confirmPassword: string;
+  }) => {
     try {
       const success = await registerUser(user);
       if (success) {
@@ -86,13 +102,21 @@ export default function UserListPage() {
         return true;
       }
       return false;
-    } catch (error: any) {
-      setErrorState({
-        title: "Error Creating User",
-        message: error.message || "Failed to create user. Please try again.",
-      });
-      return false;
+    } catch (error: unknown) {
+      if (isError(error)) {
+        setErrorState({
+          title: "Error Registering User",
+          message:
+            error.message || "Failed to register user. Please try again.",
+        });
+      } else {
+        setErrorState({
+          title: "Error Registering User",
+          message: "Failed to register user. Please try again.",
+        });
+      }
     }
+    return false;
   };
 
   const handleDeleteUser = async (e: React.MouseEvent, user: User) => {
@@ -107,11 +131,19 @@ export default function UserListPage() {
         if (success) {
           setUserToDelete(null);
         }
-      } catch (error: any) {
-        setErrorState({
-          title: "Error Deleting User",
-          message: error.message || "Failed to delete user. Please try again.",
-        });
+      } catch (error: unknown) {
+        if (isError(error)) {
+          setErrorState({
+            title: "Error Deleting User",
+            message:
+              error.message || "Failed to delete user. Please try again.",
+          });
+        } else {
+          setErrorState({
+            title: "Error Deleting User",
+            message: "Failed to delete user. Please try again.",
+          });
+        }
       }
     }
   };
@@ -127,7 +159,18 @@ export default function UserListPage() {
             className="w-64"
           />
         </form>
-        <Button variant="success" onClick={() => handleUserClick({ id: '', fullName: '', email: '', active: true, verified: false })}>
+        <Button
+          variant="success"
+          onClick={() =>
+            handleUserClick({
+              id: "",
+              fullName: "",
+              email: "",
+              active: true,
+              verified: false,
+            })
+          }
+        >
           <Plus className="mr-2 h-4 w-4" /> Add User
         </Button>
       </div>
@@ -172,7 +215,9 @@ export default function UserListPage() {
                             {user.fullName.charAt(0)}
                           </span>
                         </div>
-                        <CardTitle className="text-base">{user.fullName}</CardTitle>
+                        <CardTitle className="text-base">
+                          {user.fullName}
+                        </CardTitle>
                       </div>
                     </CardHeader>
                     <CardContent className="p-4 pt-0">
