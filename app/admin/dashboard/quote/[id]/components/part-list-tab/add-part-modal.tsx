@@ -28,13 +28,13 @@ import { Part } from "@/app/entities/Part";
 
 const formSchema = z.object({
   partId: z.string().min(1, "Please select a part"),
-  quantity: z.number().min(1, "Quantity must be at least 1"),
+  partNumber: z.string().min(1, "Please enter a part number"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 type Props = {
-  onAdd: (part: Part, qty: number) => void;
+  onAdd: (part: Part, partNumber: string) => void;
 };
 
 export function PartsDialog({ onAdd }: Props) {
@@ -48,7 +48,7 @@ export function PartsDialog({ onAdd }: Props) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       partId: "",
-      quantity: 1,
+      partNumber: "",
     },
   });
 
@@ -62,7 +62,7 @@ export function PartsDialog({ onAdd }: Props) {
         method: "get",
         url: `/api/PartLibrary/1/10?search=${encodeURIComponent(query)}`,
       });
-      console.log("Parts response:", response);
+
       setFilteredParts(response.parts);
       setLoading(false);
     } else {
@@ -79,7 +79,7 @@ export function PartsDialog({ onAdd }: Props) {
 
   const handleAdd = (values: FormValues) => {
     if (selectedPart) {
-      onAdd(selectedPart, values.quantity);
+      onAdd(selectedPart, values.partNumber);
     }
     setOpen(false);
   };
@@ -141,18 +141,17 @@ export function PartsDialog({ onAdd }: Props) {
               )}
             />
 
-            {/* Quantity Field */}
             <FormField
               control={form.control}
-              name="quantity"
+              name="partNumber"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Quantity</FormLabel>
+                  <FormLabel>Part Number</FormLabel>
                   <FormControl>
                     <Input
-                      type="number"
+                      type="text"
                       {...field}
-                      onChange={(e) => field.onChange(Number(e.target.value))}
+                      onChange={(e) => field.onChange(e.target.value)}
                     />
                   </FormControl>
                   <FormMessage />

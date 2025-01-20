@@ -13,19 +13,23 @@ import FlueCounts from "./flue-count-tab/flue-count";
 import RownCountSummary from "./row-count-summary-tab/row-count-summary";
 import RowCounts from "./row-count-tab/row-counts-table";
 import MiscCount from "./misc-count-tab/misc-count";
+import { PartList } from "@/app/entities/PartList";
 
 type Props = {
   quoteId: string;
+  parts: PartList[];
 };
 
-const QuoteClientSide = ({ quoteId }: Props) => {
+const QuoteClientSide = ({ quoteId, parts }: Props) => {
   const searchParams = useSearchParams();
   const tab = searchParams.get("tab");
   return (
     <div>
       {tab === "summary" && <RownCountSummary />}
       {tab === "row-count" && <RowCounts quoteId={quoteId} />}
-      {tab === "part-list" && <PartsListTable />}
+      {tab === "part-list" && (
+        <PartsListTable intialParts={parts} quoteId={quoteId} />
+      )}
       {tab === "receiving" && <ReceivingTable />}
       {tab === "installation" && <InstallationTable />}
       {tab === "bay-definitions" && <BayDefinitionTable />}

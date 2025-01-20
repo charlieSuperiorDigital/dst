@@ -16,7 +16,8 @@ import { Input } from "@/components/ui/input";
 import { PartsDialog } from "./add-part-modal";
 import { Part } from "@/app/entities/Part";
 import { paintTypes } from "@/app/entities/colors-enum";
-import { Button } from "@/components/ui/button";
+import { toast } from "@/hooks/use-toast";
+import { apiRequest } from "@/utils/client-side-api";
 
 // const initialParts: PartList[] = [
 //   {
@@ -98,12 +99,27 @@ import { Button } from "@/components/ui/button";
 
 const materialMargin = 0.2;
 
-export default function PartsListTable() {
-  const [parts, setParts] = useState<PartList[]>([]);
-  const [filteredParts, setFilteredParts] = useState<PartList[]>([]);
+interface Props {
+  intialParts: PartList[];
+  quoteId: string;
+}
+
+export default function PartsListTable({ intialParts, quoteId }: Props) {
+  const [parts, setParts] = useState<PartList[]>(intialParts);
+  const [filteredParts, setFilteredParts] = useState<PartList[]>(intialParts);
   const [selectedPart, setSelectedPart] = useState<PartList | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+
+  const fetchParts = async () => {
+    const response = await apiRequest({
+      method: "get",
+      url: `/api/Part/PartsFromQuotation/${quoteId}`,
+    });
+
+    console.log("responseDELFEtch", response.parts);
+    setFilteredParts(response.parts);
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,70 +134,82 @@ export default function PartsListTable() {
     setIsDialogOpen(true);
   };
 
-  const handleSave = (updatedPart: PartList) => {
-    setParts(
-      parts.map((part) => (part.id === updatedPart.id ? updatedPart : part))
-    );
+  const handleSave = async (updatedPart: PartList) => {
+    try {
+      await apiRequest({
+        method: "put",
+        url: `/api/part`,
+        data: updatedPart,
+      });
+      await fetchParts();
+
+      toast({
+        title: "Details Updated",
+        description: "Details have been updated successfully",
+      });
+    } catch (error) {
+      console.log(error);
+      toast({
+        title: "Error",
+        description: "Error updating part details",
+        variant: "destructive",
+      });
+    }
   };
-  const handleDelete = (id: string) => {
-    setParts(parts.filter((part) => part.id !== id));
+  const handleDelete = async (part: PartList) => {
+    try {
+      await apiRequest({
+        method: "delete",
+        url: `/api/part/${part.id}`,
+      });
+      await fetchParts();
+      toast({
+        title: "Part Deleted",
+        description: "Part has been deleted successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Error deleting part",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleAdd = (part: Part, qty: number) => {
-    const partToAdd: PartList = {
-      ...part,
-      qty,
-    };
+  const handleAdd = async (part: Part, partNumber: string) => {
+    try {
+      await apiRequest({
+        method: "post",
+        url: `/api/part`,
+        data: {
+          partLibId: part.id,
+          quotationId: quoteId,
+          partNumber: partNumber,
+        },
+      });
 
-    setParts((prevParts) => {
-      const existingPartIndex = prevParts.findIndex((p) => p.id === part.id);
+      await fetchParts();
 
-      if (existingPartIndex !== -1) {
-        const updatedParts = [...prevParts];
-        updatedParts[existingPartIndex] = {
-          ...updatedParts[existingPartIndex],
-          qty: updatedParts[existingPartIndex].qty + qty,
-        };
-        return updatedParts;
-      } else {
-        return [
-          ...prevParts,
-          {
-            ...part,
-            qty,
-          },
-        ];
-      }
-    });
-    setFilteredParts((prevParts) => {
-      const existingPartIndex = prevParts.findIndex((p) => p.id === part.id);
-
-      if (existingPartIndex !== -1) {
-        const updatedParts = [...prevParts];
-        updatedParts[existingPartIndex] = {
-          ...updatedParts[existingPartIndex],
-          qty: updatedParts[existingPartIndex].qty + qty,
-        };
-        return updatedParts;
-      } else {
-        return [
-          ...prevParts,
-          {
-            ...part,
-            qty,
-          },
-        ];
-      }
-    });
+      toast({
+        title: "Part Added",
+        description: "Part has been added successfully",
+      });
+    } catch (error) {
+      console.error("Error adding part:", error);
+      toast({
+        title: "Error",
+        description: "Error adding part",
+        variant: "destructive",
+      });
+    }
   };
-  const handleSavePartList = async () => {};
 
   const totalSell = parts.reduce(
     (acc, part) =>
       acc +
       ((part.unitWeight * part.unitMatLb + part.unitLabor) /
         (1 - materialMargin)) *
-        part.qty,
+        (part.qty ?? 0),
     0
   );
 
@@ -211,7 +239,6 @@ export default function PartsListTable() {
           />
         </form>
         <div className=" flex gap-3">
-          <Button onClick={() => handleSavePartList}>Save</Button>
           <PartsDialog onAdd={handleAdd} />
         </div>
       </div>
@@ -248,7 +275,7 @@ export default function PartsListTable() {
               onClick={() => handleRowClick(part)}
             >
               <TableCell className="font-medium">{part.partNumber}</TableCell>
-              <TableCell>{part.qty}</TableCell>
+              <TableCell>{part.qty || 0}</TableCell>
               <TableCell>{part.description}</TableCell>
               <TableCell>
                 {paintTypes?.find((p) => p.id === part.colorId)?.name}
@@ -257,7 +284,7 @@ export default function PartsListTable() {
                 {part.unitWeight.toFixed(2)}
               </TableCell>
               <TableCell className="text-right">
-                {part.unitWeight * part.qty}
+                {part.unitWeight * (part.qty ?? 0)}
               </TableCell>
               {/* <TableCell className="text-right">{part.unitMatLb}</TableCell> */}
               <TableCell className="text-right">{part.unitLabor}</TableCell>
@@ -265,7 +292,9 @@ export default function PartsListTable() {
                 {formatCurrency(part.unitWeight + part.unitLabor)}
               </TableCell>
               <TableCell className="text-right">
-                {formatCurrency((part.unitWeight + part.unitLabor) * part.qty)}
+                {formatCurrency(
+                  (part.unitWeight + part.unitLabor) * (part.qty ?? 0)
+                )}
               </TableCell>
               <TableCell className="text-right">
                 {formatCurrency(
@@ -273,13 +302,12 @@ export default function PartsListTable() {
                 )}
               </TableCell>
               <TableCell className="text-right">
-                {(part.qty * part.laborEA).toFixed(2)}
+                {(part.qty || 0 * part.laborEA).toFixed(2)}
               </TableCell>
               <TableCell className="text-right">
-                {" "}
                 {formatCurrency(
                   ((part.unitWeight + part.unitLabor) / (1 - materialMargin)) *
-                    part.qty
+                    (part.qty ?? 0)
                 )}
               </TableCell>
             </TableRow>
