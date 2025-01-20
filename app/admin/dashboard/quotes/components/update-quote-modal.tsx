@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
 import { Quotes, QuotesStatus } from "@/app/entities/Quotes";
 import { QuotesStatusDropdown } from "./status-quote-dropdown";
+import { UserDropdown } from "./user-dropdow";
 
 interface EditQuoteDialogProps {
   quote: Quotes | null;
@@ -69,17 +70,14 @@ export function UpdateQuoteModal({
             <Label htmlFor="unitWeight" className="text-right">
               Responsable
             </Label>
-            <Input
-              id=""
-              type="text"
+            <UserDropdown
               value={editedPart.responsible}
-              onChange={(e) =>
-                setEditedPart({
-                  ...editedPart,
-                  responsible: e.target.value,
-                })
-              }
-              className="col-span-3"
+              onChange={(reponsable) => {
+                setEditedPart((prevState) => ({
+                  ...prevState!,
+                  responsible: reponsable,
+                }));
+              }}
             />
           </div>
         </div>

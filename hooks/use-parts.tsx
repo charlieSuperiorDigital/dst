@@ -10,7 +10,7 @@ export const useParts = (initialPartsResponse) => {
     try {
       const response = await apiRequest({
         method: "get",
-        url: `/api/part/${page}/15?search=${search}`,
+        url: `/api/PartLibrary/${page}/15?search=${search}`,
       });
 
       console.log("Parts response:", response);

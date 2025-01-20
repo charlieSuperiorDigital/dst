@@ -7,7 +7,7 @@ interface ApiRequestOptions {
   headers?: Record<string, string>;
 }
 
-interface User {
+export interface User {
   id: string;
   fullName: string;
   email: string;
@@ -50,16 +50,26 @@ export const apiRequest = async <T = any>({
   } catch (error: any) {
     console.error("API Request Error:", error);
     if (error.response?.data) {
-      throw new Error(typeof error.response.data === 'string' ? error.response.data : JSON.stringify(error.response.data));
+      throw new Error(
+        typeof error.response.data === "string"
+          ? error.response.data
+          : JSON.stringify(error.response.data)
+      );
     }
     throw error;
   }
 };
 
-export const getUserList = async (search: string = "", page: number = 1, perpage: number = 12): Promise<PaginatedUsers> => {
+export const getUserList = async (
+  search: string = "",
+  page: number = 1,
+  perpage: number = 12
+): Promise<PaginatedUsers> => {
   return apiRequest({
     method: "get",
-    url: `/User/UserList?search=${encodeURIComponent(search)}&page=${page}&perpage=${perpage}`,
+    url: `/User/UserList?search=${encodeURIComponent(
+      search
+    )}&page=${page}&perpage=${perpage}`,
   });
 };
 
