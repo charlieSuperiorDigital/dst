@@ -68,7 +68,7 @@ export function UpdateQuoteModal({
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="unitWeight" className="text-right">
-              Responsable
+              Author
             </Label>
             <UserDropdown
               value={editedPart.responsible}

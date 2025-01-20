@@ -100,6 +100,7 @@ const materialMargin = 0.2;
 
 export default function PartsListTable() {
   const [parts, setParts] = useState<PartList[]>([]);
+  const [filteredParts, setFilteredParts] = useState<PartList[]>([]);
   const [selectedPart, setSelectedPart] = useState<PartList | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -152,6 +153,26 @@ export default function PartsListTable() {
         ];
       }
     });
+    setFilteredParts((prevParts) => {
+      const existingPartIndex = prevParts.findIndex((p) => p.id === part.id);
+
+      if (existingPartIndex !== -1) {
+        const updatedParts = [...prevParts];
+        updatedParts[existingPartIndex] = {
+          ...updatedParts[existingPartIndex],
+          qty: updatedParts[existingPartIndex].qty + qty,
+        };
+        return updatedParts;
+      } else {
+        return [
+          ...prevParts,
+          {
+            ...part,
+            qty,
+          },
+        ];
+      }
+    });
   };
   const handleSavePartList = async () => {};
 
@@ -164,6 +185,19 @@ export default function PartsListTable() {
     0
   );
 
+  const handleSearchPartlist = (search: string) => {
+    setSearchTerm(search);
+
+    if (search.trim() === "") {
+      setFilteredParts(parts);
+      return;
+    }
+
+    const filteredParts = parts.filter((part) =>
+      part.description.toLowerCase().includes(search.toLowerCase())
+    );
+    setFilteredParts(filteredParts);
+  };
   return (
     <div className="rounded-md border">
       <div className="flex justify-between items-center p-4">
@@ -172,7 +206,7 @@ export default function PartsListTable() {
             type="text"
             placeholder="Search part..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => handleSearchPartlist(e.target.value)}
             className="w-64"
           />
         </form>
@@ -207,7 +241,7 @@ export default function PartsListTable() {
           </div>
         </TableCell>
         <TableBody>
-          {parts.map((part) => (
+          {filteredParts.map((part) => (
             <TableRow
               key={part.id}
               className="cursor-pointer hover:bg-muted"

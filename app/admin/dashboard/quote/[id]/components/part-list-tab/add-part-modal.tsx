@@ -55,12 +55,14 @@ export function PartsDialog({ onAdd }: Props) {
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
     setSelectedPart(null);
+
     if (query) {
       setLoading(true);
       const response = await apiRequest({
         method: "get",
-        url: `/api/part/1/10?search=${query}`,
+        url: `/api/PartLibrary/1/10?search=${encodeURIComponent(query)}`,
       });
+      console.log("Parts response:", response);
       setFilteredParts(response.parts);
       setLoading(false);
     } else {
