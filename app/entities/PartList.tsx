@@ -3,7 +3,7 @@ import { Color } from "./color";
 export interface PartList {
   id: string;
   partNumber: string;
-  qty: number;
+  qty?: number;
   description: string;
   color: Color | null;
   colorId: number;
@@ -14,4 +14,5 @@ export interface PartList {
   unitSell: number;
   totalSell?: number;
   laborEA: number;
+  quotationId: string;
 }

@@ -1,6 +1,7 @@
 import QuoteClientSide from "./components/quote-client-side";
 import QuoteHeader from "./components/quote-header";
 import { getSingleQuote } from "./lib/get-single-quote";
+import { getSingleQuoteData } from "./lib/get-single-quote-data";
 
 export default async function Page({
   params,
@@ -9,6 +10,7 @@ export default async function Page({
 }) {
   const id = (await params).id;
   const quote = await getSingleQuote(id);
+  const quoteData = await getSingleQuoteData(id);
 
   if (!quote.result) {
     return <div>Quote not found</div>;
@@ -17,7 +19,7 @@ export default async function Page({
   return (
     <div>
       <QuoteHeader quote={quote.result} />
-      <QuoteClientSide quoteId={id} />
+      <QuoteClientSide quoteId={id} parts={quoteData.result.parts} />
     </div>
   );
 }
