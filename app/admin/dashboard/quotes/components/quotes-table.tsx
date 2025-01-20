@@ -1,5 +1,5 @@
 "use client";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2, User } from "lucide-react";
 import { useForm } from "react-hook-form";
 import {
   Table,
@@ -42,6 +42,7 @@ import { useQuotes } from "@/hooks/user-quotes";
 import { useState } from "react";
 import { UpdateQuoteModal } from "./update-quote-modal";
 import { useRouter } from "next/navigation";
+import { UserDropdown } from "./user-dropdow";
 
 interface ExtensibleTableProps {
   initialQuotes: PaginatedResponse<Quotes, "quotations">;
@@ -124,7 +125,7 @@ export function QuotesTable({ initialQuotes }: ExtensibleTableProps) {
     try {
       await apiRequest({
         method: "put",
-        url: `/api/quotation/${quote.id}/${quote.responsible}/${quote.name}/${quote.status}`,
+        url: `/api/quotation/${quote.id}/${quote.name}/${quote.responsible}/${quote.status}`,
       });
       toast({
         title: "Quote Updated",
@@ -199,9 +200,12 @@ export function QuotesTable({ initialQuotes }: ExtensibleTableProps) {
                   name="responsible"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Responsible</FormLabel>
+                      <FormLabel>Author</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <UserDropdown
+                          value={field.value}
+                          onChange={field.onChange}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -219,7 +223,7 @@ export function QuotesTable({ initialQuotes }: ExtensibleTableProps) {
             <TableRow>
               <TableHead>Id</TableHead>
               <TableHead>Name</TableHead>
-              <TableHead>Responsible</TableHead>
+              <TableHead>Author</TableHead>
               <TableHead>Status</TableHead>
               <TableHead> - </TableHead>
             </TableRow>

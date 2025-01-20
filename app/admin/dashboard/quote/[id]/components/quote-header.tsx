@@ -15,9 +15,7 @@ const QuoteHeader = ({ quote }: Props) => {
           <p className="text-sm text-gray-500">Project Number: {quote.id}</p>
         </div>
         <div className="text-center sm:text-left">
-          <p className="text-sm font-medium text-gray-600">
-            Project Responsible
-          </p>
+          <p className="text-sm font-medium text-gray-600">Author</p>
           <p className="text-lg font-semibold text-gray-800">
             {quote.responsible}
           </p>

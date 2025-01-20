@@ -1,11 +1,11 @@
 import { adaptRequest } from "@/adapters/axios-request-adapter";
-import { Part } from "@/app/entities/Part";
 import { PaginatedResponse } from "@/app/entities/Paginate-Response-Base";
+import { Quotes } from "@/app/entities/Quotes";
 import { getServerSideApiClient } from "@/utils/server-side-api-client";
 
-export const getAllParts = async () => {
+export const getAllUsers = async () => {
   const apiClient = await getServerSideApiClient();
-  return adaptRequest<PaginatedResponse<Part, "parts">>(
-    apiClient.get("/api/PartLibrary/1/15")
+  return adaptRequest<PaginatedResponse<Quotes, "users">>(
+    apiClient.get("/api/User/UserList?page=1&perpage=100")
   );
 };

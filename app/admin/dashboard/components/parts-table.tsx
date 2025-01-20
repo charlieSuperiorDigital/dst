@@ -63,7 +63,7 @@ export default function PartsTable({ initialPartsResponse }: Props) {
     try {
       await apiRequest({
         method: "put",
-        url: `/api/part`,
+        url: `/api/PartLibrary`,
         data: updatedPart,
       });
       fetchParts(currentPage, searchTerm);
@@ -76,7 +76,7 @@ export default function PartsTable({ initialPartsResponse }: Props) {
     try {
       await apiRequest<number>({
         method: "post",
-        url: "/api/part",
+        url: "/api/PartLibrary",
         data: newPart,
       });
       fetchParts(currentPage, searchTerm);
@@ -88,7 +88,7 @@ export default function PartsTable({ initialPartsResponse }: Props) {
     try {
       await apiRequest({
         method: "delete",
-        url: `/api/part/${part.id}`,
+        url: `/api/PartLibrary/${part.id}`,
       });
       fetchParts(currentPage, searchTerm);
     } catch (error) {
@@ -182,9 +182,9 @@ export default function PartsTable({ initialPartsResponse }: Props) {
                 <TableCell className="text-right">{part.laborEA}</TableCell>
 
                 <TableCell className="text-left">
-                  <Trash2 
-                    size={20} 
-                    onClick={(e) => handleRowDelete(e, part)} 
+                  <Trash2
+                    size={20}
+                    onClick={(e) => handleRowDelete(e, part)}
                     className="text-red-500"
                   />
                 </TableCell>
