@@ -107,15 +107,15 @@ const InstallationTable = () => {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[100px]">Rows No.</TableHead>
-            <TableHead>Bays Required</TableHead>
-            <TableHead>Bays Installed</TableHead>
-            <TableHead>Bays Remaining</TableHead>
+            <TableHead className="w-[100px] border">Rows No.</TableHead>
+            <TableHead className="border">Bays Required</TableHead>
+            <TableHead className="border">Bays Installed</TableHead>
+            <TableHead className="border">Bays Remaining</TableHead>
             {days.map((day) => (
               <TableHead
                 key={day.id}
                 onClick={() => handleEditOpenModal(day)}
-                className="cursor-pointer"
+                className="cursor-pointer border"
               >
                 Day {day.id}
               </TableHead>
@@ -124,13 +124,15 @@ const InstallationTable = () => {
         </TableHeader>
         <TableBody>
           {rows.map((row) => (
-            <TableRow key={row.id} className="cursor-pointer">
-              <TableCell>Row-{row.id}</TableCell>
-              <TableCell>{row.baysRequired}</TableCell>
-              <TableCell>{row.baysInstalled}</TableCell>
-              <TableCell>{calculateBaysRemaining(row)}</TableCell>
+            <TableRow key={row.id} className="cursor-pointer border">
+              <TableCell className="border">Row-{row.id}</TableCell>
+              <TableCell className="border">{row.baysRequired}</TableCell>
+              <TableCell className="border">{row.baysInstalled}</TableCell>
+              <TableCell className="border">
+                {calculateBaysRemaining(row)}
+              </TableCell>
               {days.map((day) => (
-                <TableCell key={`${day.id}-${row.id}`}>
+                <TableCell key={`${day.id}-${row.id}`} className="border">
                   <Input
                     type="number"
                     value={receivedQuantities[day.id]?.[row.id] || 0}

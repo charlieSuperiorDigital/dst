@@ -243,25 +243,25 @@ export default function PartsListTable({ intialParts, quoteId }: Props) {
         </div>
       </div>
       <Table>
-        <TableHeader>
+        <TableHeader className="border">
           <TableRow>
             {/* <TableHead className="w-[100px]">Total</TableHead> */}
-            <TableHead className="w-[100px]">Part No.</TableHead>
-            <TableHead>Qty</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead>Color</TableHead>
-            <TableHead className="text-right">Unit Weight</TableHead>
-            <TableHead className="text-right">Total Weight</TableHead>
+            <TableHead className="w-[100px] border ">Part No.</TableHead>
+            <TableHead className="border">Qty</TableHead>
+            <TableHead className="border">Description</TableHead>
+            <TableHead className="border">Color</TableHead>
+            <TableHead className="border text-right">Unit Weight</TableHead>
+            <TableHead className=" border text-right">Total Weight</TableHead>
             {/* <TableHead className="text-right">Unit Mat/lb</TableHead> */}
-            <TableHead className="text-right">Unit Labor</TableHead>
-            <TableHead className="text-right">Unit Cost</TableHead>
-            <TableHead className="text-right">Total Cost</TableHead>
-            <TableHead className="text-right">Unit Sell</TableHead>
-            <TableHead className="text-right">Total Man Hours</TableHead>
-            <TableHead className="text-right">Total Sell</TableHead>
+            <TableHead className="text-right border">Unit Labor</TableHead>
+            <TableHead className="text-right border">Unit Cost</TableHead>
+            <TableHead className="text-right border">Total Cost</TableHead>
+            <TableHead className="text-right border">Unit Sell</TableHead>
+            <TableHead className="text-right border">Total Man Hours</TableHead>
+            <TableHead className="text-right border">Total Sell</TableHead>
           </TableRow>
         </TableHeader>
-        <TableCell className="font-medium  bg-blue-200">
+        <TableCell className="font-medium  bg-blue-200 border">
           <div className="flex">
             <p>Total:</p>
             {formatCurrency(totalSell)}
@@ -271,40 +271,44 @@ export default function PartsListTable({ intialParts, quoteId }: Props) {
           {filteredParts.map((part) => (
             <TableRow
               key={part.id}
-              className="cursor-pointer hover:bg-muted"
+              className="cursor-pointer hover:bg-muted border"
               onClick={() => handleRowClick(part)}
             >
-              <TableCell className="font-medium">{part.partNumber}</TableCell>
-              <TableCell>{part.qty || 0}</TableCell>
-              <TableCell>{part.description}</TableCell>
-              <TableCell>
+              <TableCell className="font-medium border">
+                {part.partNumber}
+              </TableCell>
+              <TableCell className="border">{part.qty || 0}</TableCell>
+              <TableCell className="border">{part.description}</TableCell>
+              <TableCell className="border">
                 {paintTypes?.find((p) => p.id === part.colorId)?.name}
               </TableCell>
-              <TableCell className="text-right">
+              <TableCell className="text-right border">
                 {part.unitWeight.toFixed(2)}
               </TableCell>
-              <TableCell className="text-right">
+              <TableCell className="text-right border">
                 {part.unitWeight * (part.qty ?? 0)}
               </TableCell>
               {/* <TableCell className="text-right">{part.unitMatLb}</TableCell> */}
-              <TableCell className="text-right">{part.unitLabor}</TableCell>
-              <TableCell className="text-right">
+              <TableCell className="text-right border">
+                {part.unitLabor}
+              </TableCell>
+              <TableCell className="text-right border">
                 {formatCurrency(part.unitWeight + part.unitLabor)}
               </TableCell>
-              <TableCell className="text-right">
+              <TableCell className="text-right border">
                 {formatCurrency(
                   (part.unitWeight + part.unitLabor) * (part.qty ?? 0)
                 )}
               </TableCell>
-              <TableCell className="text-right">
+              <TableCell className="text-right border">
                 {formatCurrency(
                   (part.unitWeight + part.unitLabor) / (1 - materialMargin)
                 )}
               </TableCell>
-              <TableCell className="text-right">
+              <TableCell className="text-right border">
                 {(part.qty || 0 * part.laborEA).toFixed(2)}
               </TableCell>
-              <TableCell className="text-right">
+              <TableCell className="text-right border">
                 {formatCurrency(
                   ((part.unitWeight + part.unitLabor) / (1 - materialMargin)) *
                     (part.qty ?? 0)

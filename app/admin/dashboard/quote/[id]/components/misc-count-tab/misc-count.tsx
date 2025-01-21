@@ -10,11 +10,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { AddBayDefinitonTab } from "../bay-definition-tab/add-bay-definition";
 import { Button } from "@/components/ui/button";
-import { apiRequest } from "@/utils/client-side-api";
+
 import { AddPartList } from "../add-parts-list";
-import { set } from "react-hook-form";
+
 import { Part } from "@/app/entities/Part";
 
 type Row = {
@@ -70,13 +69,13 @@ const MiscCount = () => {
         </Button>
       </div>
       <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[200px]">Part Nro</TableHead>
-            <TableHead className="w-[200px]">Description</TableHead>
-            <TableHead className="w-[100px]">Total</TableHead>
+        <TableHeader className="border">
+          <TableRow className="border">
+            <TableHead className="w-[200px] border">Part Nro</TableHead>
+            <TableHead className="w-[200px] border">Description</TableHead>
+            <TableHead className="w-[100px] border">Total</TableHead>
             {mockRows.map((row) => (
-              <TableHead key={row.id} className="text-center">
+              <TableHead key={row.id} className="text-center border">
                 {row.name}
               </TableHead>
             ))}
@@ -84,15 +83,17 @@ const MiscCount = () => {
         </TableHeader>
         <TableBody>
           {misc.map((misc) => (
-            <TableRow key={misc.id}>
-              <TableCell className="font-medium">{misc.id}</TableCell>
-              <TableCell className="font-medium">{misc.description}</TableCell>
+            <TableRow key={misc.id} className="border">
+              <TableCell className="font-medium border">{misc.id}</TableCell>
+              <TableCell className="font-medium border">
+                {misc.description}
+              </TableCell>
 
-              <TableCell className="font-bold text-center">
+              <TableCell className="font-bold text-center border">
                 {calculateTotal(misc.id)}
               </TableCell>
               {rows.map((row) => (
-                <TableCell key={row.id} className="text-center">
+                <TableCell key={row.id} className="text-center border">
                   <Input
                     type="number"
                     className="w-16 mx-auto text-center"

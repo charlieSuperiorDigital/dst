@@ -65,7 +65,6 @@ export function QuotesTable({ initialQuotes }: ExtensibleTableProps) {
   const form = useForm<Quotes>({
     defaultValues: {
       name: "",
-      responsible: "",
     },
   });
 
@@ -195,22 +194,7 @@ export function QuotesTable({ initialQuotes }: ExtensibleTableProps) {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="responsible"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Author</FormLabel>
-                      <FormControl>
-                        <UserDropdown
-                          value={field.value}
-                          onChange={field.onChange}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+
                 <Button type="submit">Add</Button>
               </form>
             </Form>

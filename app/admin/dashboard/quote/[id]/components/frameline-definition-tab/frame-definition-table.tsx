@@ -201,13 +201,13 @@ const FrameLineDefinitionTable = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[100px]">Part No.</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Finish</TableHead>
+              <TableHead className="w-[100px] border">Part No.</TableHead>
+              <TableHead className="border">Description</TableHead>
+              <TableHead className="border">Finish</TableHead>
               {framelinesDefinition.map((bay) => (
                 <TableHead
                   key={bay.id}
-                  className="text-center"
+                  className="text-center border"
                   onClick={() => handleOpenUpdateModal(bay)}
                 >
                   {bay.name}
@@ -217,14 +217,14 @@ const FrameLineDefinitionTable = () => {
           </TableHeader>
           <TableBody>
             {parts.map((part) => (
-              <TableRow key={part.id}>
-                <TableCell>{part.id}</TableCell>
-                <TableCell>{part.description}</TableCell>
-                <TableCell>{part.color.name}</TableCell>
+              <TableRow key={part.id} className="border">
+                <TableCell className="border">{part.id}</TableCell>
+                <TableCell className="border">{part.description}</TableCell>
+                <TableCell className="border">{part.color.name}</TableCell>
                 {framelinesDefinition.map((bay) => (
                   <TableCell
                     key={`${bay.id}-${part.id}`}
-                    className="text-center"
+                    className="text-center border"
                   >
                     <Input
                       type="number"

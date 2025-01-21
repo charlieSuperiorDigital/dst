@@ -69,7 +69,7 @@ export function AddRowsTab({ onAdd }: Props) {
               name="quantity"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Quatinty:</FormLabel>
+                  <FormLabel>Quantity.:</FormLabel>
                   <FormControl>
                     <Input {...field} type="number" />
                   </FormControl>
