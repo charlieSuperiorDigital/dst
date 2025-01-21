@@ -81,12 +81,12 @@ const FlueCounts = () => {
         </Button>
       </div>
       <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[200px]">Flue Name</TableHead>
-            <TableHead className="w-[100px]">Total</TableHead>
+        <TableHeader className="border">
+          <TableRow className="border">
+            <TableHead className="w-[200px] border">Flue Name</TableHead>
+            <TableHead className="w-[100px] border">Total</TableHead>
             {mockRows.map((row) => (
-              <TableHead key={row.id} className="text-center">
+              <TableHead key={row.id} className="text-center border">
                 {row.name}
               </TableHead>
             ))}
@@ -94,13 +94,13 @@ const FlueCounts = () => {
         </TableHeader>
         <TableBody>
           {flueDefinition.map((bay) => (
-            <TableRow key={bay.id}>
-              <TableCell className="font-medium">{bay.name}</TableCell>
-              <TableCell className="font-bold text-center">
+            <TableRow key={bay.id} className="border">
+              <TableCell className="font-medium border">{bay.name}</TableCell>
+              <TableCell className="font-bold text-center border">
                 {calculateTotal(bay.id)}
               </TableCell>
               {rows.map((row) => (
-                <TableCell key={row.id} className="text-center">
+                <TableCell key={row.id} className="text-center border">
                   <Input
                     type="number"
                     className="w-16 mx-auto text-center"

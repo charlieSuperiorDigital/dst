@@ -16,10 +16,18 @@ export default async function Page({
     return <div>Quote not found</div>;
   }
 
+  const rowsWithData = quoteData.result?.rows || [];
+  const mappedrows = rowsWithData.map((row) => row.row);
+
   return (
     <div>
       <QuoteHeader quote={quote.result} />
-      <QuoteClientSide quoteId={id} parts={quoteData.result.parts} />
+      <QuoteClientSide
+        quoteId={id}
+        parts={quoteData.result.parts}
+        rows={mappedrows}
+        rowsWithData={rowsWithData}
+      />
     </div>
   );
 }

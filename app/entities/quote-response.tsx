@@ -10,7 +10,7 @@ type Frameline = {
   id: string;
   name: string;
 };
-type Row = {
+export type Row = {
   id: string;
   name: string;
   quotationId: string;
@@ -29,11 +29,11 @@ type framelinesWithQuantity = {
   quantity: number;
 };
 
-type RowWithDetails = {
-  row: Row;
-  bays: BayWithQuantity[];
-  flues: fluesWithQuantity[];
-  framelines: framelinesWithQuantity[];
+export type RowWithDetails = {
+  row: Row[];
+  bays?: BayWithQuantity[];
+  flues?: fluesWithQuantity[];
+  framelines?: framelinesWithQuantity[];
 };
 
 type Part = {

@@ -10,6 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
 
 interface MarginTax {
   name: string;
@@ -29,33 +30,35 @@ export default function MarginTaxes({ marginTaxes, setMarginTaxes }: Props) {
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-3xl">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[200px]">Name</TableHead>
-            <TableHead className="w-[100px]">%</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {marginTaxes.map((marginTax, index) => (
-            <TableRow key={index}>
-              <TableCell className="font-medium">{marginTax.name}</TableCell>
-              <TableCell>
-                <Input
-                  type="number"
-                  value={marginTax.price}
-                  onChange={(e) => handlePriceChange(index, e.target.value)}
-                  className="w-24"
-                  step="0.01"
-                  min="0"
-                  max="100"
-                />
-              </TableCell>
+    <Card className="w-[500px]">
+      <div className="container mx-auto p-6 max-w-3xl">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[200px]">Name</TableHead>
+              <TableHead className="w-[100px]">%</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+          </TableHeader>
+          <TableBody>
+            {marginTaxes.map((marginTax, index) => (
+              <TableRow key={index}>
+                <TableCell className="font-medium">{marginTax.name}</TableCell>
+                <TableCell>
+                  <Input
+                    type="number"
+                    value={marginTax.price}
+                    onChange={(e) => handlePriceChange(index, e.target.value)}
+                    className="w-24"
+                    step="0.01"
+                    min="0"
+                    max="100"
+                  />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </Card>
   );
 }

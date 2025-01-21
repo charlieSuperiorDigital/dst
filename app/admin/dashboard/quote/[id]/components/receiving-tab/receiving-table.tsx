@@ -163,18 +163,18 @@ const ReceivingTable = () => {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[100px]">Part No.</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead>Finish</TableHead>
-            <TableHead>Qty Required</TableHead>
-            <TableHead>Qty Ordered</TableHead>
-            <TableHead>Qty Received</TableHead>
-            <TableHead>Balance Due</TableHead>
+            <TableHead className="w-[100px] border">Part No.</TableHead>
+            <TableHead className="border">Description</TableHead>
+            <TableHead className="border">Finish</TableHead>
+            <TableHead className="border">Qty Required</TableHead>
+            <TableHead className="border">Qty Ordered</TableHead>
+            <TableHead className="border">Qty Received</TableHead>
+            <TableHead className="border">Balance Due</TableHead>
             {loads.map((load) => (
               <TableHead
                 key={load.id}
                 onClick={() => handleOpenModal(load)}
-                className="cursor-pointer"
+                className="cursor-pointer border"
               >
                 Load {load.id}
               </TableHead>
@@ -183,18 +183,25 @@ const ReceivingTable = () => {
         </TableHeader>
         <TableBody>
           {parts.map((part) => (
-            <TableRow key={part.id} className="cursor-pointer">
-              <TableCell>{part.id}</TableCell>
-              <TableCell onClick={() => handleOpenEditPart(part)}>
+            <TableRow key={part.id} className="cursor-pointer border">
+              <TableCell className="border">{part.id}</TableCell>
+              <TableCell
+                onClick={() => handleOpenEditPart(part)}
+                className="border"
+              >
                 {part.description}
               </TableCell>
-              <TableCell>-</TableCell>
-              <TableCell>{part.qtyRequired}</TableCell>
-              <TableCell>{part.qtyOrdered}</TableCell>
-              <TableCell>{calculateTotalReceived(part.id)}</TableCell>
-              <TableCell>{calculateBalanceDue(part)}</TableCell>
+              <TableCell className="border">-</TableCell>
+              <TableCell className="border">{part.qtyRequired}</TableCell>
+              <TableCell className="border">{part.qtyOrdered}</TableCell>
+              <TableCell className="border">
+                {calculateTotalReceived(part.id)}
+              </TableCell>
+              <TableCell className="border">
+                {calculateBalanceDue(part)}
+              </TableCell>
               {loads.map((load) => (
-                <TableCell key={`${part.id}-${load.id}`}>
+                <TableCell key={`${part.id}-${load.id}`} className="border">
                   <Input
                     type="number"
                     value={receivedQuantities[load.id]?.[part.id] || 0}

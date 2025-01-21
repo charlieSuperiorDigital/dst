@@ -1,7 +1,6 @@
 export type Quotes = {
   id: number;
   name: string;
-  responsible: string;
   creationDate: string;
   updateDate: string;
   status?: QuotesStatus;
