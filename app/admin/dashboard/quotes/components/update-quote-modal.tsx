@@ -66,20 +66,6 @@ export function UpdateQuoteModal({
               className="col-span-3"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="unitWeight" className="text-right">
-              Author
-            </Label>
-            <UserDropdown
-              value={editedPart.responsible}
-              onChange={(reponsable) => {
-                setEditedPart((prevState) => ({
-                  ...prevState!,
-                  responsible: reponsable,
-                }));
-              }}
-            />
-          </div>
         </div>
         <div className="grid grid-cols-4 items-center gap-4">
           <Label htmlFor="unitWeight" className="text-right">

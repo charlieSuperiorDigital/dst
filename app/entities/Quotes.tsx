@@ -4,6 +4,7 @@ export type Quotes = {
   creationDate: string;
   updateDate: string;
   status?: QuotesStatus;
+  responsible?: string;
 };
 
 export enum QuotesStatus {
