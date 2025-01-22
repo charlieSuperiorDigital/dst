@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import { useQuote } from "../../context/quote-context";
 
 type Bay = {
   id: string;
@@ -63,7 +64,8 @@ const mockData: RowWithDetails[] = [
   },
 ];
 
-const BayCounts = ({ initialData }) => {
+const BayCounts = () => {
+  const { isLocked } = useQuote();
   const [rowsWithDetails, setRowsWithDetails] =
     useState<RowWithDetails[]>(mockData);
   const [baysDefinition, setBaysDefinition] = useState<Bay[]>([]);
@@ -148,18 +150,14 @@ const BayCounts = ({ initialData }) => {
     );
   };
 
-  const handleSave = () => {
-    console.log("Saving data:", rowsWithDetails);
-    // In a real application, you would send this data to your backend
-  };
-
   return (
     <div className="container mx-auto p-4">
       <div className="flex items-center justify-between mb-4">
-        <Button onClick={handleAddBay} variant="outline">
-          <Plus className="mr-2 h-4 w-4" /> Add Bay
-        </Button>
-        <Button onClick={handleSave}>Save</Button>
+        {!isLocked && (
+          <Button onClick={handleAddBay} variant="outline">
+            <Plus className="mr-2 h-4 w-4" /> Add Bay
+          </Button>
+        )}
       </div>
       <div className="overflow-x-auto border rounded-md">
         <Table>

@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { useQuote } from "../../context/quote-context";
 
 interface MarginTax {
   name: string;
@@ -23,6 +24,7 @@ type Props = {
 };
 
 export default function MarginTaxes({ marginTaxes, setMarginTaxes }: Props) {
+  const { isLocked } = useQuote();
   const handlePriceChange = (index: number, newPrice: string) => {
     const updatedMarginTaxes = [...marginTaxes];
     updatedMarginTaxes[index].price = parseFloat(newPrice) || 0;
@@ -52,6 +54,7 @@ export default function MarginTaxes({ marginTaxes, setMarginTaxes }: Props) {
                     step="0.01"
                     min="0"
                     max="100"
+                    disabled={isLocked}
                   />
                 </TableCell>
               </TableRow>

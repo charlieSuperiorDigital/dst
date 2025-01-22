@@ -11,6 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { CostItem, MarginTax } from "./row-count-summary";
 import { Card } from "@/components/ui/card";
+import { useQuote } from "../../context/quote-context";
 
 type Props = {
   marginTaxes: MarginTax[];
@@ -23,6 +24,7 @@ export default function CostBreakdownTable({
   costItems,
   setCostItems,
 }: Props) {
+  const { isLocked } = useQuote();
   const handlePriceChange = (index: number, newPrice: string) => {
     const updatedItems = [...costItems];
     updatedItems[index].price = parseFloat(newPrice) || 0;
@@ -107,6 +109,7 @@ export default function CostBreakdownTable({
                     value={item.price}
                     onChange={(e) => handlePriceChange(index, e.target.value)}
                     className="w-32 text-right"
+                    disabled={isLocked}
                   />
                 </TableCell>
                 <TableCell className="text-right">

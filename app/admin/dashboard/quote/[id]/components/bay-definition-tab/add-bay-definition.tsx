@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,7 +24,6 @@ import {
 } from "@/components/ui/form";
 
 import { Input } from "@/components/ui/input";
-import { BayDefinition } from "./bay-definition-table";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -33,7 +32,7 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 interface Props {
-  onAdd: (day: BayDefinition) => void;
+  onAdd: (bayName: string) => void;
 }
 
 export function AddBayDefinitonTab({ onAdd }: Props) {
@@ -47,7 +46,7 @@ export function AddBayDefinitonTab({ onAdd }: Props) {
   });
 
   const handleAdd = (values) => {
-    onAdd(values);
+    onAdd(values.name);
     setOpen(false);
     form.reset();
   };
