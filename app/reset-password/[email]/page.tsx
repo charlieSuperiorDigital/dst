@@ -17,44 +17,42 @@ import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import axios from "axios";
 
-const formSchema = z
-  .object({
-    fullName: z.string().min(2, {
-      message: "Full name must be at least 2 characters.",
-    }),
-    email: z.string().email({
-      message: "Please enter a valid email address.",
-    }),
-    password: z.string().min(8, {
-      message: "Password must be at least 8 characters.",
-    }),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ["confirmPassword"],
-  });
+const formSchema = z.object({
+  tempcode: z.string().min(1, "Reset code is required"),
+  password: z.string().min(8, {
+    message: "Password must be at least 8 characters.",
+  }),
+  passwordconfirm: z.string(),
+}).refine((data) => data.password === data.passwordconfirm, {
+  message: "Passwords don't match",
+  path: ["passwordconfirm"],
+});
 
 type FormValues = z.infer<typeof formSchema>;
 
-export default function RegisterPage() {
+export default function ResetPasswordConfirmPage({ params }: { params: { email: string } }) {
   const router = useRouter();
+  const email = decodeURIComponent(params.email);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      fullName: "",
-      email: "",
+      tempcode: "",
       password: "",
-      confirmPassword: "",
+      passwordconfirm: "",
     },
   });
 
   const onSubmit = async (values: FormValues) => {
     try {
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/authorization/register`,
-        values,
+        `${process.env.NEXT_PUBLIC_API_URL}/authorization/PasswordReset`,
+        {
+          email,
+          tempcode: values.tempcode,
+          password: values.password,
+          passwordconfirm: values.passwordconfirm,
+        },
         {
           headers: {
             "Content-Type": "application/json",
@@ -64,18 +62,18 @@ export default function RegisterPage() {
 
       if (response.status === 200) {
         toast({
-          title: "Registration Successful",
-          description: "You have successfully registered.",
+          title: "Password Reset Successful",
+          description: "Your password has been reset successfully.",
         });
         router.push("/");
       } else {
-        throw new Error("Registration failed");
+        throw new Error("Failed to reset password");
       }
-    } catch (error) {
-      console.error("Registration error:", error);
+    } catch (error: any) {
+      console.error("Password reset error:", error);
       toast({
-        title: "Registration Failed",
-        description: "An error occurred while registering.",
+        title: "Reset Failed",
+        description: error.response?.data || "An error occurred while resetting your password.",
         variant: "destructive",
       });
     }
@@ -83,32 +81,21 @@ export default function RegisterPage() {
 
   return (
     <div className="w-full max-w-[800px] mx-auto border border-gray-200 rounded-lg shadow-lg bg-white p-6">
-      <h1 className="text-3xl font-bold mb-6">Register</h1>
+      <h1 className="text-3xl font-bold mb-6">Reset Password</h1>
+      <p className="text-gray-600 mb-6">
+        Enter the reset code sent to your email and your new password.
+      </p>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
             control={form.control}
-            name="fullName"
+            name="tempcode"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Full Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="John Doe" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel>Reset Code</FormLabel>
                 <FormControl>
                   <Input
-                    type="email"
-                    placeholder="john@example.com"
+                    placeholder="Enter reset code"
                     {...field}
                   />
                 </FormControl>
@@ -121,9 +108,12 @@ export default function RegisterPage() {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Password</FormLabel>
+                <FormLabel>New Password</FormLabel>
                 <FormControl>
-                  <Input type="password" {...field} />
+                  <Input
+                    type="password"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -131,12 +121,15 @@ export default function RegisterPage() {
           />
           <FormField
             control={form.control}
-            name="confirmPassword"
+            name="passwordconfirm"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Confirm Password</FormLabel>
+                <FormLabel>Confirm New Password</FormLabel>
                 <FormControl>
-                  <Input type="password" {...field} />
+                  <Input
+                    type="password"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -145,7 +138,7 @@ export default function RegisterPage() {
 
           <div className="flex flex-col gap-2">
             <Button type="submit" className="w-full">
-              Register
+              Reset Password
             </Button>
             <div className="relative my-2">
               <div className="absolute inset-0 flex items-center">
@@ -168,4 +161,4 @@ export default function RegisterPage() {
       </Form>
     </div>
   );
-}
+} 

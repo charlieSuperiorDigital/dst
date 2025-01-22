@@ -17,44 +17,29 @@ import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import axios from "axios";
 
-const formSchema = z
-  .object({
-    fullName: z.string().min(2, {
-      message: "Full name must be at least 2 characters.",
-    }),
-    email: z.string().email({
-      message: "Please enter a valid email address.",
-    }),
-    password: z.string().min(8, {
-      message: "Password must be at least 8 characters.",
-    }),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ["confirmPassword"],
-  });
+const formSchema = z.object({
+  email: z.string().email({
+    message: "Please enter a valid email address.",
+  }),
+});
 
 type FormValues = z.infer<typeof formSchema>;
 
-export default function RegisterPage() {
+export default function ResetPasswordPage() {
   const router = useRouter();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      fullName: "",
       email: "",
-      password: "",
-      confirmPassword: "",
     },
   });
 
   const onSubmit = async (values: FormValues) => {
     try {
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/authorization/register`,
-        values,
+        `${process.env.NEXT_PUBLIC_API_URL}/authorization/PasswordResetTempCode`,
+        { email: values.email },
         {
           headers: {
             "Content-Type": "application/json",
@@ -64,18 +49,19 @@ export default function RegisterPage() {
 
       if (response.status === 200) {
         toast({
-          title: "Registration Successful",
-          description: "You have successfully registered.",
+          title: "Reset Code Sent",
+          description: "If an account exists with this email, you will receive a password reset code.",
         });
-        router.push("/");
+        // Store the email in the URL state for the next step
+        router.push(`/reset-password/${values.email}`);
       } else {
-        throw new Error("Registration failed");
+        throw new Error("Failed to send reset code");
       }
     } catch (error) {
-      console.error("Registration error:", error);
+      console.error("Password reset error:", error);
       toast({
-        title: "Registration Failed",
-        description: "An error occurred while registering.",
+        title: "Request Failed",
+        description: "An error occurred while processing your request.",
         variant: "destructive",
       });
     }
@@ -83,22 +69,12 @@ export default function RegisterPage() {
 
   return (
     <div className="w-full max-w-[800px] mx-auto border border-gray-200 rounded-lg shadow-lg bg-white p-6">
-      <h1 className="text-3xl font-bold mb-6">Register</h1>
+      <h1 className="text-3xl font-bold mb-6">Reset Password</h1>
+      <p className="text-gray-600 mb-6">
+        Enter your email address and we'll send you a code to reset your password.
+      </p>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="fullName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Full Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="John Doe" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
           <FormField
             control={form.control}
             name="email"
@@ -116,36 +92,10 @@ export default function RegisterPage() {
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <Input type="password" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="confirmPassword"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Confirm Password</FormLabel>
-                <FormControl>
-                  <Input type="password" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
 
           <div className="flex flex-col gap-2">
             <Button type="submit" className="w-full">
-              Register
+              Send Reset Code
             </Button>
             <div className="relative my-2">
               <div className="absolute inset-0 flex items-center">
@@ -168,4 +118,4 @@ export default function RegisterPage() {
       </Form>
     </div>
   );
-}
+} 

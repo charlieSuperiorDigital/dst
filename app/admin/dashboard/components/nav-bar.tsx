@@ -3,7 +3,7 @@
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { LogOut, Users } from "lucide-react";
 
 export function Navbar() {
   const { data: session, status } = useSession();
@@ -18,18 +18,25 @@ export function Navbar() {
               <span>Welcome, {session.user?.name}</span>
             ) : null}
           </div>
-          <div className="flex items-center">
+          <div className="flex items-center gap-2">
             {status === "loading" ? (
               <p>Loading...</p>
             ) : session ? (
-              <Button
-                variant="outline"
-                onClick={() => signOut({ callbackUrl: "/" })}
-                className="text-red-500 border-red-500 hover:bg-red-500 hover:text-white"
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Sign out
-              </Button>
+              <>
+                <Link href="/admin/dashboard/user-list">
+                  <Button variant="outline" className="text-gray-500 border-gray-500 hover:bg-gray-500 hover:text-white">
+                    <Users className="h-4 w-4" />
+                  </Button>
+                </Link>
+                <Button 
+                  variant="outline" 
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  className="text-red-500 border-red-500 hover:bg-red-500 hover:text-white"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign out
+                </Button>
+              </>
             ) : (
               <Link
                 href="/"
