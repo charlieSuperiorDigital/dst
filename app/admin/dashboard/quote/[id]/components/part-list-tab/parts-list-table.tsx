@@ -10,93 +10,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { EditPartDialog } from "./edit-part-modal";
-import { PartList } from "../../../../../../entities/PartList";
+import type { PartList } from "../../../../../../entities/PartList";
 import { formatCurrency } from "@/utils/format-currency";
 import { Input } from "@/components/ui/input";
 import { PartsDialog } from "./add-part-modal";
-import { Part } from "@/app/entities/Part";
+import type { Part } from "@/app/entities/Part";
 import { paintTypes } from "@/app/entities/colors-enum";
 import { toast } from "@/hooks/use-toast";
 import { apiRequest } from "@/utils/client-side-api";
 import { useQuote } from "../../context/quote-context";
-
-// const initialParts: PartList[] = [
-//   {
-//     id: "0001",
-//     qty: 3,
-//     description: "445-312-42 Frame, boxed both legs 164/164, w/ WRR, WPP4",
-//     color: "Std Blue",
-//     unitWeight: 446.0,
-//     totalWeight: 0,
-//     unitMatLb: 2,
-//     unitLabor: 446.0,
-//     unitCost: 4.0,
-//     totalCost: 0.0,
-//     unitSell: 524.71,
-//     totalSell: 0.0,
-//     laborEA: 0.1,
-//   },
-//   {
-//     partNo: "0002",
-//     qty: 0,
-//     description: "335-312-42 Frame, boxed 096/096, w/WRR, WPP4",
-//     color: "Std Blue",
-//     unitWeight: 333.0,
-//     totalWeight: 0,
-//     unitMatLb: 12.2,
-//     unitLabor: 5,
-//     unitCost: 346.32,
-//     totalCost: 0.0,
-//     unitSell: 407.44,
-//     totalSell: 0.0,
-//     laborEA: 0.2,
-//   },
-//   {
-//     partNo: "0003",
-//     qty: 0,
-//     description: "335-240-42 DOCK Frame,NO BASE PLATES",
-//     color: "Std Blue",
-//     unitWeight: 220.0,
-//     totalWeight: 0,
-//     unitMatLb: 12.8,
-//     unitLabor: 10.2,
-//     unitCost: 220.0,
-//     totalCost: 0.0,
-//     unitSell: 258.82,
-//     totalSell: 0.0,
-//     laborEA: 0.3,
-//   },
-//   {
-//     partNo: "0009",
-//     qty: 0,
-//     description: "335-96 Beam, 4200 lbs cap/level",
-//     color: "Std Orange",
-//     unitWeight: 32.0,
-//     totalWeight: 0,
-//     unitMatLb: 1,
-//     unitLabor: 5,
-//     unitCost: 32.0,
-//     totalCost: 0.0,
-//     unitSell: 37.65,
-//     totalSell: 0.0,
-//     laborEA: 0.4,
-//   },
-//   {
-//     partNo: "0010",
-//     qty: 0,
-//     description: "445-96 Beam, 7700 lbs cap/level",
-//     color: "Std Orange",
-//     unitWeight: 39.0,
-//     totalWeight: 0,
-//     unitMatLb: 3,
-//     unitLabor: 30,
-//     unitCost: 38.61,
-//     totalCost: 0.0,
-//     unitSell: 45.42,
-//     totalSell: 0.0,
-//     laborEA: 0.5,
-//   },
-// ];
 
 const materialMargin = 0.2;
 
@@ -118,8 +40,6 @@ export default function PartsListTable({ intialParts, quoteId }: Props) {
       method: "get",
       url: `/api/Part/PartsFromQuotation/${quoteId}`,
     });
-
-    console.log("responseDELFEtch", response.parts);
     setFilteredParts(response.parts);
   };
 
@@ -252,7 +172,7 @@ export default function PartsListTable({ intialParts, quoteId }: Props) {
             <TableHead className="border">Qty</TableHead>
             <TableHead className="border">Description</TableHead>
             <TableHead className="border">Color</TableHead>
-            <TableHead className="border text-right">Unit Weight</TableHead>
+            <TableHead className="text-right border">Unit Weight</TableHead>
             <TableHead className=" border text-right">Total Weight</TableHead>
             {/* <TableHead className="text-right">Unit Mat/lb</TableHead> */}
             <TableHead className="text-right border">Unit Labor</TableHead>
@@ -263,13 +183,16 @@ export default function PartsListTable({ intialParts, quoteId }: Props) {
             <TableHead className="text-right border">Total Sell</TableHead>
           </TableRow>
         </TableHeader>
-        <TableCell className="font-medium  bg-blue-200 border">
-          <div className="flex">
-            <p>Total:</p>
-            {formatCurrency(totalSell)}
-          </div>
-        </TableCell>
         <TableBody>
+          <TableRow className="bg-blue-200">
+            <TableCell colSpan={9} className="font-medium border">
+              <div className="flex">
+                <p>Total:</p>
+                {formatCurrency(totalSell)}
+              </div>
+            </TableCell>
+            <TableCell colSpan={3} className="border" />
+          </TableRow>
           {filteredParts.map((part) => (
             <TableRow
               key={part.id}
