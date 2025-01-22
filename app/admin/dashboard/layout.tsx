@@ -36,9 +36,6 @@ export default function DashboardLayout({
             <TabsTrigger value="quotes" asChild>
               <Link href="/admin/dashboard/quotes">Quotes</Link>
             </TabsTrigger>
-            <TabsTrigger value="users" asChild>
-              <Link href="/admin/dashboard/user-list">Users</Link>
-            </TabsTrigger>
           </TabsList>
         </Tabs>
         {children}

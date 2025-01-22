@@ -93,12 +93,20 @@ export default function LoginForm() {
               </Button>
             </CardFooter>
           </form>
-          <p
-            className="cursor-pointer text-blue-500 underline hover:text-blue-700 transition"
-            onClick={handleRegister}
-          >
-            New account
-          </p>
+          <div className="flex justify-between items-center mt-4">
+            <p
+              className="cursor-pointer text-blue-500 underline hover:text-blue-700 transition"
+              onClick={handleRegister}
+            >
+              New account
+            </p>
+            <p
+              className="cursor-pointer text-blue-500 underline hover:text-blue-700 transition"
+              onClick={() => router.push("/reset-password")}
+            >
+              Forgot password?
+            </p>
+          </div>
         </CardContent>
       </Card>
       {error && (
