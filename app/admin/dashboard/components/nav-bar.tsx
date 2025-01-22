@@ -9,7 +9,6 @@ export function Navbar() {
   const { data: session, status } = useSession();
   return (
     <nav className="border-b">
-      
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
@@ -23,8 +22,8 @@ export function Navbar() {
             {status === "loading" ? (
               <p>Loading...</p>
             ) : session ? (
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => signOut({ callbackUrl: "/" })}
                 className="text-red-500 border-red-500 hover:bg-red-500 hover:text-white"
               >

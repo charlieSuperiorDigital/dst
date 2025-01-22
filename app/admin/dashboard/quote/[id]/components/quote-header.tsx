@@ -10,9 +10,9 @@ const QuoteHeader = ({ quote }: Props) => {
     <header className="bg-white shadow-md p-6 rounded-md">
       <div className="flex flex-col sm:flex-row justify-around items-center gap-6">
         <div className="text-center sm:text-left">
-          <p className="text-sm font-medium text-gray-600">Project Name:</p>
+          <p className="text-sm font-medium text-gray-600">Quotes Name:</p>
           <h1 className="text-xl font-semibold text-gray-800">{quote.name}</h1>
-          <p className="text-sm text-gray-500">Project Number: {quote.id}</p>
+          <p className="text-sm text-gray-500">Quotes Number: {quote.id}</p>
         </div>
         <div className="text-center sm:text-left">
           <p className="text-sm font-medium text-gray-600">Author</p>

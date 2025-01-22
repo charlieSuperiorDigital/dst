@@ -5,13 +5,19 @@ export type Quotes = {
   updateDate: string;
   status?: QuotesStatus;
   responsible?: string;
+  customerName?: string;
+  address?: string;
+  contactName?: string;
+  phoneNumber1?: string;
+  phoneNumber2?: string;
+  zipCode: string;
+  state?: string;
+  email?: string;
+  dateStarted?: string;
 };
 
 export enum QuotesStatus {
   New = 0,
-  Pending = 1,
-  Approved = 2,
-  Rejected = 3,
-  Cancelled = 4,
-  Executed = 5,
+  Revised = 1,
+  Completed = 2,
 }

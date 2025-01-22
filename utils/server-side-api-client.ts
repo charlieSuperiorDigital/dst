@@ -25,16 +25,11 @@ export async function getServerSideApiClient() {
     baseURL: process.env.NEXT_PUBLIC_API_URL,
   });
 
-  const session: {
-    user: { accessToken: string; refreshToken: string };
-  } | null = await getServerSession(authOptions);
-
-  const token = session?.user?.accessToken;
-
+  const session = await getServerSession(authOptions);
+  const token = session?.user?.token;
   if (token) {
     client.interceptors.request.use((config) => {
-      config.headers.set("x-access-token", token);
-
+      config.headers.Authorization = `Bearer ${token}`;
       return config;
     });
   }
@@ -61,8 +56,8 @@ export async function getServerSideApiClient() {
           );
 
           if (error.config) {
-            error.config?.headers.set("x-access-token", data.accessToken);
-            return Promise.resolve(axios.request(error.config));
+            error.config.headers.Authorization = `Bearer ${data.accessToken}`;
+            return axios.request(error.config);
           }
         } catch (err) {
           return Promise.reject(
@@ -80,5 +75,6 @@ export async function getServerSideApiClient() {
       return Promise.reject(error);
     }
   );
+
   return client;
 }

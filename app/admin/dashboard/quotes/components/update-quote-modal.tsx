@@ -13,8 +13,6 @@ import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
 import { Quotes, QuotesStatus } from "@/app/entities/Quotes";
 import { QuotesStatusDropdown } from "./status-quote-dropdown";
-import { UserDropdown } from "./user-dropdow";
-
 interface EditQuoteDialogProps {
   quote: Quotes | null;
   open: boolean;
@@ -50,7 +48,7 @@ export function UpdateQuoteModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Edit Part: {editedPart.id}</DialogTitle>
+          <DialogTitle>Edit Quote: {editedPart.id}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
@@ -58,7 +56,7 @@ export function UpdateQuoteModal({
               Name
             </Label>
             <Input
-              id="description"
+              id="name"
               value={editedPart.name}
               onChange={(e) =>
                 setEditedPart({ ...editedPart, name: e.target.value })
@@ -66,6 +64,112 @@ export function UpdateQuoteModal({
               className="col-span-3"
             />
           </div>
+        </div>
+
+        <div className="grid grid-cols-4 items-center gap-4">
+          <Label htmlFor="description" className="text-right">
+            Customer Name
+          </Label>
+          <Input
+            id="name"
+            value={editedPart.customerName}
+            onChange={(e) =>
+              setEditedPart({ ...editedPart, customerName: e.target.value })
+            }
+            className="col-span-3"
+          />
+        </div>
+        <div className="grid grid-cols-4 items-center gap-4">
+          <Label htmlFor="description" className="text-right">
+            Contact Name
+          </Label>
+          <Input
+            id="contactName"
+            value={editedPart.contactName}
+            onChange={(e) =>
+              setEditedPart({ ...editedPart, contactName: e.target.value })
+            }
+            className="col-span-3"
+          />
+        </div>
+        <div className="grid grid-cols-4 items-center gap-4">
+          <Label htmlFor="description" className="text-right">
+            Email
+          </Label>
+          <Input
+            id="email"
+            value={editedPart.email}
+            type="email"
+            onChange={(e) =>
+              setEditedPart({ ...editedPart, email: e.target.value })
+            }
+            className="col-span-3"
+          />
+        </div>
+        <div className="grid grid-cols-4 items-center gap-4">
+          <Label htmlFor="description" className="text-right">
+            Phone Number 1
+          </Label>
+          <Input
+            id="phoneNumber1"
+            value={editedPart.phoneNumber1}
+            onChange={(e) =>
+              setEditedPart({ ...editedPart, phoneNumber1: e.target.value })
+            }
+            className="col-span-3"
+          />
+        </div>
+        <div className="grid grid-cols-4 items-center gap-4">
+          <Label htmlFor="description" className="text-right">
+            Phone Number 2
+          </Label>
+          <Input
+            id="phoneNumber2"
+            value={editedPart.phoneNumber2}
+            onChange={(e) =>
+              setEditedPart({ ...editedPart, phoneNumber2: e.target.value })
+            }
+            className="col-span-3"
+          />
+        </div>
+        <div className="grid grid-cols-4 items-center gap-4">
+          <Label htmlFor="description" className="text-right">
+            address
+          </Label>
+          <Input
+            id="address"
+            value={editedPart.address}
+            onChange={(e) =>
+              setEditedPart({ ...editedPart, address: e.target.value })
+            }
+            className="col-span-3"
+          />
+        </div>
+        <div className="grid grid-cols-4 items-center gap-4">
+          <Label htmlFor="description" className="text-right">
+            Zip Code
+          </Label>
+          <Input
+            id="address"
+            value={editedPart.zipCode}
+            onChange={(e) =>
+              setEditedPart({ ...editedPart, zipCode: e.target.value })
+            }
+            className="col-span-3"
+          />
+        </div>
+        <div className="grid grid-cols-4 items-center gap-4">
+          <Label htmlFor="description" className="text-right">
+            State
+          </Label>
+          <Input
+            id="state"
+            value={editedPart.state}
+            onChange={(e) =>
+              setEditedPart({ ...editedPart, state: e.target.value })
+            }
+            className="col-span-3"
+          />
         </div>
         <div className="grid grid-cols-4 items-center gap-4">
           <Label htmlFor="unitWeight" className="text-right">
