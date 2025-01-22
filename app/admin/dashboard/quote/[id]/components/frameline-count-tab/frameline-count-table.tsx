@@ -89,11 +89,11 @@ const FrameLineCounts = () => {
       </div>
       <Table>
         <TableHeader>
-          <TableRow>
-            <TableHead className="w-[200px]">Flue Name</TableHead>
-            <TableHead className="w-[100px]">Total</TableHead>
+          <TableRow className="border">
+            <TableHead className="w-[200px] border">Flue Name</TableHead>
+            <TableHead className="w-[100px] border">Total</TableHead>
             {mockRows.map((row) => (
-              <TableHead key={row.id} className="text-center">
+              <TableHead key={row.id} className="text-center border">
                 {row.name}
               </TableHead>
             ))}

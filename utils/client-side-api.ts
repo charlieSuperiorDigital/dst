@@ -1,4 +1,5 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
+import { getSession } from "next-auth/react";
 
 interface ApiRequestOptions {
   method: "get" | "post" | "put" | "delete" | "patch";
@@ -37,12 +38,18 @@ export const apiRequest = async <T = any>({
   data = null,
   headers = {},
 }: ApiRequestOptions): Promise<T> => {
+  const session = await getSession();
+
+  const updatedHeaders = {
+    ...headers,
+    Authorization: `Bearer ${session?.user?.token}`,
+  };
   try {
     const config: AxiosRequestConfig = {
       method,
       url: `${process.env.NEXT_PUBLIC_API_URL}${url}`,
       data,
-      headers,
+      headers: updatedHeaders,
     };
 
     const response: AxiosResponse<T> = await axios(config);

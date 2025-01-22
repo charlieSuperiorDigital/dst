@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { CostItem, MarginTax } from "./row-count-summary";
+import { Card } from "@/components/ui/card";
 
 type Props = {
   marginTaxes: MarginTax[];
@@ -28,7 +29,6 @@ export default function CostBreakdownTable({
     setCostItems(updatedItems);
   };
 
-  // Calculate total and additional costs based on marginTaxes
   const calculateWithMargins = () => {
     let totalBeforeTaxes = 0;
     let totalSalesTax = 0;
@@ -38,13 +38,11 @@ export default function CostBreakdownTable({
       let taxAmount = 0;
 
       if (item.item.toLowerCase().includes("material")) {
-        // Apply Material Margin
         const materialMargin = marginTaxes.find((tax) =>
           tax.name.toLowerCase().includes("material margin")
         );
         taxAmount = (item.price * (materialMargin?.price || 0)) / 100;
       } else if (item.item.toLowerCase().includes("calculations")) {
-        // Apply Permits Cost Plus
         const permitsCostPlus = marginTaxes.find((tax) =>
           tax.name.toLowerCase().includes("permits cost plus")
         );
@@ -60,13 +58,11 @@ export default function CostBreakdownTable({
       };
     });
 
-    // Apply Sales Tax Rate
     const salesTaxRate = marginTaxes.find((tax) =>
       tax.name.toLowerCase().includes("sales tax rate")
     );
     totalSalesTax = (totalBeforeTaxes * (salesTaxRate?.price || 0)) / 100;
 
-    // Apply Taxable Sales
     const taxableSalesRate = marginTaxes.find((tax) =>
       tax.name.toLowerCase().includes("taxable sales")
     );
@@ -84,69 +80,68 @@ export default function CostBreakdownTable({
     };
   };
 
-  const {
-    updatedItems,
-    totalBeforeTaxes,
-    totalSalesTax,
-    totalTaxableSales,
-    grandTotal,
-  } = calculateWithMargins();
+  const { updatedItems, totalBeforeTaxes, totalSalesTax, grandTotal } =
+    calculateWithMargins();
 
   return (
-    <div className="container mx-auto p-6 max-w-3xl">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[200px]">Item</TableHead>
-            <TableHead className="text-right">Price</TableHead>
-            <TableHead className="text-right">Total w/ Margin or Tax</TableHead>
-            <TableHead className="w-[300px]"></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {updatedItems.map((item, index) => (
-            <TableRow key={index}>
-              <TableCell className="font-medium">{item.item}</TableCell>
-              <TableCell className="text-right">
-                <Input
-                  type="number"
-                  value={item.price}
-                  onChange={(e) => handlePriceChange(index, e.target.value)}
-                  className="w-32 text-right"
-                />
-              </TableCell>
-              <TableCell className="text-right">
-                ${item.totalWithTax.toLocaleString()}
-              </TableCell>
-              <TableCell>{item.note}</TableCell>
+    <Card className="w-[500px]">
+      <div className="container mx-auto p-6 max-w-3xl">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[200px]">Item</TableHead>
+              <TableHead className="text-right">Price</TableHead>
+              <TableHead className="text-right">
+                Total w/ Margin or Tax
+              </TableHead>
+              <TableHead className="w-[300px]"></TableHead>
             </TableRow>
-          ))}
-          <TableRow className="font-bold">
-            <TableCell>Total Before Taxes</TableCell>
-            <TableCell></TableCell>
-            <TableCell className="text-right">
-              ${totalBeforeTaxes.toLocaleString()}
-            </TableCell>
-            <TableCell></TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell>Sales Tax</TableCell>
-            <TableCell></TableCell>
-            <TableCell className="text-right">
-              ${totalSalesTax.toLocaleString()}
-            </TableCell>
-            <TableCell></TableCell>
-          </TableRow>
-          <TableRow className="font-bold">
-            <TableCell>Grand Total</TableCell>
-            <TableCell></TableCell>
-            <TableCell className="text-right">
-              ${grandTotal.toLocaleString()}
-            </TableCell>
-            <TableCell></TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
-    </div>
+          </TableHeader>
+          <TableBody>
+            {updatedItems.map((item, index) => (
+              <TableRow key={index}>
+                <TableCell className="font-medium">{item.item}</TableCell>
+                <TableCell className="text-right">
+                  <Input
+                    type="number"
+                    value={item.price}
+                    onChange={(e) => handlePriceChange(index, e.target.value)}
+                    className="w-32 text-right"
+                  />
+                </TableCell>
+                <TableCell className="text-right">
+                  ${item.totalWithTax.toLocaleString()}
+                </TableCell>
+                <TableCell>{item.note}</TableCell>
+              </TableRow>
+            ))}
+            <TableRow className="font-bold">
+              <TableCell>Total Before Taxes</TableCell>
+              <TableCell></TableCell>
+              <TableCell className="text-right">
+                ${totalBeforeTaxes.toLocaleString()}
+              </TableCell>
+              <TableCell></TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>Sales Tax</TableCell>
+              <TableCell></TableCell>
+              <TableCell className="text-right">
+                ${totalSalesTax.toLocaleString()}
+              </TableCell>
+              <TableCell></TableCell>
+            </TableRow>
+            <TableRow className="font-bold">
+              <TableCell>Grand Total</TableCell>
+              <TableCell></TableCell>
+              <TableCell className="text-right">
+                ${grandTotal.toLocaleString()}
+              </TableCell>
+              <TableCell></TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </div>
+    </Card>
   );
 }

@@ -13,7 +13,6 @@ export const useParts = (initialPartsResponse) => {
         url: `/api/PartLibrary/${page}/15?search=${search}`,
       });
 
-      console.log("Parts response:", response);
       setPartsResponse(response);
     } catch (error) {
       console.error("Error fetching parts:", error);

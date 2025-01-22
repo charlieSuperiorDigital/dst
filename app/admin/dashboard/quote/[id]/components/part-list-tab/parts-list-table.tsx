@@ -16,7 +16,8 @@ import { Input } from "@/components/ui/input";
 import { PartsDialog } from "./add-part-modal";
 import { Part } from "@/app/entities/Part";
 import { paintTypes } from "@/app/entities/colors-enum";
-import { Button } from "@/components/ui/button";
+import { toast } from "@/hooks/use-toast";
+import { apiRequest } from "@/utils/client-side-api";
 
 // const initialParts: PartList[] = [
 //   {
@@ -98,11 +99,27 @@ import { Button } from "@/components/ui/button";
 
 const materialMargin = 0.2;
 
-export default function PartsListTable() {
-  const [parts, setParts] = useState<PartList[]>([]);
+interface Props {
+  intialParts: PartList[];
+  quoteId: string;
+}
+
+export default function PartsListTable({ intialParts, quoteId }: Props) {
+  const [parts, setParts] = useState<PartList[]>(intialParts);
+  const [filteredParts, setFilteredParts] = useState<PartList[]>(intialParts);
   const [selectedPart, setSelectedPart] = useState<PartList | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+
+  const fetchParts = async () => {
+    const response = await apiRequest({
+      method: "get",
+      url: `/api/Part/PartsFromQuotation/${quoteId}`,
+    });
+
+    console.log("responseDELFEtch", response.parts);
+    setFilteredParts(response.parts);
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,53 +134,98 @@ export default function PartsListTable() {
     setIsDialogOpen(true);
   };
 
-  const handleSave = (updatedPart: PartList) => {
-    setParts(
-      parts.map((part) => (part.id === updatedPart.id ? updatedPart : part))
-    );
+  const handleSave = async (updatedPart: PartList) => {
+    try {
+      await apiRequest({
+        method: "put",
+        url: `/api/part`,
+        data: updatedPart,
+      });
+      await fetchParts();
+
+      toast({
+        title: "Details Updated",
+        description: "Details have been updated successfully",
+      });
+    } catch (error) {
+      console.log(error);
+      toast({
+        title: "Error",
+        description: "Error updating part details",
+        variant: "destructive",
+      });
+    }
   };
-  const handleDelete = (id: string) => {
-    setParts(parts.filter((part) => part.id !== id));
+  const handleDelete = async (part: PartList) => {
+    try {
+      await apiRequest({
+        method: "delete",
+        url: `/api/part/${part.id}`,
+      });
+      await fetchParts();
+      toast({
+        title: "Part Deleted",
+        description: "Part has been deleted successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Error deleting part",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleAdd = (part: Part, qty: number) => {
-    const partToAdd: PartList = {
-      ...part,
-      qty,
-    };
+  const handleAdd = async (part: Part, partNumber: string) => {
+    try {
+      await apiRequest({
+        method: "post",
+        url: `/api/part`,
+        data: {
+          partLibId: part.id,
+          quotationId: quoteId,
+          partNumber: partNumber,
+        },
+      });
 
-    setParts((prevParts) => {
-      const existingPartIndex = prevParts.findIndex((p) => p.id === part.id);
+      await fetchParts();
 
-      if (existingPartIndex !== -1) {
-        const updatedParts = [...prevParts];
-        updatedParts[existingPartIndex] = {
-          ...updatedParts[existingPartIndex],
-          qty: updatedParts[existingPartIndex].qty + qty,
-        };
-        return updatedParts;
-      } else {
-        return [
-          ...prevParts,
-          {
-            ...part,
-            qty,
-          },
-        ];
-      }
-    });
+      toast({
+        title: "Part Added",
+        description: "Part has been added successfully",
+      });
+    } catch (error) {
+      console.error("Error adding part:", error);
+      toast({
+        title: "Error",
+        description: "Error adding part",
+        variant: "destructive",
+      });
+    }
   };
-  const handleSavePartList = async () => {};
 
   const totalSell = parts.reduce(
     (acc, part) =>
       acc +
       ((part.unitWeight * part.unitMatLb + part.unitLabor) /
         (1 - materialMargin)) *
-        part.qty,
+        (part.qty ?? 0),
     0
   );
 
+  const handleSearchPartlist = (search: string) => {
+    setSearchTerm(search);
+
+    if (search.trim() === "") {
+      setFilteredParts(parts);
+      return;
+    }
+
+    const filteredParts = parts.filter((part) =>
+      part.description.toLowerCase().includes(search.toLowerCase())
+    );
+    setFilteredParts(filteredParts);
+  };
   return (
     <div className="rounded-md border">
       <div className="flex justify-between items-center p-4">
@@ -172,80 +234,84 @@ export default function PartsListTable() {
             type="text"
             placeholder="Search part..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => handleSearchPartlist(e.target.value)}
             className="w-64"
           />
         </form>
         <div className=" flex gap-3">
-          <Button onClick={() => handleSavePartList}>Save</Button>
           <PartsDialog onAdd={handleAdd} />
         </div>
       </div>
       <Table>
-        <TableHeader>
+        <TableHeader className="border">
           <TableRow>
             {/* <TableHead className="w-[100px]">Total</TableHead> */}
-            <TableHead className="w-[100px]">Part No.</TableHead>
-            <TableHead>Qty</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead>Color</TableHead>
-            <TableHead className="text-right">Unit Weight</TableHead>
-            <TableHead className="text-right">Total Weight</TableHead>
+            <TableHead className="w-[100px] border ">Part No.</TableHead>
+            <TableHead className="border">Qty</TableHead>
+            <TableHead className="border">Description</TableHead>
+            <TableHead className="border">Color</TableHead>
+            <TableHead className="border text-right">Unit Weight</TableHead>
+            <TableHead className=" border text-right">Total Weight</TableHead>
             {/* <TableHead className="text-right">Unit Mat/lb</TableHead> */}
-            <TableHead className="text-right">Unit Labor</TableHead>
-            <TableHead className="text-right">Unit Cost</TableHead>
-            <TableHead className="text-right">Total Cost</TableHead>
-            <TableHead className="text-right">Unit Sell</TableHead>
-            <TableHead className="text-right">Total Man Hours</TableHead>
-            <TableHead className="text-right">Total Sell</TableHead>
+            <TableHead className="text-right border">Unit Labor</TableHead>
+            <TableHead className="text-right border">Unit Cost</TableHead>
+            <TableHead className="text-right border">Total Cost</TableHead>
+            <TableHead className="text-right border">Unit Sell</TableHead>
+            <TableHead className="text-right border">Total Man Hours</TableHead>
+            <TableHead className="text-right border">Total Sell</TableHead>
           </TableRow>
         </TableHeader>
-        <TableCell className="font-medium  bg-blue-200">
+        <TableCell className="font-medium  bg-blue-200 border">
           <div className="flex">
             <p>Total:</p>
             {formatCurrency(totalSell)}
           </div>
         </TableCell>
         <TableBody>
-          {parts.map((part) => (
+          {filteredParts.map((part) => (
             <TableRow
               key={part.id}
-              className="cursor-pointer hover:bg-muted"
+              className="cursor-pointer hover:bg-muted border"
               onClick={() => handleRowClick(part)}
             >
-              <TableCell className="font-medium">{part.partNumber}</TableCell>
-              <TableCell>{part.qty}</TableCell>
-              <TableCell>{part.description}</TableCell>
-              <TableCell>
+              <TableCell className="font-medium border">
+                {part.partNumber}
+              </TableCell>
+              <TableCell className="border">{part.qty || 0}</TableCell>
+              <TableCell className="border">{part.description}</TableCell>
+              <TableCell className="border">
                 {paintTypes?.find((p) => p.id === part.colorId)?.name}
               </TableCell>
-              <TableCell className="text-right">
+              <TableCell className="text-right border">
                 {part.unitWeight.toFixed(2)}
               </TableCell>
-              <TableCell className="text-right">
-                {part.unitWeight * part.qty}
+              <TableCell className="text-right border">
+                {part.unitWeight * (part.qty ?? 0)}
               </TableCell>
               {/* <TableCell className="text-right">{part.unitMatLb}</TableCell> */}
-              <TableCell className="text-right">{part.unitLabor}</TableCell>
-              <TableCell className="text-right">
+              <TableCell className="text-right border">
+                {part.unitLabor}
+              </TableCell>
+              <TableCell className="text-right border">
                 {formatCurrency(part.unitWeight + part.unitLabor)}
               </TableCell>
-              <TableCell className="text-right">
-                {formatCurrency((part.unitWeight + part.unitLabor) * part.qty)}
+              <TableCell className="text-right border">
+                {formatCurrency(
+                  (part.unitWeight + part.unitLabor) * (part.qty ?? 0)
+                )}
               </TableCell>
-              <TableCell className="text-right">
+              <TableCell className="text-right border">
                 {formatCurrency(
                   (part.unitWeight + part.unitLabor) / (1 - materialMargin)
                 )}
               </TableCell>
-              <TableCell className="text-right">
-                {(part.qty * part.laborEA).toFixed(2)}
+              <TableCell className="text-right border">
+                {(part.qty || 0 * part.laborEA).toFixed(2)}
               </TableCell>
-              <TableCell className="text-right">
-                {" "}
+              <TableCell className="text-right border">
                 {formatCurrency(
                   ((part.unitWeight + part.unitLabor) / (1 - materialMargin)) *
-                    part.qty
+                    (part.qty ?? 0)
                 )}
               </TableCell>
             </TableRow>

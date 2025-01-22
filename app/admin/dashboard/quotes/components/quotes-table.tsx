@@ -42,7 +42,6 @@ import { useQuotes } from "@/hooks/user-quotes";
 import { useState } from "react";
 import { UpdateQuoteModal } from "./update-quote-modal";
 import { useRouter } from "next/navigation";
-import { UserDropdown } from "./user-dropdow";
 
 interface ExtensibleTableProps {
   initialQuotes: PaginatedResponse<Quotes, "quotations">;
@@ -65,7 +64,14 @@ export function QuotesTable({ initialQuotes }: ExtensibleTableProps) {
   const form = useForm<Quotes>({
     defaultValues: {
       name: "",
-      responsible: "",
+      customerName: "",
+      contactName: "",
+      address: "",
+      phoneNumber1: "",
+      phoneNumber2: "",
+      zipCode: "",
+      email: "",
+      state: "",
     },
   });
 
@@ -90,18 +96,6 @@ export function QuotesTable({ initialQuotes }: ExtensibleTableProps) {
     }
   };
 
-  //     try {
-  //       await apiRequest({
-  //         method: "put",
-  //         url: `/api/quotation/${quote.id}/${quote.responsible}/${quote.name}/${quote.status}`,
-  //       });
-
-  //       fetchQuotes(currentPage, searchTerm);
-  //     } catch (error) {
-  //       console.error("Error updating part:", error);
-  //     }
-  //   };
-
   const handleRowDelete = async (e, quote) => {
     e.stopPropagation();
     try {
@@ -125,7 +119,8 @@ export function QuotesTable({ initialQuotes }: ExtensibleTableProps) {
     try {
       await apiRequest({
         method: "put",
-        url: `/api/quotation/${quote.id}/${quote.name}/${quote.responsible}/${quote.status}`,
+        url: `/api/quotation/`,
+        data: quote,
       });
       toast({
         title: "Quote Updated",
@@ -197,20 +192,122 @@ export function QuotesTable({ initialQuotes }: ExtensibleTableProps) {
                 />
                 <FormField
                   control={form.control}
-                  name="responsible"
+                  name="customerName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Author</FormLabel>
+                      <FormLabel>Customer Name</FormLabel>
                       <FormControl>
-                        <UserDropdown
-                          value={field.value}
-                          onChange={field.onChange}
-                        />
+                        <Input {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+                <FormField
+                  control={form.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>address</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="contactName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contact Name</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="phoneNumber1"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number 1</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="phoneNumber2"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number 2</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Address</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="zipCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Zip Code</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="state"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>State</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 <Button type="submit">Add</Button>
               </form>
             </Form>

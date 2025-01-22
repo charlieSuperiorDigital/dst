@@ -4,7 +4,6 @@ import { getAllParts } from "./lib/get-all-parts";
 
 const dashboard = async () => {
   const partsResponse = await getAllParts();
-  console.log(partsResponse.result);
 
   if (!partsResponse.result) {
     return <div>Error loading parts</div>;
