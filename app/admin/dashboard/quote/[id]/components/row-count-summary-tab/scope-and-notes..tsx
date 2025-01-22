@@ -85,7 +85,7 @@ const ScopeItemsAndNotes = () => {
         </CardContent>
 
         <CardHeader>
-          <CardTitle>Project Scope of Work</CardTitle>
+          <CardTitle>Scope of Work</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <Input
@@ -134,7 +134,7 @@ const ScopeItemsAndNotes = () => {
         </CardContent>
 
         <CardHeader>
-          <CardTitle>Project Notes</CardTitle>
+          <CardTitle>Quotes Notes</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <Input

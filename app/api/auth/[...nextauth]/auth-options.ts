@@ -15,7 +15,7 @@ interface Session extends NextAuthSession {
   user: {
     id: string;
     role: string;
-    accessToken: string;
+    token: string;
   } & NextAuthSession["user"];
 }
 
@@ -46,11 +46,12 @@ export const authOptions: AuthOptions = {
               response.data.errorMessage || "Authentication failed"
             );
           }
-
+          console.log("response", response.data);
           return {
             id: response.data.userId,
             email: response.data.email,
             name: response.data.fullname,
+            role: response.data.role,
             token: response.data.token,
           };
         } catch (error) {
@@ -68,7 +69,7 @@ export const authOptions: AuthOptions = {
         token.email = extendedUser.email;
         token.name = extendedUser.name;
         token.role = extendedUser.role;
-        token.accessToken = extendedUser.token;
+        token.token = extendedUser.token;
       }
       return token;
     },
@@ -78,7 +79,7 @@ export const authOptions: AuthOptions = {
         extendedSession.user.id = token.id as string;
         extendedSession.user.email = token.email as string;
         extendedSession.user.name = token.name as string;
-        extendedSession.user.accessToken = token.accessToken as string;
+        extendedSession.user.token = token.token as string;
       }
       return extendedSession;
     },

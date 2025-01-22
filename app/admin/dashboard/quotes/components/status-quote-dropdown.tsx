@@ -1,3 +1,4 @@
+import { QuotesStatus } from "@/app/entities/Quotes";
 import {
   Select,
   SelectContent,
@@ -5,15 +6,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-export enum QuotesStatus {
-  New = 0,
-  Pending = 1,
-  Approved = 2,
-  Rejected = 3,
-  Cancelled = 4,
-  Executed = 5,
-}
 
 interface QuotesStatusDropdownProps {
   value: QuotesStatus;
@@ -24,9 +16,8 @@ export function QuotesStatusDropdown({
   onChange,
   value,
 }: QuotesStatusDropdownProps) {
-  // Convert enum to array of objects
   const statusOptions = Object.entries(QuotesStatus)
-    .filter(([key]) => isNaN(Number(key))) // Exclude reverse mappings from the enum
+    .filter(([key]) => isNaN(Number(key)))
     .map(([key, val]) => ({
       id: val as number,
       description: key,
