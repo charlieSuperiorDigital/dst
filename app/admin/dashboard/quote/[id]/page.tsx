@@ -1,5 +1,6 @@
 import QuoteClientSide from "./components/quote-client-side";
 import QuoteHeader from "./components/quote-header";
+import { QuoteProvider } from "./context/quote-context";
 import { getSingleQuote } from "./lib/get-single-quote";
 import { getSingleQuoteData } from "./lib/get-single-quote-data";
 
@@ -12,22 +13,25 @@ export default async function Page({
   const quote = await getSingleQuote(id);
   const quoteData = await getSingleQuoteData(id);
 
-  if (!quote.result) {
+  if (!quote) {
     return <div>Quote not found</div>;
   }
-
-  const rowsWithData = quoteData.result?.rows || [];
-  const mappedrows = rowsWithData.map((row) => row.row);
-
+  const isLocked = quote.result.status === 2;
+  const contextValue = {
+    quote: quote.result,
+    quoteData: quoteData,
+    isLocked: isLocked,
+  };
   return (
-    <div>
-      <QuoteHeader quote={quote.result} />
-      <QuoteClientSide
-        quoteId={id}
-        parts={quoteData.result.parts}
-        rows={mappedrows}
-        rowsWithData={rowsWithData}
-      />
-    </div>
+    <QuoteProvider value={contextValue}>
+      <div>
+        <QuoteHeader quote={quote.result} />
+        <QuoteClientSide
+          quoteId={id}
+          parts={quoteData.parts}
+          isLocked={isLocked}
+        />
+      </div>
+    </QuoteProvider>
   );
 }

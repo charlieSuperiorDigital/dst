@@ -20,8 +20,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { BayDefinition } from "./bay-definition-table";
+// import { BayDefinition } from "./bay-definition-table";
 
+interface Bay {
+  id: string;
+  name: string;
+  // Add other properties of Bay if needed
+}
 const formSchema = z.object({
   name: z.string().min(1, "Day is required"),
 });
@@ -29,11 +34,11 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 interface Props {
-  onEdit: (bay: BayDefinition) => void;
-  bay: BayDefinition;
+  onEdit: (bay: Bay) => void;
+  bay: Bay;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onDelete: (bay: BayDefinition) => void;
+  onDelete: (bay: Bay) => void;
 }
 
 export function EditBayDefinitionTab({

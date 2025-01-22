@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -15,24 +15,27 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 
-const formSchema = z.object({
-  tempcode: z.string().min(1, "Reset code is required"),
-  password: z.string().min(8, {
-    message: "Password must be at least 8 characters.",
-  }),
-  passwordconfirm: z.string(),
-}).refine((data) => data.password === data.passwordconfirm, {
-  message: "Passwords don't match",
-  path: ["passwordconfirm"],
-});
+const formSchema = z
+  .object({
+    tempcode: z.string().min(1, "Reset code is required"),
+    password: z.string().min(8, {
+      message: "Password must be at least 8 characters.",
+    }),
+    passwordconfirm: z.string(),
+  })
+  .refine((data) => data.password === data.passwordconfirm, {
+    message: "Passwords don't match",
+    path: ["passwordconfirm"],
+  });
 
 type FormValues = z.infer<typeof formSchema>;
 
-export default function ResetPasswordConfirmPage({ params }: { params: { email: string } }) {
+export default function ResetPasswordConfirmPage() {
   const router = useRouter();
-  const email = decodeURIComponent(params.email);
+  const params = useParams();
+  const email = params.email as string;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -69,11 +72,17 @@ export default function ResetPasswordConfirmPage({ params }: { params: { email: 
       } else {
         throw new Error("Failed to reset password");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Password reset error:", error);
+
+      let errorMessage = "An error occurred while resetting your password.";
+      if (error instanceof AxiosError) {
+        errorMessage = error.response?.data?.message || errorMessage;
+      }
+
       toast({
         title: "Reset Failed",
-        description: error.response?.data || "An error occurred while resetting your password.",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -94,10 +103,7 @@ export default function ResetPasswordConfirmPage({ params }: { params: { email: 
               <FormItem>
                 <FormLabel>Reset Code</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="Enter reset code"
-                    {...field}
-                  />
+                  <Input placeholder="Enter reset code" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -110,10 +116,7 @@ export default function ResetPasswordConfirmPage({ params }: { params: { email: 
               <FormItem>
                 <FormLabel>New Password</FormLabel>
                 <FormControl>
-                  <Input
-                    type="password"
-                    {...field}
-                  />
+                  <Input type="password" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -126,10 +129,7 @@ export default function ResetPasswordConfirmPage({ params }: { params: { email: 
               <FormItem>
                 <FormLabel>Confirm New Password</FormLabel>
                 <FormControl>
-                  <Input
-                    type="password"
-                    {...field}
-                  />
+                  <Input type="password" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -161,4 +161,4 @@ export default function ResetPasswordConfirmPage({ params }: { params: { email: 
       </Form>
     </div>
   );
-} 
+}

@@ -18,6 +18,7 @@ import { Part } from "@/app/entities/Part";
 import { paintTypes } from "@/app/entities/colors-enum";
 import { toast } from "@/hooks/use-toast";
 import { apiRequest } from "@/utils/client-side-api";
+import { useQuote } from "../../context/quote-context";
 
 // const initialParts: PartList[] = [
 //   {
@@ -105,6 +106,7 @@ interface Props {
 }
 
 export default function PartsListTable({ intialParts, quoteId }: Props) {
+  const { isLocked } = useQuote();
   const [parts, setParts] = useState<PartList[]>(intialParts);
   const [filteredParts, setFilteredParts] = useState<PartList[]>(intialParts);
   const [selectedPart, setSelectedPart] = useState<PartList | null>(null);
@@ -239,7 +241,7 @@ export default function PartsListTable({ intialParts, quoteId }: Props) {
           />
         </form>
         <div className=" flex gap-3">
-          <PartsDialog onAdd={handleAdd} />
+          {!isLocked && <PartsDialog onAdd={handleAdd} />}
         </div>
       </div>
       <Table>

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Plus, Trash2 } from "lucide-react";
 import React, { useState } from "react";
 import { useSession } from "next-auth/react";
+import { useQuote } from "../../context/quote-context";
 interface Note {
   id: string;
   content: string;
@@ -20,6 +21,7 @@ const ScopeItemsAndNotes = () => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [newItem, setNewItem] = useState("");
   const [newNote, setNewNote] = useState("");
+  const { isLocked } = useQuote();
 
   const { data: session } = useSession();
 
@@ -77,27 +79,35 @@ const ScopeItemsAndNotes = () => {
                   size="sm"
                   onClick={() => handleRemoveItem(item.id)}
                 >
-                  <Trash2 className="w-4 h-4 text-red-500 " />
+                  {!isLocked && <Trash2 className="w-4 h-4 text-red-500 " />}
                 </Button>
               </li>
             ))}
           </ul>
         </CardContent>
+        {!isLocked && (
+          <>
+            <CardHeader>
+              <CardTitle>Scope of Work</CardTitle>
+            </CardHeader>
 
-        <CardHeader>
-          <CardTitle>Scope of Work</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Input
-            value={newItem}
-            onChange={(e) => setNewItem(e.target.value)}
-            placeholder="Enter scope "
-          />
-          <Button onClick={handleAddItem} variant="success" className="w-full">
-            <Plus className="w-4 h-4 mr-2" />
-            Add Scope Item
-          </Button>
-        </CardContent>
+            <CardContent className="space-y-4">
+              <Input
+                value={newItem}
+                onChange={(e) => setNewItem(e.target.value)}
+                placeholder="Enter scope "
+              />
+              <Button
+                onClick={handleAddItem}
+                variant="success"
+                className="w-full"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Scope Item
+              </Button>
+            </CardContent>
+          </>
+        )}
       </Card>
       <Card className="w-full">
         <CardHeader>
@@ -119,7 +129,7 @@ const ScopeItemsAndNotes = () => {
                     size="sm"
                     onClick={() => handleRemoveNote(item.id)}
                   >
-                    <Trash2 className="w-4 h-4 text-red-500" />
+                    {!isLocked && <Trash2 className="w-4 h-4 text-red-500" />}
                   </Button>
                 </div>
                 <div className="text-sm text-gray-500 flex justify-between">
@@ -133,20 +143,28 @@ const ScopeItemsAndNotes = () => {
           </ul>
         </CardContent>
 
-        <CardHeader>
-          <CardTitle>Quotes Notes</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Input
-            value={newNote}
-            onChange={(e) => setNewNote(e.target.value)}
-            placeholder="Enter note "
-          />
-          <Button onClick={handleNewNote} variant="success" className="w-full">
-            <Plus className="w-4 h-4 mr-2" />
-            Add note
-          </Button>
-        </CardContent>
+        {!isLocked && (
+          <>
+            <CardHeader>
+              <CardTitle>Quotes Notes</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Input
+                value={newNote}
+                onChange={(e) => setNewNote(e.target.value)}
+                placeholder="Enter note"
+              />
+              <Button
+                onClick={handleNewNote}
+                variant="success"
+                className="w-full"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add note
+              </Button>
+            </CardContent>
+          </>
+        )}
       </Card>
     </div>
   );

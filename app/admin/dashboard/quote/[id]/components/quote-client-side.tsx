@@ -14,16 +14,14 @@ import RownCountSummary from "./row-count-summary-tab/row-count-summary";
 import RowCounts from "./row-count-tab/row-counts-table";
 import MiscCount from "./misc-count-tab/misc-count";
 import { PartList } from "@/app/entities/PartList";
-import { Row } from "@/app/entities/quote-response";
 
 type Props = {
   quoteId: string;
   parts: PartList[];
-  rows: Row[];
-  rowsWithData: RowWithDetails[];
+  isLocked: boolean;
 };
 
-const QuoteClientSide = ({ quoteId, parts, rows, rowsWithData }: Props) => {
+const QuoteClientSide = ({ quoteId, parts, isLocked }: Props) => {
   const searchParams = useSearchParams();
   const tab = searchParams.get("tab");
   return (
@@ -35,10 +33,12 @@ const QuoteClientSide = ({ quoteId, parts, rows, rowsWithData }: Props) => {
       )}
       {tab === "receiving" && <ReceivingTable />}
       {tab === "installation" && <InstallationTable />}
-      {tab === "bay-definitions" && <BayDefinitionTable />}
+      {tab === "bay-definitions" && (
+        <BayDefinitionTable quoteId={quoteId} parts={parts} />
+      )}
       {tab === "frameline-definition" && <FrameLineDefinitionTable />}
       {tab === "flue-definition" && <FlueDefinitionTable />}
-      {tab === "bay-count" && <BayCounts initialData={rowsWithData} />}
+      {tab === "bay-count" && <BayCounts />}
       {tab === "frameline-count" && <FrameLineCounts />}
       {tab === "flue-counts" && <FlueCounts />}
       {tab === "misc-counts" && <MiscCount />}

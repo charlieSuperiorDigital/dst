@@ -50,7 +50,8 @@ export default function ResetPasswordPage() {
       if (response.status === 200) {
         toast({
           title: "Reset Code Sent",
-          description: "If an account exists with this email, you will receive a password reset code.",
+          description:
+            "If an account exists with this email, you will receive a password reset code.",
         });
         // Store the email in the URL state for the next step
         router.push(`/reset-password/${values.email}`);
@@ -71,7 +72,8 @@ export default function ResetPasswordPage() {
     <div className="w-full max-w-[800px] mx-auto border border-gray-200 rounded-lg shadow-lg bg-white p-6">
       <h1 className="text-3xl font-bold mb-6">Reset Password</h1>
       <p className="text-gray-600 mb-6">
-        Enter your email address and we'll send you a code to reset your password.
+        Please enter your email address to reset your password. We&apos;ll send
+        you an email with instructions on how to reset your password.
       </p>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -118,4 +120,4 @@ export default function ResetPasswordPage() {
       </Form>
     </div>
   );
-} 
+}
