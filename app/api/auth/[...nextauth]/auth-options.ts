@@ -46,7 +46,7 @@ export const authOptions: AuthOptions = {
               response.data.errorMessage || "Authentication failed"
             );
           }
-          console.log("response", response.data);
+
           return {
             id: response.data.userId,
             email: response.data.email,

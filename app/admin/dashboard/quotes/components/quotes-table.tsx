@@ -175,7 +175,7 @@ export function QuotesTable({ initialQuotes }: ExtensibleTableProps) {
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(handleAdd)}
-                className="space-y-4"
+                className="grid grid-cols-1 md:grid-cols-2 gap-4"
               >
                 <FormField
                   control={form.control}
@@ -208,7 +208,7 @@ export function QuotesTable({ initialQuotes }: ExtensibleTableProps) {
                   name="address"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>address</FormLabel>
+                      <FormLabel>Address</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -270,19 +270,6 @@ export function QuotesTable({ initialQuotes }: ExtensibleTableProps) {
                 />
                 <FormField
                   control={form.control}
-                  name="address"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Address</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
                   name="zipCode"
                   render={({ field }) => (
                     <FormItem>
@@ -308,7 +295,9 @@ export function QuotesTable({ initialQuotes }: ExtensibleTableProps) {
                   )}
                 />
 
-                <Button type="submit">Add</Button>
+                <div className="col-span-1 md:col-span-2">
+                  <Button type="submit">Add</Button>
+                </div>
               </form>
             </Form>
           </DialogContent>
