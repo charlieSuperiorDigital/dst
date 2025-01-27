@@ -4,38 +4,32 @@ import React from "react";
 import PartsListTable from "./part-list-tab/parts-list-table";
 import ReceivingTable from "./receiving-tab/receiving-table";
 import InstallationTable from "./installation-tab/installation-table";
-import BayDefinitionTable from "./bay-definition-tab/bay-definition-table";
 import FrameLineDefinitionTable from "./frameline-definition-tab/frame-definition-table";
 import FlueDefinitionTable from "./flue-dinition-tab/flue-definition-table";
-import BayCounts, { RowWithDetails } from "./bay-count-tab/bay-count-table";
+import BayCounts from "./bay-count-tab/bay-count-table";
 import FrameLineCounts from "./frameline-count-tab/frameline-count-table";
 import FlueCounts from "./flue-count-tab/flue-count";
 import RownCountSummary from "./row-count-summary-tab/row-count-summary";
 import RowCounts from "./row-count-tab/row-counts-table";
 import MiscCount from "./misc-count-tab/misc-count";
-import { PartList } from "@/app/entities/PartList";
+import TableComponent from "./bay-definition-tab/table-test2";
 
 type Props = {
   quoteId: string;
-  parts: PartList[];
-  isLocked: boolean;
 };
 
-const QuoteClientSide = ({ quoteId, parts, isLocked }: Props) => {
+const QuoteClientSide = ({ quoteId }: Props) => {
   const searchParams = useSearchParams();
   const tab = searchParams.get("tab");
   return (
     <div>
       {tab === "summary" && <RownCountSummary />}
       {tab === "row-count" && <RowCounts quoteId={quoteId} />}
-      {tab === "part-list" && (
-        <PartsListTable intialParts={parts} quoteId={quoteId} />
-      )}
+      {tab === "part-list" && <PartsListTable quoteId={quoteId} />}
       {tab === "receiving" && <ReceivingTable />}
       {tab === "installation" && <InstallationTable />}
-      {tab === "bay-definitions" && (
-        <BayDefinitionTable quoteId={quoteId} parts={parts} />
-      )}
+      {/* {tab === "bay-definitions" && <BayDefinitionTable quoteId={quoteId} />} */}
+      {tab === "bay-definitions" && <TableComponent quoteId={quoteId} />}
       {tab === "frameline-definition" && <FrameLineDefinitionTable />}
       {tab === "flue-definition" && <FlueDefinitionTable />}
       {tab === "bay-count" && <BayCounts />}

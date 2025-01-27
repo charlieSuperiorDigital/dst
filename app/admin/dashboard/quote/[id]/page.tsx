@@ -1,8 +1,10 @@
 import QuoteClientSide from "./components/quote-client-side";
 import QuoteHeader from "./components/quote-header";
 import { QuoteProvider } from "./context/quote-context";
+
+import { getBayDefinitions } from "./lib/get-bay-definition";
 import { getSingleQuote } from "./lib/get-single-quote";
-import { getSingleQuoteData } from "./lib/get-single-quote-data";
+import QuoteTabs from "./quote-tabs";
 
 export default async function Page({
   params,
@@ -11,27 +13,22 @@ export default async function Page({
 }) {
   const id = (await params).id;
   const quote = await getSingleQuote(id);
-  const quoteData = await getSingleQuoteData(id);
-
+  const bayDefinition = await getBayDefinitions(id);
   if (!quote) {
     return <div>Quote not found</div>;
   }
   const isLocked = quote.result.status === 2;
   const contextValue = {
     quote: quote.result,
-    quoteData: quoteData,
+    bayDefinition: bayDefinition.result,
     isLocked: isLocked,
   };
+
   return (
-    <QuoteProvider value={contextValue}>
-      <div>
-        <QuoteHeader quote={quote.result} />
-        <QuoteClientSide
-          quoteId={id}
-          parts={quoteData.parts}
-          isLocked={isLocked}
-        />
-      </div>
+    <QuoteProvider initialValue={contextValue}>
+      <QuoteHeader quote={quote.result} />
+      <QuoteClientSide quoteId={id} />
+      <QuoteTabs />
     </QuoteProvider>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { use, useEffect, useState } from "react";
 import {
   Table,
   TableBody,
@@ -23,14 +23,13 @@ import { useQuote } from "../../context/quote-context";
 const materialMargin = 0.2;
 
 interface Props {
-  intialParts: PartList[];
   quoteId: string;
 }
 
-export default function PartsListTable({ intialParts, quoteId }: Props) {
+export default function PartsListTable({ quoteId }: Props) {
   const { isLocked } = useQuote();
-  const [parts, setParts] = useState<PartList[]>(intialParts);
-  const [filteredParts, setFilteredParts] = useState<PartList[]>(intialParts);
+  const [parts, setParts] = useState<PartList[]>([]);
+  const [filteredParts, setFilteredParts] = useState<PartList[]>([]);
   const [selectedPart, setSelectedPart] = useState<PartList | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -148,6 +147,27 @@ export default function PartsListTable({ intialParts, quoteId }: Props) {
     );
     setFilteredParts(filteredParts);
   };
+
+  useEffect(() => {
+    const getParts = async () => {
+      try {
+        const response = await apiRequest({
+          method: "get",
+          url: `/api/Part/PartsFromQuotation/${quoteId}`,
+        });
+        setFilteredParts(response.parts);
+        setParts(response.parts);
+      } catch (error) {
+        console.log(error);
+        toast({
+          title: "Error",
+          description: "Error fetching parts",
+          variant: "destructive",
+        });
+      }
+    };
+    getParts();
+  }, [quoteId]);
   return (
     <div className="rounded-md border">
       <div className="flex justify-between items-center p-4">
@@ -184,63 +204,73 @@ export default function PartsListTable({ intialParts, quoteId }: Props) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          <TableRow className="bg-blue-200">
-            <TableCell colSpan={9} className="font-medium border">
-              <div className="flex">
-                <p>Total:</p>
-                {formatCurrency(totalSell)}
-              </div>
-            </TableCell>
-            <TableCell colSpan={3} className="border" />
-          </TableRow>
-          {filteredParts.map((part) => (
-            <TableRow
-              key={part.id}
-              className="cursor-pointer hover:bg-muted border"
-              onClick={() => handleRowClick(part)}
-            >
-              <TableCell className="font-medium border">
-                {part.partNumber}
-              </TableCell>
-              <TableCell className="border">{part.qty || 0}</TableCell>
-              <TableCell className="border">{part.description}</TableCell>
-              <TableCell className="border">
-                {paintTypes?.find((p) => p.id === part.colorId)?.name}
-              </TableCell>
-              <TableCell className="text-right border">
-                {part.unitWeight.toFixed(2)}
-              </TableCell>
-              <TableCell className="text-right border">
-                {part.unitWeight * (part.qty ?? 0)}
-              </TableCell>
-              {/* <TableCell className="text-right">{part.unitMatLb}</TableCell> */}
-              <TableCell className="text-right border">
-                {part.unitLabor}
-              </TableCell>
-              <TableCell className="text-right border">
-                {formatCurrency(part.unitWeight + part.unitLabor)}
-              </TableCell>
-              <TableCell className="text-right border">
-                {formatCurrency(
-                  (part.unitWeight + part.unitLabor) * (part.qty ?? 0)
-                )}
-              </TableCell>
-              <TableCell className="text-right border">
-                {formatCurrency(
-                  (part.unitWeight + part.unitLabor) / (1 - materialMargin)
-                )}
-              </TableCell>
-              <TableCell className="text-right border">
-                {(part.qty || 0 * part.laborEA).toFixed(2)}
-              </TableCell>
-              <TableCell className="text-right border">
-                {formatCurrency(
-                  ((part.unitWeight + part.unitLabor) / (1 - materialMargin)) *
-                    (part.qty ?? 0)
-                )}
+          {filteredParts.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={12} className="text-center">
+                Loading...
               </TableCell>
             </TableRow>
-          ))}
+          ) : (
+            <>
+              <TableRow className="bg-blue-200">
+                <TableCell colSpan={9} className="font-medium border">
+                  <div className="flex">
+                    <p>Total:</p>
+                    {formatCurrency(totalSell)}
+                  </div>
+                </TableCell>
+                <TableCell colSpan={3} className="border" />
+              </TableRow>
+              {filteredParts.map((part) => (
+                <TableRow
+                  key={part.id}
+                  className="cursor-pointer hover:bg-muted border"
+                  onClick={() => handleRowClick(part)}
+                >
+                  <TableCell className="font-medium border">
+                    {part.partNumber}
+                  </TableCell>
+                  <TableCell className="border">{part.qty || 0}</TableCell>
+                  <TableCell className="border">{part.description}</TableCell>
+                  <TableCell className="border">
+                    {paintTypes?.find((p) => p.id === part.colorId)?.name}
+                  </TableCell>
+                  <TableCell className="text-right border">
+                    {part.unitWeight.toFixed(2)}
+                  </TableCell>
+                  <TableCell className="text-right border">
+                    {part.unitWeight * (part.qty ?? 0)}
+                  </TableCell>
+                  <TableCell className="text-right border">
+                    {part.unitLabor}
+                  </TableCell>
+                  <TableCell className="text-right border">
+                    {formatCurrency(part.unitWeight + part.unitLabor)}
+                  </TableCell>
+                  <TableCell className="text-right border">
+                    {formatCurrency(
+                      (part.unitWeight + part.unitLabor) * (part.qty ?? 0)
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right border">
+                    {formatCurrency(
+                      (part.unitWeight + part.unitLabor) / (1 - materialMargin)
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right border">
+                    {(part.qty || 0 * part.laborEA).toFixed(2)}
+                  </TableCell>
+                  <TableCell className="text-right border">
+                    {formatCurrency(
+                      ((part.unitWeight + part.unitLabor) /
+                        (1 - materialMargin)) *
+                        (part.qty ?? 0)
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </>
+          )}
         </TableBody>
       </Table>
 

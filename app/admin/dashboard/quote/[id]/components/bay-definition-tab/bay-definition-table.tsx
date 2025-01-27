@@ -48,7 +48,7 @@ interface PartWithBays {
 
 interface PartsBayTableProps {
   quoteId: string;
-  parts: PartList[];
+  parts?: PartList[];
 }
 
 export default function PartsBayTable({ quoteId, parts }: PartsBayTableProps) {
@@ -78,28 +78,6 @@ export default function PartsBayTable({ quoteId, parts }: PartsBayTableProps) {
   const updateQuantity = useCallback(
     async (partId: string, bayId: string, newQuantity: number) => {
       try {
-        const partWithBays = partsWithBays.find(
-          (item) => item.part.id === partId
-        );
-        const bay = partWithBays?.bays.find((b) => b.bayId === bayId);
-
-        const previousQuantity = bay?.quantity || 0;
-        const isNewEntry = previousQuantity === 0 && newQuantity > 0;
-
-        if (isNewEntry) {
-          await apiRequest({
-            url: `/api/part/bay/addPart`,
-            method: "post",
-            data: { partId, id: bayId, quantity: newQuantity },
-          });
-        } else {
-          await apiRequest({
-            url: `/api/part/bay/updatePart`,
-            method: "put",
-            data: { partId, bayId, quantity: newQuantity },
-          });
-        }
-
         setPartsWithBays((prevState) =>
           prevState.map((item) =>
             item.part.id === partId
@@ -114,6 +92,42 @@ export default function PartsBayTable({ quoteId, parts }: PartsBayTableProps) {
               : item
           )
         );
+        console.log("partId", partId);
+        console.log("bayId", bayId);
+        console.log("newQuantity", newQuantity);
+        await apiRequest({
+          url: `/api/part/bay/updatePart`,
+          method: "put",
+          data: { partId, bayId, quantity: newQuantity },
+        });
+        // await apiRequest({
+        //   url: `/api/part/bay/addPart`,
+        //   method: "post",
+        //   data: { partId, id: bayId, quantity: newQuantity },
+        // });
+
+        // const partWithBays = partsWithBays.find(
+        //   (item) => item.part.id === partId
+        // );
+        // const bay = partWithBays?.bays.find((b) => b.bayId === bayId);
+
+        // const previousQuantity = bay?.quantity || 0;
+        // const isNewEntry = previousQuantity === 0 && newQuantity > 0;
+        // console.log("isNewEntry", isNewEntry);
+
+        // if (isNewEntry) {
+        //   await apiRequest({
+        //     url: `/api/part/bay/addPart`,
+        //     method: "post",
+        //     data: { partId, id: bayId, quantity: newQuantity },
+        //   });
+        // } else {
+        //   await apiRequest({
+        //     url: `/api/part/bay/updatePart`,
+        //     method: "put",
+        //     data: { partId, bayId, quantity: newQuantity },
+        //   });
+        // }
 
         toast({
           title: "Success",
@@ -156,12 +170,21 @@ export default function PartsBayTable({ quoteId, parts }: PartsBayTableProps) {
 
   const handleAddBay = async (bayName) => {
     try {
-      await apiRequest({
+      const response = await apiRequest({
         url: `/api/definition/bay/${bayName}/${quoteId}`,
         method: "post",
       });
 
       setBays((prevState) => [...prevState, bayName]);
+      setPartsWithBays((prevState) =>
+        prevState.map((partWithBays) => ({
+          ...partWithBays,
+          bays: [
+            ...partWithBays.bays,
+            { bayName: bayName, bayId: response, quantity: 0 },
+          ],
+        }))
+      );
 
       toast({
         title: "Success",
