@@ -3,6 +3,9 @@ import React, { useState, useRef, useEffect } from "react";
 import { AddBayDefinitonTab } from "./add-bay-definition";
 import { toast } from "@/hooks/use-toast";
 import { useQuote } from "../../context/quote-context";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 type Part = {
   id: string;
@@ -61,7 +64,8 @@ const TableComponent = ({ quoteId }: Props) => {
   const [copiedCells, setCopiedCells] = useState<string[][]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-
+  const [searchTerm, setSearchTerm] = useState("");
+  const [hideZeroQuantity, setHideZeroQuantity] = useState(false);
   const fetchData = async () => {
     try {
       const response: PartWithBays[] = await apiRequest({
@@ -69,6 +73,7 @@ const TableComponent = ({ quoteId }: Props) => {
         method: "get",
       });
 
+      console.log("PartsWithBays:", response);
       setPartsWithBays(response);
       setLoading(false);
     } catch (err) {
@@ -87,10 +92,10 @@ const TableComponent = ({ quoteId }: Props) => {
     )
   );
   if (loading) {
-    return <div>Cargando...</div>;
+    return <div>Loading</div>;
   }
   if (error) {
-    return <div>{error}</div>;
+    return <div>Error loading </div>;
   }
 
   // Funciones adaptadas para trabajar con `partsWithBays`
@@ -747,41 +752,6 @@ const TableComponent = ({ quoteId }: Props) => {
     setRowHeights((prev) => ({ ...prev, [rowIndex]: maxHeight }));
   };
 
-  const handleEnterKey = (rowIndex: number) => {
-    // Mover a la siguiente fila al presionar Enter
-    moveToNextCell("down");
-  };
-
-  const handleArrowInEdit = (
-    direction: "up" | "down" | "left" | "right",
-    event: React.KeyboardEvent
-  ) => {
-    const input = activeInput.current;
-    if (!input) return;
-
-    const currentCellContent =
-      partsWithBays[editingCell.row].bays[editingCell.col].quantity.toString();
-
-    // Para movimiento izquierda/derecha, verificar la posición del cursor
-    if (direction === "left") {
-      // Solo mover a la celda anterior si el cursor está al inicio
-      if (input.selectionStart === 0 && input.selectionEnd === 0) {
-        moveToNextCell(direction, event);
-      }
-    } else if (direction === "right") {
-      // Solo mover a la celda siguiente si el cursor está al final
-      if (
-        input.selectionStart === currentCellContent.length &&
-        input.selectionEnd === currentCellContent.length
-      ) {
-        moveToNextCell(direction, event);
-      }
-    } else {
-      // Para movimiento arriba/abajo, siempre mover
-      moveToNextCell(direction, event);
-    }
-  };
-
   const handleAddBay = async (bayName) => {
     try {
       const response = await apiRequest({
@@ -794,7 +764,7 @@ const TableComponent = ({ quoteId }: Props) => {
           ...partWithBays,
           bays: [
             ...partWithBays.bays,
-            { bayName: bayName, bayId: "11", quantity: 0 },
+            { bayName: bayName, bayId: response, quantity: 0 },
           ],
         }))
       );
@@ -803,7 +773,7 @@ const TableComponent = ({ quoteId }: Props) => {
           ...partWithBays,
           bays: [
             ...partWithBays.bays,
-            { bayName: bayName, bayId: "11", quantity: 0 },
+            { bayName: bayName, bayId: response, quantity: 0 },
           ],
         }))
       );
@@ -956,9 +926,41 @@ const TableComponent = ({ quoteId }: Props) => {
   const calculateTotalQuantity = (partWithBays: PartWithBays): number => {
     return partWithBays.bays.reduce((total, bay) => total + bay.quantity, 0);
   };
+
+  const filteredBays = allBays.filter((bayName) =>
+    bayName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredPartsWithBays = partsWithBays.filter((partWithBays) => {
+    const matchesSearch = partWithBays.bays.some((bay) =>
+      bay.bayName.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    const hasNonZeroQuantity =
+      !hideZeroQuantity || partWithBays.bays.some((bay) => bay.quantity > 0);
+    return matchesSearch && hasNonZeroQuantity;
+  });
   return (
-    <>
-      <AddBayDefinitonTab onAdd={handleAddBay} />
+    <div className="mt-6">
+      <div className="flex items-center space-x-4 mb-6">
+        <div className="">
+          <Input
+            type="search"
+            placeholder="Search bays..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full"
+          />
+        </div>
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="hide-zero"
+            checked={hideZeroQuantity}
+            onCheckedChange={setHideZeroQuantity}
+          />
+          <Label htmlFor="hide-zero">Hide zero quantity</Label>
+        </div>
+        <AddBayDefinitonTab onAdd={handleAddBay} />
+      </div>
       <div
         className="table-component overflow-auto max-w-full max-h-full outline-none relative"
         onKeyDown={handleKeyNavigation}
@@ -987,7 +989,7 @@ const TableComponent = ({ quoteId }: Props) => {
               <th className="border border-gray-300 p-2 font-bold text-left w-[350px] sticky left-0 bg-white z-20">
                 Part Number / Description
               </th>
-              {allBays.map((bayName, colIndex) => (
+              {filteredBays.map((bayName, colIndex) => (
                 <th
                   key={colIndex}
                   className={`border border-gray-300 p-2 font-bold text-center cursor-pointer relative ${
@@ -1013,7 +1015,7 @@ const TableComponent = ({ quoteId }: Props) => {
             </tr>
           </thead>
           <tbody>
-            {partsWithBays.map((partWithBays, rowIndex) => {
+            {filteredPartsWithBays.map((partWithBays, rowIndex) => {
               const totalQuantity = calculateTotalQuantity(partWithBays); // Calculate the total for the row
               return (
                 <tr key={partWithBays.part.id}>
@@ -1040,7 +1042,7 @@ const TableComponent = ({ quoteId }: Props) => {
                       {partWithBays.part.description}
                     </span>
                   </td>
-                  {allBays.map((bayName, colIndex) => {
+                  {filteredBays.map((bayName, colIndex) => {
                     const bay = partWithBays.bays.find(
                       (b) => b.bayName === bayName
                     );
@@ -1104,7 +1106,7 @@ const TableComponent = ({ quoteId }: Props) => {
                               const newPartsWithBays = [...partsWithBays];
                               const part = newPartsWithBays[rowIndex];
                               const bay = part.bays.find(
-                                (b) => b.bayName === allBays[colIndex]
+                                (b) => b.bayName === filteredBays[colIndex]
                               );
 
                               if (bay) {
@@ -1159,7 +1161,7 @@ const TableComponent = ({ quoteId }: Props) => {
           </tbody>
         </table>
       </div>
-    </>
+    </div>
   );
 };
 

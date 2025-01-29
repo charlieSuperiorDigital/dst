@@ -10,6 +10,8 @@ import {
   useEffect,
 } from "react";
 import type { PartWithBays } from "../components/bay-definition-tab/table-test2";
+import { PartWithFrames } from "../components/frameline-definition-tab/frame-definition-table";
+import { PartWithFlues } from "../components/flue-dinition-tab/flue-definition-table";
 
 interface ErrorState {
   bays: string[];
@@ -21,9 +23,20 @@ interface QuoteContextType {
   quote: Quotes;
   isLocked: boolean;
   bayDefinition?: PartWithBays[];
+  framelineDefinition?: PartWithFrames[];
+  flueDefinition?: PartWithFlues[];
   setBayDefinitionContext: React.Dispatch<React.SetStateAction<PartWithBays[]>>;
+  setFrameLinesDefinitionContext: React.Dispatch<
+    React.SetStateAction<PartWithFrames[]>
+  >;
+  setFluesDefinitionContext: React.Dispatch<
+    React.SetStateAction<PartWithFlues[]>
+  >;
   updateBayDefinitionContext: (bay: PartWithBays[]) => void;
   error: ErrorState;
+  bayDefinitionContext?: PartWithBays[];
+  frameLinesDefinitionContext?: PartWithFrames[];
+  fluesDefinitionContext?: PartWithFlues[];
 }
 
 const QuoteContext = createContext<QuoteContextType | undefined>(undefined);
@@ -35,12 +48,25 @@ export function QuoteProvider({
   children: ReactNode;
   initialValue?: Omit<
     QuoteContextType,
-    "updateBayDefinitionContext" | "setBayDefinitionContext" | "error"
+    | "updateBayDefinitionContext"
+    | "setBayDefinitionContext"
+    | "error"
+    | "setFrameLinesDefinitionContext"
+    | "setFluesDefinitionContext"
+    | "bayDefinitionContext"
+    | "frameLinesDefinitionContext"
+    | "fluesDefinitionContext"
   >;
 }) {
   const [bayDefinitionContext, setBayDefinitionContext] = useState<
     PartWithBays[]
   >(initialValue?.bayDefinition || []);
+
+  const [frameLinesDefinitionContext, setFrameLinesDefinitionContext] =
+    useState<PartWithFrames[]>(initialValue?.framelineDefinition || []);
+  const [fluesDefinitionContext, setFluesDefinitionContext] = useState<
+    PartWithFlues[]
+  >(initialValue?.flueDefinition || []);
 
   const [error, setError] = useState<ErrorState>({
     bays: [],
@@ -72,29 +98,78 @@ export function QuoteProvider({
 
   // Add similar functions for framelines and flues if needed
   const checkForProblematicFramelines = (
-    partWithBays: PartWithBays[]
+    partWithFrames: PartWithFrames[]
   ): string[] => {
-    // Implement the logic to check for problematic framelines
-    return [];
-  };
+    const problematicFrames: string[] = [];
 
-  const checkForProblematicFlues = (partWithBays: PartWithBays[]): string[] => {
-    // Implement the logic to check for problematic flues
-    return [];
+    partWithFrames.forEach((partWithBay) => {
+      partWithBay.framelines.forEach((frameline) => {
+        if (frameline.quantity === 0) {
+          const allPartsZero = partWithFrames
+            .filter((p) =>
+              p.framelines.some((f) => f.framelineId === frameline.framelineId)
+            )
+            .every(
+              (p) =>
+                p.framelines.find(
+                  (f) => f.framelineId === frameline.framelineId
+                )?.quantity === 0
+            );
+
+          if (
+            allPartsZero &&
+            !problematicFrames.includes(frameline.framelineName)
+          ) {
+            problematicFrames.push(frameline.framelineName);
+          }
+        }
+      });
+    });
+
+    return problematicFrames;
+  };
+  const checkForProblematicFlues = (
+    partWithFlues: PartWithFlues[]
+  ): string[] => {
+    const problematicFlues: string[] = [];
+
+    partWithFlues.forEach((partWithFlue) => {
+      partWithFlue.flues.forEach((flue) => {
+        if (flue.quantity === 0) {
+          const allPartsZero = partWithFlues
+            .filter((p) => p.flues.some((f) => f.flueId === flue.flueId))
+            .every(
+              (p) =>
+                p.flues.find((f) => f.flueId === flue.flueId)?.quantity === 0
+            );
+
+          if (allPartsZero && !problematicFlues.includes(flue.flueName)) {
+            problematicFlues.push(flue.flueName);
+          }
+        }
+      });
+    });
+
+    return problematicFlues;
   };
 
   useEffect(() => {
     const problematicBays = checkForZeroQuantityBays(bayDefinitionContext);
-    const problematicFramelines =
-      checkForProblematicFramelines(bayDefinitionContext);
-    const problematicFlues = checkForProblematicFlues(bayDefinitionContext);
+    const problematicFramelines = checkForProblematicFramelines(
+      frameLinesDefinitionContext
+    );
+    const problematicFlues = checkForProblematicFlues(fluesDefinitionContext);
 
     setError({
       bays: problematicBays,
       framelines: problematicFramelines,
       flues: problematicFlues,
     });
-  }, [bayDefinitionContext]); // Added dependencies
+  }, [
+    bayDefinitionContext,
+    frameLinesDefinitionContext,
+    fluesDefinitionContext,
+  ]);
 
   const updateBayDefinitionContext = (newBay: PartWithBays[]) => {
     console.log("Updating bayDefinitionContext with:", newBay);
@@ -106,10 +181,14 @@ export function QuoteProvider({
       value={{
         quote: initialValue?.quote || ({} as Quotes),
         isLocked: initialValue?.isLocked || false,
-        bayDefinition: bayDefinitionContext,
+        bayDefinitionContext: bayDefinitionContext,
+        frameLinesDefinitionContext,
+        fluesDefinitionContext,
         updateBayDefinitionContext,
         setBayDefinitionContext,
         error,
+        setFluesDefinitionContext,
+        setFrameLinesDefinitionContext,
       }}
     >
       {children}

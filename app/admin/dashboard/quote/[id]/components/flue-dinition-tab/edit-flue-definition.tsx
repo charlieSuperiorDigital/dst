@@ -20,7 +20,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { FlueDefinition } from "./flue-definition-table";
 
 const formSchema = z.object({
   name: z.string().min(1, "Day is required"),
@@ -29,11 +28,11 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 interface Props {
-  onEdit: (bay: FlueDefinition) => void;
-  bay: FlueDefinition;
+  onEdit: (bay) => void;
+  bay;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onDelete: (bay: FlueDefinition) => void;
+  onDelete: (bay) => void;
 }
 
 export function EditBayDefinitionTab({
