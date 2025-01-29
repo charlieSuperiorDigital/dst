@@ -2,8 +2,8 @@
 
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import React from "react";
-import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useQuote } from "./context/quote-context";
 import {
   Tooltip,
@@ -30,6 +30,15 @@ const tabItems = [
 const QuoteTabs = () => {
   const { error } = useQuote();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [currentTab, setCurrentTab] = useState("summary");
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab) {
+      setCurrentTab(tab);
+    }
+  }, [searchParams]);
 
   const handleTabChange = (value: string) => {
     router.push(`?tab=${value}`);
@@ -38,6 +47,7 @@ const QuoteTabs = () => {
   const hasBayErrors = error?.bays && error.bays.length > 0;
   const hasFramelineErrors = error?.framelines && error.framelines.length > 0;
   const hasFlueErrors = error?.flues && error.flues.length > 0;
+  console.log("error", error);
 
   const bayErrorTooltip = hasBayErrors ? error.bays.join(", ") : "";
   const framelineErrorTooltip = hasFramelineErrors
@@ -46,31 +56,35 @@ const QuoteTabs = () => {
   const flueErrorTooltip = hasFlueErrors ? error.flues.join(", ") : "";
 
   const getTabStyle = (tabValue: string) => {
+    let style = "";
+    if (tabValue === currentTab) {
+      style += "bg-[#3A3C91]  text-white ";
+    }
     if (
       (tabValue === "bay-definitions" && hasBayErrors) ||
       (tabValue === "frameline-definition" && hasFramelineErrors) ||
       (tabValue === "flue-definition" && hasFlueErrors)
     ) {
-      return "bg-red-500 text-white hover:bg-red-600";
+      style += "bg-red-500 text-white hover:bg-red-600 ";
     }
-    return "";
+    return style;
   };
 
   const getTooltipContent = (tabValue: string) => {
     if (tabValue === "bay-definitions" && hasBayErrors) {
-      return <p>Error in bays: {bayErrorTooltip}</p>;
+      return <p>No Def. in bays: {bayErrorTooltip}</p>;
     }
     if (tabValue === "frameline-definition" && hasFramelineErrors) {
-      return <p>Error in framelines: {framelineErrorTooltip}</p>;
+      return <p>No Def. in framelines: {framelineErrorTooltip}</p>;
     }
     if (tabValue === "flue-definition" && hasFlueErrors) {
-      return <p>Error in flues: {flueErrorTooltip}</p>;
+      return <p>No Def. in flues: {flueErrorTooltip}</p>;
     }
     return null;
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t">
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t z-50">
       <ScrollArea className="w-full">
         <Tabs onValueChange={handleTabChange} className="w-full">
           <TabsList className="w-full justify-start bg-gray-100">

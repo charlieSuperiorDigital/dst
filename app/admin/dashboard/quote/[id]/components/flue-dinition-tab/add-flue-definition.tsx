@@ -24,7 +24,6 @@ import {
 } from "@/components/ui/form";
 
 import { Input } from "@/components/ui/input";
-import { FlueDefinition } from "./flue-definition-table";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -33,7 +32,7 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 interface Props {
-  onAdd: (fluedef: FlueDefinition) => void;
+  onAdd: (fluedef) => void;
 }
 
 export function AddFlueDefinitonTab({ onAdd }: Props) {

@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { CostItem, MarginTax } from "./row-count-summary";
 import { Card } from "@/components/ui/card";
 import { useQuote } from "../../context/quote-context";
+import { useState } from "react";
 
 type Props = {
   marginTaxes: MarginTax[];
@@ -25,10 +26,17 @@ export default function CostBreakdownTable({
   setCostItems,
 }: Props) {
   const { isLocked } = useQuote();
+
+  const [manualSalesTax, setManualSalesTax] = useState<number | null>(null);
+
   const handlePriceChange = (index: number, newPrice: string) => {
     const updatedItems = [...costItems];
     updatedItems[index].price = parseFloat(newPrice) || 0;
     setCostItems(updatedItems);
+  };
+
+  const handleSalesTaxChange = (newTax: string) => {
+    setManualSalesTax(parseFloat(newTax) || 0);
   };
 
   const calculateWithMargins = () => {
@@ -60,10 +68,14 @@ export default function CostBreakdownTable({
       };
     });
 
+    // Use manual sales tax if provided, otherwise calculate it
     const salesTaxRate = marginTaxes.find((tax) =>
       tax.name.toLowerCase().includes("sales tax rate")
     );
-    totalSalesTax = (totalBeforeTaxes * (salesTaxRate?.price || 0)) / 100;
+    totalSalesTax =
+      manualSalesTax !== null
+        ? manualSalesTax
+        : (totalBeforeTaxes * (salesTaxRate?.price || 0)) / 100;
 
     const taxableSalesRate = marginTaxes.find((tax) =>
       tax.name.toLowerCase().includes("taxable sales")
@@ -130,7 +142,15 @@ export default function CostBreakdownTable({
               <TableCell>Sales Tax</TableCell>
               <TableCell></TableCell>
               <TableCell className="text-right">
-                ${totalSalesTax.toLocaleString()}
+                <Input
+                  type="number"
+                  value={
+                    manualSalesTax !== null ? manualSalesTax : totalSalesTax
+                  }
+                  onChange={(e) => handleSalesTaxChange(e.target.value)}
+                  className="w-32 text-right"
+                  disabled={isLocked}
+                />
               </TableCell>
               <TableCell></TableCell>
             </TableRow>
