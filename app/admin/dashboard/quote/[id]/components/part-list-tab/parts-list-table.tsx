@@ -212,7 +212,7 @@ export default function PartsListTable({ quoteId }: Props) {
             </TableRow>
           ) : (
             <>
-              <TableRow className="bg-blue-200">
+              {/* <TableRow className="bg-blue-200">
                 <TableCell colSpan={9} className="font-medium border">
                   <div className="flex">
                     <p>Total:</p>
@@ -220,7 +220,7 @@ export default function PartsListTable({ quoteId }: Props) {
                   </div>
                 </TableCell>
                 <TableCell colSpan={3} className="border" />
-              </TableRow>
+              </TableRow> */}
               {filteredParts.map((part) => (
                 <TableRow
                   key={part.id}

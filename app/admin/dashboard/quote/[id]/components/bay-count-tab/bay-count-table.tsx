@@ -3,6 +3,9 @@ import React, { useState, useRef, useEffect } from "react";
 import { toast } from "@/hooks/use-toast";
 import { useQuote } from "../../context/quote-context";
 import { AddBayDefinitonTab } from "../bay-definition-tab/add-bay-definition";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 type Row = {
   rowName: string;
@@ -35,7 +38,7 @@ type Props = {
   quoteId: string;
 };
 const TableComponent = ({ quoteId }: Props) => {
-  const { updateBayDefinitionContext, setBayDefinitionContext } = useQuote();
+  const { setBayDefinitionContext } = useQuote();
   const [bayWithRows, setbayWithRows] = useState<BayWithRows[]>([]);
   const [selectedCell, setSelectedCell] = useState({ row: -1, col: -1 });
   const [editingCell, setEditingCell] = useState({ row: -1, col: -1 });
@@ -60,6 +63,8 @@ const TableComponent = ({ quoteId }: Props) => {
   const [copiedCells, setCopiedCells] = useState<string[][]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [hideZeroQuantity, setHideZeroQuantity] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -960,9 +965,46 @@ const TableComponent = ({ quoteId }: Props) => {
   const calculateTotalQuantity = (partWithBays: BayWithRows): number => {
     return partWithBays.rows.reduce((total, bay) => total + bay.quantity, 0);
   };
+  const filteredBayWithRows = bayWithRows.filter((partWithBays) => {
+    // Filtrar por término de búsqueda
+    const matchesSearch = partWithBays.bay.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+
+    // Filtrar por toggle de ocultar filas con todas las cantidades en 0
+    const hasNonZeroQuantity = partWithBays.rows.some(
+      (row) => row.quantity !== 0
+    );
+
+    // Si el toggle está activado, solo mostrar filas con al menos una cantidad no cero
+    if (hideZeroQuantity) {
+      return matchesSearch && hasNonZeroQuantity;
+    }
+
+    return matchesSearch;
+  });
   return (
-    <>
-      <AddBayDefinitonTab onAdd={handleAddBay} />
+    <div className="mt-6">
+      <div className="flex items-center space-x-4  mb-4">
+        <AddBayDefinitonTab onAdd={handleAddBay} />
+        <div>
+          <Input
+            type="text"
+            placeholder="Search by bay name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="p-2 border border-gray-300 rounded"
+          />
+        </div>
+        <div className="flex items-center space-x-2 ">
+          <Switch
+            id="hide-zero"
+            checked={hideZeroQuantity}
+            onCheckedChange={setHideZeroQuantity}
+          />
+          <Label htmlFor="hide-zero">Hide zero quantity</Label>
+        </div>
+      </div>
       <div
         className="table-component overflow-auto max-w-full max-h-full outline-none relative"
         onKeyDown={handleKeyNavigation}
@@ -989,7 +1031,7 @@ const TableComponent = ({ quoteId }: Props) => {
           <thead>
             <tr>
               <th className="border border-gray-300 p-2 font-bold text-left w-[350px] sticky left-0 bg-white z-20">
-                Part Number / Description
+                Bay
               </th>
               {allBays.map((bayName, colIndex) => (
                 <th
@@ -1017,7 +1059,7 @@ const TableComponent = ({ quoteId }: Props) => {
             </tr>
           </thead>
           <tbody>
-            {bayWithRows.map((partWithBays, rowIndex) => {
+            {filteredBayWithRows.map((partWithBays, rowIndex) => {
               const totalQuantity = calculateTotalQuantity(partWithBays); // Calculate the total for the row
               return (
                 <tr key={partWithBays.bay.id}>
@@ -1157,7 +1199,7 @@ const TableComponent = ({ quoteId }: Props) => {
           </tbody>
         </table>
       </div>
-    </>
+    </div>
   );
 };
 

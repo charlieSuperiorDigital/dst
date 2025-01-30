@@ -3,6 +3,206 @@ import React, { useState, useRef, useEffect } from "react";
 import { toast } from "@/hooks/use-toast";
 import { useQuote } from "../../context/quote-context";
 import { AddFlueDefinitonTab } from "../flue-dinition-tab/add-flue-definition";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+const data = [
+  {
+    flue: {
+      id: "d2d12631-67be-4e32-8387-4d11b3d37232",
+      name: "fl-1",
+      quotationId: "ab29564c-fa0c-42ae-94dd-f1dd0d67a8f8",
+    },
+    rows: [
+      {
+        rowName: "Row-1",
+        row2Name: "Row-1",
+        rowId: "f9312335-0eb5-41f6-a59f-b1892d262391",
+        rowId2: "f9312335-0eb5-41f6-a59f-b1892d262391",
+        quantity: 1,
+      },
+      {
+        rowName: "Row-2",
+        row2Name: null, // Removed empty string
+        rowId: "b88a3e88-c074-494f-84cc-33b3ac0522c3",
+        rowId2: "00000000-0000-0000-0000-000000000000",
+        quantity: 0,
+      },
+      {
+        rowName: "Row-3",
+        row2Name: null, // Removed empty string
+        rowId: "c45b210a-7d3e-4a8f-bf34-5d8e7c9a1b22",
+        rowId2: "00000000-0000-0000-0000-000000000000",
+        quantity: 0,
+      },
+      {
+        rowName: "Row-4",
+        row2Name: "Row-4",
+        rowId: "a12b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p",
+        rowId2: "a12b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p",
+        quantity: 2,
+      },
+      {
+        rowName: "Row-5",
+        row2Name: null, // Removed empty string
+        rowId: "b23c4d5e-6f7g-8h9i-0j1k-2l3m4n5o6p7q",
+        rowId2: "00000000-0000-0000-0000-000000000000",
+        quantity: 1,
+      },
+      {
+        rowName: "Row-6",
+        row2Name: "Row-6",
+        rowId: "c34d5e6f-7g8h-9i0j-1k2l-3m4n5o6p7q8r",
+        rowId2: "c34d5e6f-7g8h-9i0j-1k2l-3m4n5o6p7q8r",
+        quantity: 3,
+      },
+      {
+        rowName: "Row-7",
+        row2Name: null, // Removed empty string
+        rowId: "d45e6f7g-8h9i-0j1k-2l3m-4n5o6p7q8r9s",
+        rowId2: "00000000-0000-0000-0000-000000000000",
+        quantity: 0,
+      },
+      {
+        rowName: "Row-8",
+        row2Name: "Row-8",
+        rowId: "e56f7g8h-9i0j-1k2l-3m4n-5o6p7q8r9s0t",
+        rowId2: "e56f7g8h-9i0j-1k2l-3m4n-5o6p7q8r9s0t",
+        quantity: 4,
+      },
+    ],
+  },
+  {
+    flue: {
+      id: "8ef4227a-343f-4e3e-b62a-271eb742ae4f",
+      name: "fl-2",
+      quotationId: "ab29564c-fa0c-42ae-94dd-f1dd0d67a8f8",
+    },
+    rows: [
+      {
+        rowName: "Row-1",
+        row2Name: "Row-1",
+        rowId: "f9312335-0eb5-41f6-a59f-b1892d262391",
+        rowId2: "f9312335-0eb5-41f6-a59f-b1892d262391",
+        quantity: 1,
+      },
+      {
+        rowName: "Row-2",
+        row2Name: null, // Removed empty string
+        rowId: "b88a3e88-c074-494f-84cc-33b3ac0522c3",
+        rowId2: "00000000-0000-0000-0000-000000000000",
+        quantity: 0,
+      },
+      {
+        rowName: "Row-3",
+        row2Name: "Row-3",
+        rowId: "d89e4f2a-1b5d-4c7a-9a3b-6e8f5c2d1a7e",
+        rowId2: "d89e4f2a-1b5d-4c7a-9a3b-6e8f5c2d1a7e",
+        quantity: 2,
+      },
+      {
+        rowName: "Row-4",
+        row2Name: null, // Removed empty string
+        rowId: "f67g8h9i-0j1k-2l3m-4n5o-6p7q8r9s0t1u",
+        rowId2: "00000000-0000-0000-0000-000000000000",
+        quantity: 1,
+      },
+      {
+        rowName: "Row-5",
+        row2Name: "Row-5",
+        rowId: "g78h9i0j-1k2l-3m4n-5o6p-7q8r9s0t1u2v",
+        rowId2: "g78h9i0j-1k2l-3m4n-5o6p-7q8r9s0t1u2v",
+        quantity: 0,
+      },
+      {
+        rowName: "Row-6",
+        row2Name: null, // Removed empty string
+        rowId: "h89i0j1k-2l3m-4n5o-6p7q-8r9s0t1u2v3w",
+        rowId2: "00000000-0000-0000-0000-000000000000",
+        quantity: 3,
+      },
+      {
+        rowName: "Row-7",
+        row2Name: "Row-7",
+        rowId: "i90j1k2l-3m4n-5o6p-7q8r-9s0t1u2v3w4x",
+        rowId2: "i90j1k2l-3m4n-5o6p-7q8r-9s0t1u2v3w4x",
+        quantity: 2,
+      },
+      {
+        rowName: "Row-8",
+        row2Name: null, // Removed empty string
+        rowId: "j01k2l3m-4n5o-6p7q-8r9s-0t1u2v3w4x5y",
+        rowId2: "00000000-0000-0000-0000-000000000000",
+        quantity: 1,
+      },
+    ],
+  },
+  {
+    flue: {
+      id: "9ac45b21-3d7e-4f2a-b63c-1e8d9f7a0b34",
+      name: "fl-3",
+      quotationId: "ab29564c-fa0c-42ae-94dd-f1dd0d67a8f8",
+    },
+    rows: [
+      {
+        rowName: "Row-1",
+        row2Name: "",
+        rowId: "f9312335-0eb5-41f6-a59f-b1892d262391",
+        rowId2: "f9312335-0eb5-41f6-a59f-b1892d262391",
+        quantity: 1,
+      },
+      {
+        rowName: "Row-2",
+        row2Name: "",
+        rowId: "b88a3e88-c074-494f-84cc-33b3ac0522c3",
+        rowId2: "00000000-0000-0000-0000-000000000000",
+        quantity: 0,
+      },
+      {
+        rowName: "Row-3",
+        row2Name: "",
+        rowId: "e76f5c2d-1a7e-4a8f-bf34-5d8e7c9a1b22",
+        rowId2: "00000000-0000-0000-0000-000000000000",
+        quantity: 3,
+      },
+      {
+        rowName: "Row-4",
+        row2Name: "",
+        rowId: "k12l3m4n-5o6p-7q8r-9s0t-1u2v3w4x5y6z",
+        rowId2: "k12l3m4n-5o6p-7q8r-9s0t-1u2v3w4x5y6z",
+        quantity: 2,
+      },
+      {
+        rowName: "Row-5",
+        row2Name: "",
+        rowId: "l23m4n5o-6p7q-8r9s-0t1u-2v3w4x5y6z7a",
+        rowId2: "00000000-0000-0000-0000-000000000000",
+        quantity: 1,
+      },
+      {
+        rowName: "Row-6",
+        row2Name: "Row-6",
+        rowId: "m34n5o6p-7q8r-9s0t-1u2v-3w4x5y6z7a8b",
+        rowId2: "m34n5o6p-7q8r-9s0t-1u2v-3w4x5y6z7a8b",
+        quantity: 0,
+      },
+      {
+        rowName: "Row-7",
+        row2Name: "", // Removed empty string
+        rowId: "n45o6p7q-8r9s-0t1u-2v3w-4x5y6z7a8b9c",
+        rowId2: "00000000-0000-0000-0000-000000000000",
+        quantity: 4,
+      },
+      {
+        rowName: "Row-8",
+        row2Name: "Row-8",
+        rowId: "o56p7q8r-9s0t-1u2v-3w4x-5y6z7a8b9c0d",
+        rowId2: "o56p7q8r-9s0t-1u2v-3w4x-5y6z7a8b9c0d",
+        quantity: 3,
+      },
+    ],
+  },
+];
 
 type Row = {
   rowName: string;
@@ -60,6 +260,8 @@ const FlueCountTable = ({ quoteId }: Props) => {
   const [copiedCells, setCopiedCells] = useState<string[][]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [hideZeroQuantity, setHideZeroQuantity] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -789,7 +991,7 @@ const FlueCountTable = ({ quoteId }: Props) => {
       const results = await Promise.allSettled(
         updates.map((update) =>
           apiRequest({
-            url: `/api/row/frameline/update`,
+            url: `/api/row/flue/update`,
             method: "put",
             data: update,
           })
@@ -917,7 +1119,7 @@ const FlueCountTable = ({ quoteId }: Props) => {
     return partWithBays.rows.reduce((total, bay) => total + bay.quantity, 0);
   };
 
-  const handleAddFrameline = async (value) => {
+  const handleAddFlue = async (value) => {
     try {
       const response = await apiRequest({
         url: `/api/definition/flue/${value.name}/${quoteId}`,
@@ -951,20 +1153,58 @@ const FlueCountTable = ({ quoteId }: Props) => {
 
       toast({
         title: "Success",
-        description: "Bay added successfully",
+        description: "Flue added successfully",
       });
     } catch (error) {
       console.error("Error adding bay:", error);
       toast({
         title: "Error",
-        description: "Failed to add bay. Please try again.",
+        description: "Failed to add flue. Please try again.",
         variant: "destructive",
       });
     }
   };
+  const filteredBayWithRows = bayWithRows.filter((partWithBays) => {
+    // Filtrar por término de búsqueda
+    const matchesSearch = partWithBays.flue.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+
+    // Filtrar por toggle de ocultar filas con todas las cantidades en 0
+    const hasNonZeroQuantity = partWithBays.rows.some(
+      (row) => row.quantity !== 0
+    );
+
+    // Si el toggle está activado, solo mostrar filas con al menos una cantidad no cero
+    if (hideZeroQuantity) {
+      return matchesSearch && hasNonZeroQuantity;
+    }
+
+    return matchesSearch;
+  });
+
   return (
-    <>
-      <AddFlueDefinitonTab onAdd={handleAddFrameline} />
+    <div className="mt-6">
+      <div className="flex items-center space-x-4  mb-4">
+        <div>
+          <Input
+            type="text"
+            placeholder="Search by bay name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="p-2 border border-gray-300 rounded"
+          />
+        </div>
+        <div className="flex items-center space-x-2 ">
+          <Switch
+            id="hide-zero"
+            checked={hideZeroQuantity}
+            onCheckedChange={setHideZeroQuantity}
+          />
+          <Label htmlFor="hide-zero">Hide zero quantity</Label>
+        </div>
+        <AddFlueDefinitonTab onAdd={handleAddFlue} />
+      </div>
       <div
         className="table-component overflow-auto max-w-full max-h-full outline-none relative"
         onKeyDown={handleKeyNavigation}
@@ -991,9 +1231,9 @@ const FlueCountTable = ({ quoteId }: Props) => {
           <thead>
             <tr>
               <th className="border border-gray-300 p-2 font-bold text-left w-[350px] sticky left-0 bg-white z-20">
-                Part Number / Description
+                Flue
               </th>
-              {allBays.map((bayName, colIndex) => (
+              {allBays.slice(0, -1).map((bayName, colIndex) => (
                 <th
                   key={colIndex}
                   className={`border border-gray-300 p-2 font-bold text-center cursor-pointer relative ${
@@ -1001,7 +1241,10 @@ const FlueCountTable = ({ quoteId }: Props) => {
                   }`}
                   style={{ minWidth: "100px", ...getColumnStyle(colIndex) }}
                 >
-                  {bayName}
+                  {bayName} -{" "}
+                  {bayName.replace(/\d+/, (match) =>
+                    (parseInt(match, 10) + 1).toString()
+                  )}
                   <div
                     className="col-resize-handle absolute top-0 right-0 w-1 h-full cursor-col-resize opacity-0 hover:opacity-100 hover:bg-blue-300"
                     onMouseDown={(e) => startColumnResize(e, colIndex)}
@@ -1019,7 +1262,7 @@ const FlueCountTable = ({ quoteId }: Props) => {
             </tr>
           </thead>
           <tbody>
-            {bayWithRows.map((partWithBays, rowIndex) => {
+            {filteredBayWithRows.map((partWithBays, rowIndex) => {
               const totalQuantity = calculateTotalQuantity(partWithBays); // Calculate the total for the row
               return (
                 <tr key={partWithBays.flue.id}>
@@ -1040,7 +1283,7 @@ const FlueCountTable = ({ quoteId }: Props) => {
                       {partWithBays.flue.name}
                     </span>
                   </td>
-                  {allBays.map((bayName, colIndex) => {
+                  {allBays.slice(0, -1).map((bayName, colIndex) => {
                     const bay = partWithBays.rows.find(
                       (b) => b.rowName === bayName
                     );
@@ -1159,7 +1402,7 @@ const FlueCountTable = ({ quoteId }: Props) => {
           </tbody>
         </table>
       </div>
-    </>
+    </div>
   );
 };
 

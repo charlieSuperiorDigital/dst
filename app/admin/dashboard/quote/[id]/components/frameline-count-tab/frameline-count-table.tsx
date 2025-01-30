@@ -4,6 +4,9 @@ import { toast } from "@/hooks/use-toast";
 import { useQuote } from "../../context/quote-context";
 import { AddBayDefinitonTab } from "../bay-definition-tab/add-bay-definition";
 import { AddFrameLineDefinitonTab } from "../frameline-definition-tab/add-frameline-definition";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 type Row = {
   rowName: string;
@@ -61,6 +64,8 @@ const FramilineCountTable = ({ quoteId }: Props) => {
   const [copiedCells, setCopiedCells] = useState<string[][]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [hideZeroQuantity, setHideZeroQuantity] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -955,20 +960,57 @@ const FramilineCountTable = ({ quoteId }: Props) => {
 
       toast({
         title: "Success",
-        description: "Bay added successfully",
+        description: "Frameline added successfully",
       });
     } catch (error) {
-      console.error("Error adding bay:", error);
+      console.error("Error adding Frameline:", error);
       toast({
         title: "Error",
-        description: "Failed to add bay. Please try again.",
+        description: "Failed to add frameline. Please try again.",
         variant: "destructive",
       });
     }
   };
+  const filteredBayWithRows = bayWithRows.filter((partWithBays) => {
+    // Filtrar por término de búsqueda
+    const matchesSearch = partWithBays.frameline.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+
+    // Filtrar por toggle de ocultar filas con todas las cantidades en 0
+    const hasNonZeroQuantity = partWithBays.rows.some(
+      (row) => row.quantity !== 0
+    );
+
+    // Si el toggle está activado, solo mostrar filas con al menos una cantidad no cero
+    if (hideZeroQuantity) {
+      return matchesSearch && hasNonZeroQuantity;
+    }
+
+    return matchesSearch;
+  });
   return (
-    <>
-      <AddFrameLineDefinitonTab onAdd={handleAddFrameline} />
+    <div className="mt-6">
+      <div className="flex items-center space-x-4  mb-4">
+        <div>
+          <Input
+            type="text"
+            placeholder="Search by bay name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="p-2 border border-gray-300 rounded"
+          />
+        </div>
+        <div className="flex items-center space-x-2 ">
+          <Switch
+            id="hide-zero"
+            checked={hideZeroQuantity}
+            onCheckedChange={setHideZeroQuantity}
+          />
+          <Label htmlFor="hide-zero">Hide zero quantity</Label>
+        </div>
+        <AddFrameLineDefinitonTab onAdd={handleAddFrameline} />
+      </div>
       <div
         className="table-component overflow-auto max-w-full max-h-full outline-none relative"
         onKeyDown={handleKeyNavigation}
@@ -995,7 +1037,7 @@ const FramilineCountTable = ({ quoteId }: Props) => {
           <thead>
             <tr>
               <th className="border border-gray-300 p-2 font-bold text-left w-[350px] sticky left-0 bg-white z-20">
-                Part Number / Description
+                Frameline
               </th>
               {allBays.map((bayName, colIndex) => (
                 <th
@@ -1023,7 +1065,7 @@ const FramilineCountTable = ({ quoteId }: Props) => {
             </tr>
           </thead>
           <tbody>
-            {bayWithRows.map((partWithBays, rowIndex) => {
+            {filteredBayWithRows.map((partWithBays, rowIndex) => {
               const totalQuantity = calculateTotalQuantity(partWithBays); // Calculate the total for the row
               return (
                 <tr key={partWithBays.frameline.id}>
@@ -1163,7 +1205,7 @@ const FramilineCountTable = ({ quoteId }: Props) => {
           </tbody>
         </table>
       </div>
-    </>
+    </div>
   );
 };
 

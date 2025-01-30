@@ -6,13 +6,13 @@ import ReceivingTable from "./receiving-tab/receiving-table";
 import InstallationTable from "./installation-tab/installation-table";
 import RownCountSummary from "./row-count-summary-tab/row-count-summary";
 import RowCounts from "./row-count-tab/row-counts-table";
-import MiscCount from "./misc-count-tab/misc-count";
 import TableComponent from "./bay-definition-tab/table-test2";
 import BayCountTable from "./bay-count-tab/bay-count-table";
 import FrameLineTable from "./frameline-definition-tab/frame-definition-table";
 import FlueTable from "./flue-dinition-tab/flue-definition-table";
 import FramilineCountTable from "./frameline-count-tab/frameline-count-table";
 import FlueCountTable from "./flue-count-tab/flue-count";
+import MiscTable from "./misc-count-tab/misc-count";
 
 type Props = {
   quoteId: string;
@@ -23,7 +23,7 @@ const QuoteClientSide = ({ quoteId }: Props) => {
   const tab = searchParams.get("tab");
   return (
     <div>
-      {tab === "summary" && <RownCountSummary />}
+      {tab === "summary" && <RownCountSummary quoteId={quoteId} />}
       {tab === "row-count" && <RowCounts quoteId={quoteId} />}
       {tab === "part-list" && <PartsListTable quoteId={quoteId} />}
       {tab === "receiving" && <ReceivingTable />}
@@ -34,7 +34,7 @@ const QuoteClientSide = ({ quoteId }: Props) => {
       {tab === "bay-count" && <BayCountTable quoteId={quoteId} />}
       {tab === "frameline-count" && <FramilineCountTable quoteId={quoteId} />}
       {tab === "flue-counts" && <FlueCountTable quoteId={quoteId} />}
-      {tab === "misc-counts" && <MiscCount />}
+      {tab === "misc-counts" && <MiscTable quoteId={quoteId} />}
     </div>
   );
 };
