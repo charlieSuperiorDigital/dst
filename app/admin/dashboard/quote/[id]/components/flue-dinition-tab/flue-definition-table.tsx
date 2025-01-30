@@ -889,13 +889,13 @@ const FlueTable = ({ quoteId }: Props) => {
 
       toast({
         title: "Success",
-        description: "Bay added successfully",
+        description: "Flue added successfully",
       });
     } catch (error) {
-      console.error("Error adding bay:", error);
+      console.error("Error adding flue:", error);
       toast({
         title: "Error",
-        description: "Failed to add bay. Please try again.",
+        description: "Failed to add flue. Please try again.",
         variant: "destructive",
       });
     }

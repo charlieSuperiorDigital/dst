@@ -47,7 +47,6 @@ const QuoteTabs = () => {
   const hasBayErrors = error?.bays && error.bays.length > 0;
   const hasFramelineErrors = error?.framelines && error.framelines.length > 0;
   const hasFlueErrors = error?.flues && error.flues.length > 0;
-  console.log("error", error);
 
   const bayErrorTooltip = hasBayErrors ? error.bays.join(", ") : "";
   const framelineErrorTooltip = hasFramelineErrors

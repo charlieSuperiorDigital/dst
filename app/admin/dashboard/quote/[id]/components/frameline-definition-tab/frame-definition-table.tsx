@@ -891,13 +891,13 @@ const FrameLineTable = ({ quoteId }: Props) => {
 
       toast({
         title: "Success",
-        description: "Bay added successfully",
+        description: "Frameline added successfully",
       });
     } catch (error) {
       console.error("Error adding bay:", error);
       toast({
         title: "Error",
-        description: "Failed to add bay. Please try again.",
+        description: "Failed to add frameline. Please try again.",
         variant: "destructive",
       });
     }

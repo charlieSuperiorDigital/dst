@@ -172,7 +172,6 @@ export function QuoteProvider({
   ]);
 
   const updateBayDefinitionContext = (newBay: PartWithBays[]) => {
-    console.log("Updating bayDefinitionContext with:", newBay);
     setBayDefinitionContext(newBay);
   };
 
