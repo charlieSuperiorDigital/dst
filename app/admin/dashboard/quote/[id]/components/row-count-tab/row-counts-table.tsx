@@ -196,52 +196,60 @@ const RowCountTable = ({ quoteId }: Props) => {
             </tr>
           </thead>
           <tbody>
-            {filteredBayWithRows.map((partWithBays, rowIndex) => {
-              const totalQuantity = calculateTotalQuantity(partWithBays);
-              return (
-                <tr key={partWithBays.part.id}>
-                  <td
-                    className={`border w-[350px] border-gray-300 p-2 text-left sticky left-0 bg-white z-10 flex items-center`}
-                    style={{
-                      height: "60px",
-                      overflow: "hidden",
-                      whiteSpace: "nowrap",
-                      textOverflow: "ellipsis",
-                    }}
-                    title={`${partWithBays.part.description}`}
-                  >
-                    <span className="font-bold text-blue-600 text-lg">
-                      {partWithBays.part.partNumber}-
-                    </span>
-                    <span>{partWithBays.part.description}</span>
-                  </td>
-                  {allBays.map((bayName, colIndex) => {
-                    const bay = partWithBays.rows.find(
-                      (b) => b.rowName === bayName
-                    );
-                    const quantity = bay ? bay.quantity : 0;
+            {allBays.length === 0 ? (
+              <tr>
+                <td colSpan={2} className="text-center p-4 text-gray-500">
+                  No rows exist or no part added to any row.
+                </td>
+              </tr>
+            ) : (
+              filteredBayWithRows.map((partWithBays, rowIndex) => {
+                const totalQuantity = calculateTotalQuantity(partWithBays);
+                return (
+                  <tr key={partWithBays.part.id}>
+                    <td
+                      className={`border w-[350px] border-gray-300 p-2 text-left sticky left-0 bg-white z-10 flex items-center`}
+                      style={{
+                        height: "60px",
+                        overflow: "hidden",
+                        whiteSpace: "nowrap",
+                        textOverflow: "ellipsis",
+                      }}
+                      title={`${partWithBays.part.description}`}
+                    >
+                      <span className="font-bold text-blue-600 text-lg">
+                        {partWithBays.part.partNumber}-
+                      </span>
+                      <span>{partWithBays.part.description}</span>
+                    </td>
+                    {allBays.map((bayName, colIndex) => {
+                      const bay = partWithBays.rows.find(
+                        (b) => b.rowName === bayName
+                      );
+                      const quantity = bay ? bay.quantity : 0;
 
-                    return (
-                      <td
-                        key={`${partWithBays.part.id}-${bayName}`}
-                        className={`border border-gray-300 p-2 text-center`}
-                        style={{ minWidth: "100px" }}
-                      >
-                        <div
-                          className="cell-content p-2 whitespace-nowrap overflow-hidden text-ellipsis"
-                          title={quantity.toString()}
+                      return (
+                        <td
+                          key={`${partWithBays.part.id}-${bayName}`}
+                          className="border border-gray-300 p-2 text-center"
+                          style={{ minWidth: "100px" }}
                         >
-                          {quantity}
-                        </div>
-                      </td>
-                    );
-                  })}
-                  <td className="border border-gray-300 p-2 text-center sticky right-0 bg-white z-10">
-                    {totalQuantity}
-                  </td>
-                </tr>
-              );
-            })}
+                          <div
+                            className="cell-content p-2 whitespace-nowrap overflow-hidden text-ellipsis"
+                            title={quantity.toString()}
+                          >
+                            {quantity}
+                          </div>
+                        </td>
+                      );
+                    })}
+                    <td className="border border-gray-300 p-2 text-center sticky right-0 bg-white z-10">
+                      {totalQuantity}
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>

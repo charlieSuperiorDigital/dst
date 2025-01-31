@@ -95,7 +95,7 @@ const FrameLineTable = ({ quoteId }: Props) => {
     )
   );
   if (loading) {
-    return <div>Cargando...</div>;
+    return <div>Loading...</div>;
   }
   if (error) {
     return <div>{error}</div>;

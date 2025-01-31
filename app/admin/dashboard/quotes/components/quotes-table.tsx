@@ -182,7 +182,7 @@ export function QuotesTable({ initialQuotes }: ExtensibleTableProps) {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Name</FormLabel>
+                      <FormLabel>Quote Name </FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -195,7 +195,7 @@ export function QuotesTable({ initialQuotes }: ExtensibleTableProps) {
                   name="customerName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Customer Name</FormLabel>
+                      <FormLabel>Client Name</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
