@@ -65,6 +65,7 @@ const TableComponent = ({ quoteId }: Props) => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [hideZeroQuantity, setHideZeroQuantity] = useState(false);
+  const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const fetchData = async () => {
     try {
@@ -983,6 +984,35 @@ const TableComponent = ({ quoteId }: Props) => {
 
     return matchesSearch;
   });
+  const debounceUpdate = (update: {
+    bayId: string;
+    rowId: string;
+    quantity: number;
+  }) => {
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current); // Cancelar el debounce anterior
+    }
+
+    // Establecer un nuevo debounce
+    debounceTimeout.current = setTimeout(() => {
+      updateSingleQuantity(update);
+    }, 500); // 500 ms de retraso
+  };
+
+  // Forzar la ejecución del debounce en onBlur
+  const handleBlur = () => {
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current); // Cancelar el debounce
+      const update = {
+        bayId: bayWithRows[editingCell.row].bay.id,
+        rowId: bayWithRows[editingCell.row].rows[editingCell.col].rowId,
+        quantity: bayWithRows[editingCell.row].rows[editingCell.col].quantity,
+      };
+      updateSingleQuantity(update); // Forzar la actualización
+    }
+    stopEditing();
+  };
+
   return (
     <div className="mt-6">
       <div className="flex items-center space-x-4  mb-4">
@@ -1151,7 +1181,7 @@ const TableComponent = ({ quoteId }: Props) => {
                                 bay.quantity = newQuantity;
                                 setbayWithRows(newPartsWithBays);
 
-                                updateSingleQuantity({
+                                debounceUpdate({
                                   bayId: part.bay.id,
                                   rowId: bay.rowId,
                                   quantity: newQuantity,
@@ -1168,7 +1198,7 @@ const TableComponent = ({ quoteId }: Props) => {
                                 });
                               }
                             }}
-                            onBlur={stopEditing}
+                            onBlur={handleBlur}
                             onKeyDown={(e) => {
                               if (e.key === "Enter") {
                                 e.preventDefault();

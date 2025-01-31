@@ -65,6 +65,7 @@ const FlueCountTable = ({ quoteId }: Props) => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [hideZeroQuantity, setHideZeroQuantity] = useState(false);
+  const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const fetchData = async () => {
     try {
@@ -984,6 +985,31 @@ const FlueCountTable = ({ quoteId }: Props) => {
 
     return matchesSearch;
   });
+  const debounceUpdate = (update: {
+    flueid: string;
+    rowId: string;
+    quantity: number;
+  }) => {
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current); // Cancelar el debounce anterior
+    }
+    // Establecer un nuevo debounce
+    debounceTimeout.current = setTimeout(() => {
+      updateSingleQuantity(update);
+    }, 500); // 500 ms de retraso
+  };
+  const handleBlur = () => {
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current); // Cancelar el debounce
+      const update = {
+        flueid: bayWithRows[editingCell.row].flue.id,
+        rowId: bayWithRows[editingCell.row].rows[editingCell.col].rowId,
+        quantity: bayWithRows[editingCell.row].rows[editingCell.col].quantity,
+      };
+      updateSingleQuantity(update); // Forzar la actualización
+    }
+    stopEditing();
+  };
 
   return (
     <div className="mt-6">
@@ -1035,7 +1061,7 @@ const FlueCountTable = ({ quoteId }: Props) => {
               <th className="border border-gray-300 p-2 font-bold text-left w-[350px] sticky left-0 bg-white z-20">
                 Flue
               </th>
-              {allBays.slice(0, -1).map((bayName, colIndex) => (
+              {allBays.map((bayName, colIndex) => (
                 <th
                   key={colIndex}
                   className={`border border-gray-300 p-2 font-bold text-center cursor-pointer relative ${
@@ -1043,10 +1069,7 @@ const FlueCountTable = ({ quoteId }: Props) => {
                   }`}
                   style={{ minWidth: "100px", ...getColumnStyle(colIndex) }}
                 >
-                  {bayName} -{" "}
-                  {bayName.replace(/\d+/, (match) =>
-                    (parseInt(match, 10) + 1).toString()
-                  )}
+                  {bayName}
                   <div
                     className="col-resize-handle absolute top-0 right-0 w-1 h-full cursor-col-resize opacity-0 hover:opacity-100 hover:bg-blue-300"
                     onMouseDown={(e) => startColumnResize(e, colIndex)}
@@ -1085,7 +1108,7 @@ const FlueCountTable = ({ quoteId }: Props) => {
                       {partWithBays.flue.name}
                     </span>
                   </td>
-                  {allBays.slice(0, -1).map((bayName, colIndex) => {
+                  {allBays.map((bayName, colIndex) => {
                     const bay = partWithBays.rows.find(
                       (b) => b.rowName === bayName
                     );
@@ -1156,7 +1179,7 @@ const FlueCountTable = ({ quoteId }: Props) => {
                                 bay.quantity = newQuantity;
                                 setbayWithRows(newPartsWithBays);
 
-                                updateSingleQuantity({
+                                debounceUpdate({
                                   flueid: part.flue.id,
                                   rowId: bay.rowId,
                                   quantity: newQuantity,
@@ -1173,7 +1196,7 @@ const FlueCountTable = ({ quoteId }: Props) => {
                                 });
                               }
                             }}
-                            onBlur={stopEditing}
+                            onBlur={handleBlur}
                             onKeyDown={(e) => {
                               if (e.key === "Enter") {
                                 e.preventDefault();

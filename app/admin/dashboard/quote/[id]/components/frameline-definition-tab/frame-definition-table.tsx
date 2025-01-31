@@ -67,6 +67,7 @@ const FrameLineTable = ({ quoteId }: Props) => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [hideZeroQuantity, setHideZeroQuantity] = useState(false);
+  const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const fetchData = async () => {
     try {
@@ -923,6 +924,37 @@ const FrameLineTable = ({ quoteId }: Props) => {
       partWithBays.framelines.some((bay) => bay.quantity > 0);
     return matchesSearch && hasNonZeroQuantity;
   });
+  const debounceUpdate = (update: {
+    partId: string;
+    framelineid: string;
+    quantity: number;
+  }) => {
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current); // Cancelar el debounce anterior
+    }
+
+    // Establecer un nuevo debounce
+    debounceTimeout.current = setTimeout(() => {
+      updateSingleQuantity(update);
+    }, 500); // 500 ms de retraso
+  };
+
+  // Forzar la ejecución del debounce en onBlur
+  const handleBlur = () => {
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current); // Cancelar el debounce
+      const update = {
+        partId: partsWithBays[editingCell.row].part.id,
+        framelineid:
+          partsWithBays[editingCell.row].framelines[editingCell.col]
+            .framelineId,
+        quantity:
+          partsWithBays[editingCell.row].framelines[editingCell.col].quantity,
+      };
+      updateSingleQuantity(update); // Forzar la actualización
+    }
+    stopEditing();
+  };
 
   return (
     <div className="mt-6">
@@ -1100,7 +1132,7 @@ const FrameLineTable = ({ quoteId }: Props) => {
                                 bay.quantity = newQuantity;
                                 setPartsWithBays(newPartsWithBays);
 
-                                updateSingleQuantity({
+                                debounceUpdate({
                                   partId: part.part.id,
                                   framelineid: bay.framelineId,
                                   quantity: newQuantity,
@@ -1117,7 +1149,7 @@ const FrameLineTable = ({ quoteId }: Props) => {
                                 });
                               }
                             }}
-                            onBlur={stopEditing}
+                            onBlur={handleBlur}
                             onKeyDown={(e) => {
                               if (e.key === "Enter") {
                                 e.preventDefault();
