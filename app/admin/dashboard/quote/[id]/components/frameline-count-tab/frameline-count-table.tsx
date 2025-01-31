@@ -66,6 +66,7 @@ const FramilineCountTable = ({ quoteId }: Props) => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [hideZeroQuantity, setHideZeroQuantity] = useState(false);
+  const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const fetchData = async () => {
     try {
@@ -989,6 +990,34 @@ const FramilineCountTable = ({ quoteId }: Props) => {
 
     return matchesSearch;
   });
+  const debounceUpdate = (update: {
+    freamelineid: string;
+    rowId: string;
+    quantity: number;
+  }) => {
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current); // Cancelar el debounce anterior
+    }
+
+    // Establecer un nuevo debounce
+    debounceTimeout.current = setTimeout(() => {
+      updateSingleQuantity(update);
+    }, 500); // 500 ms de retraso
+  };
+
+  // Forzar la ejecución del debounce en onBlur
+  const handleBlur = () => {
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current); // Cancelar el debounce
+      const update = {
+        freamelineid: bayWithRows[editingCell.row].frameline.id,
+        rowId: bayWithRows[editingCell.row].rows[editingCell.col].rowId,
+        quantity: bayWithRows[editingCell.row].rows[editingCell.col].quantity,
+      };
+      updateSingleQuantity(update); // Forzar la actualización
+    }
+    stopEditing();
+  };
   return (
     <div className="mt-6">
       <div className="flex items-center space-x-4  mb-4">
@@ -1157,7 +1186,7 @@ const FramilineCountTable = ({ quoteId }: Props) => {
                                 bay.quantity = newQuantity;
                                 setbayWithRows(newPartsWithBays);
 
-                                updateSingleQuantity({
+                                debounceUpdate({
                                   freamelineid: part.frameline.id,
                                   rowId: bay.rowId,
                                   quantity: newQuantity,
@@ -1174,7 +1203,7 @@ const FramilineCountTable = ({ quoteId }: Props) => {
                                 });
                               }
                             }}
-                            onBlur={stopEditing}
+                            onBlur={handleBlur}
                             onKeyDown={(e) => {
                               if (e.key === "Enter") {
                                 e.preventDefault();

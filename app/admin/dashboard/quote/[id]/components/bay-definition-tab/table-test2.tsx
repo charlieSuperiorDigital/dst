@@ -66,6 +66,8 @@ const TableComponent = ({ quoteId }: Props) => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [hideZeroQuantity, setHideZeroQuantity] = useState(false);
+  const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
+
   const fetchData = async () => {
     try {
       const response: PartWithBays[] = await apiRequest({
@@ -937,6 +939,34 @@ const TableComponent = ({ quoteId }: Props) => {
       !hideZeroQuantity || partWithBays.bays.some((bay) => bay.quantity > 0);
     return matchesSearch && hasNonZeroQuantity;
   });
+  const debounceUpdate = (update: {
+    partId: string;
+    bayId: string;
+    quantity: number;
+  }) => {
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current); // Cancelar el debounce anterior
+    }
+
+    // Establecer un nuevo debounce
+    debounceTimeout.current = setTimeout(() => {
+      updateSingleQuantity(update);
+    }, 500); // 500 ms de retraso
+  };
+
+  // Forzar la ejecución del debounce en onBlur
+  const handleBlur = () => {
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current); // Cancelar el debounce
+      const update = {
+        partId: partsWithBays[editingCell.row].part.id,
+        bayId: partsWithBays[editingCell.row].bays[editingCell.col].bayId,
+        quantity: partsWithBays[editingCell.row].bays[editingCell.col].quantity,
+      };
+      updateSingleQuantity(update); // Forzar la actualización
+    }
+    stopEditing();
+  };
   return (
     <div className="mt-6">
       <div className="flex items-center space-x-4 mb-6">
@@ -1111,7 +1141,7 @@ const TableComponent = ({ quoteId }: Props) => {
                                 bay.quantity = newQuantity;
                                 setPartsWithBays(newPartsWithBays);
 
-                                updateSingleQuantity({
+                                debounceUpdate({
                                   partId: part.part.id,
                                   bayId: bay.bayId,
                                   quantity: newQuantity,
@@ -1128,7 +1158,7 @@ const TableComponent = ({ quoteId }: Props) => {
                                 });
                               }
                             }}
-                            onBlur={stopEditing}
+                            onBlur={handleBlur}
                             onKeyDown={(e) => {
                               if (e.key === "Enter") {
                                 e.preventDefault();
