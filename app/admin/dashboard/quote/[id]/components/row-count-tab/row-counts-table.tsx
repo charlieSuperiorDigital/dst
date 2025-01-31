@@ -38,6 +38,7 @@ const RowCountTable = ({ quoteId }: Props) => {
         url: `/api/count/row/${quoteId}`,
         method: "get",
       });
+
       setbayWithRows(response);
       setLoading(false);
     } catch (err) {

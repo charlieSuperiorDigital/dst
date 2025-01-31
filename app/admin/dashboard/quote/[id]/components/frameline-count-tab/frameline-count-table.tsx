@@ -951,9 +951,9 @@ const FramilineCountTable = ({ quoteId }: Props) => {
       setFrameLinesDefinitionContext?.((prevState) =>
         prevState.map((partWithBays) => ({
           ...partWithBays,
-          frameline: [
+          framelines: [
             ...partWithBays.framelines,
-            { frameline: value.name, bayId: response, quantity: 0 },
+            { framelineName: value.name, framelineId: response, quantity: 0 },
           ],
         }))
       );
