@@ -33,6 +33,7 @@ export default function PartsListTable({ quoteId }: Props) {
   const [selectedPart, setSelectedPart] = useState<PartList | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const fetchParts = async () => {
     const response = await apiRequest({
@@ -108,7 +109,6 @@ export default function PartsListTable({ quoteId }: Props) {
           partNumber: partNumber,
         },
       });
-
       await fetchParts();
 
       toast({
@@ -149,14 +149,16 @@ export default function PartsListTable({ quoteId }: Props) {
   };
 
   useEffect(() => {
-    const getParts = async () => {
+    const fetchParts = async () => {
       try {
+        setLoading(true);
         const response = await apiRequest({
           method: "get",
           url: `/api/Part/PartsFromQuotation/${quoteId}`,
         });
-        setFilteredParts(response.parts);
+        console.log(response);
         setParts(response.parts);
+        setFilteredParts(response.parts);
       } catch (error) {
         console.log(error);
         toast({
@@ -164,9 +166,12 @@ export default function PartsListTable({ quoteId }: Props) {
           description: "Error fetching parts",
           variant: "destructive",
         });
+      } finally {
+        setLoading(false);
       }
     };
-    getParts();
+
+    fetchParts();
   }, [quoteId]);
   return (
     <div className="rounded-md border">
@@ -204,7 +209,7 @@ export default function PartsListTable({ quoteId }: Props) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {filteredParts.length === 0 ? (
+          {loading ? (
             <TableRow>
               <TableCell colSpan={12} className="text-center">
                 Loading...
@@ -245,26 +250,20 @@ export default function PartsListTable({ quoteId }: Props) {
                     {part.unitLabor}
                   </TableCell>
                   <TableCell className="text-right border">
-                    {formatCurrency(part.unitWeight + part.unitLabor)}
+                    {formatCurrency(part.unitCost)}
                   </TableCell>
                   <TableCell className="text-right border">
-                    {formatCurrency(
-                      (part.unitWeight + part.unitLabor) * (part.qty ?? 0)
-                    )}
+                    {formatCurrency(part.unitCost * (part.qty ?? 0))}
                   </TableCell>
                   <TableCell className="text-right border">
-                    {formatCurrency(
-                      (part.unitWeight + part.unitLabor) / (1 - materialMargin)
-                    )}
+                    {formatCurrency(part.unitCost / (1 - materialMargin))}
                   </TableCell>
                   <TableCell className="text-right border">
                     {(part.qty || 0 * part.laborEA).toFixed(2)}
                   </TableCell>
                   <TableCell className="text-right border">
                     {formatCurrency(
-                      ((part.unitWeight + part.unitLabor) /
-                        (1 - materialMargin)) *
-                        (part.qty ?? 0)
+                      (part.unitCost / (1 - materialMargin)) * (part.qty ?? 0)
                     )}
                   </TableCell>
                 </TableRow>

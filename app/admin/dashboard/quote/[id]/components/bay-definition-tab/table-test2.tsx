@@ -72,8 +72,6 @@ const TableComponent = ({ quoteId }: Props) => {
         url: `/api/definition/bay/${quoteId}`,
         method: "get",
       });
-
-      console.log("PartsWithBays:", response);
       setPartsWithBays(response);
       setLoading(false);
     } catch (err) {
