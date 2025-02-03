@@ -11,142 +11,314 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
 import { AddDayInstallationTab } from "./add-day";
 import { EditDayInstallationTab } from "./edit-day";
+import { apiRequest } from "@/utils/client-side-api";
+import { toast } from "@/hooks/use-toast";
 
-export type RowsInstallation = {
+// Match C# InstallationDays model
+export type InstallationDay = {
   id: string;
+  installationId: string;
+  quotationId: string;
+  name: string;
+  quantityReceived: number;
+  day: Date;
+};
+
+// Match C# InstallationRows model exactly
+export type InstallationRow = {
+  rowName: string;
+  rowId: string;
+  quotationId: string;
+  installationId: string;
   baysRequired: number;
-  baysInstalled: number;
+  baysRemaining: number;
+  installationDays: InstallationDay[];
 };
 
-export type DaysInstallation = {
-  id: number;
-  day: string;
-  date: string;
-};
+interface Props {
+  quoteId: string;
+}
 
-const initialRows: RowsInstallation[] = [
-  { id: "1", baysRequired: 5, baysInstalled: 3 },
-  { id: "2", baysRequired: 10, baysInstalled: 10 },
-  { id: "3", baysRequired: 8, baysInstalled: 6 },
-];
-
-const InstallationTable = () => {
-  const [rows, setRows] = useState<RowsInstallation[]>(initialRows);
-  const [days, setDays] = useState<DaysInstallation[]>([
-    { id: 1, day: "Monday", date: "2022-01-01" },
-  ]);
+const InstallationTable = ({ quoteId }: Props) => {
+  const [installations, setInstallations] = useState<InstallationRow[]>([]);
   const [openEditDay, setOpenEditDay] = useState(false);
-  const [selectedDay, setSelectedDay] = useState<DaysInstallation | null>(null);
-  const [receivedQuantities, setReceivedQuantities] = useState<{
-    [key: string]: { [key: string]: number };
-  }>({});
+  const [selectedDay, setSelectedDay] = useState<InstallationDay | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const handleQuantityChange = (
-    rowId: string,
-    dayId: number,
-    quantity: number
-  ) => {
-    setReceivedQuantities((prevQuantities) => ({
-      ...prevQuantities,
-      [dayId]: {
-        ...prevQuantities[dayId],
-        [rowId]: quantity,
-      },
-    }));
-  };
-
-  const calculateTotalInstalled = (rowId: string) => {
-    return Object.values(receivedQuantities).reduce((total, dayQuantities) => {
-      return total + (dayQuantities[rowId] || 0);
-    }, 0);
-  };
-
-  const calculateBaysRemaining = (row: RowsInstallation) => {
-    const totalInstalled = calculateTotalInstalled(row.id);
-    return row.baysRequired - totalInstalled;
+  const fetchInstallationData = async (quotationId: string) => {
+    try {
+      console.log('Starting fetchInstallationData with quoteId:', quotationId);
+      setLoading(true);
+      
+      const response = await apiRequest<InstallationRow[]>({
+        method: "get",
+        url: `/installation/${quotationId}`
+      });
+      
+      if (response && response.length > 0) {
+        setInstallations(response);
+      } else {
+        console.log('No data received from API');
+      }
+    } catch (error) {
+      console.error("Error fetching installation data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load installation data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    setRows((prevRows) =>
-      prevRows.map((row) => ({
-        ...row,
-        baysInstalled: calculateTotalInstalled(row.id),
-      }))
-    );
-  }, [receivedQuantities]);
+    const urlQuoteId = window.location.href.split('/quote/')[1]?.split('/')[0];
+    if (!urlQuoteId) {
+      console.log('No quoteId found in URL, skipping fetch');
+      return;
+    }
+    fetchInstallationData(urlQuoteId);
+  }, []);
 
-  const handleAddNewDay = (day: DaysInstallation) => {
-    setDays((prevDays) => [...prevDays, day]);
+  const handleQuantityChange = (
+    rowId: string,
+    dayId: string,
+    quantity: number
+  ) => {
+    // Update local state only, no API call
+    setInstallations(prevInstallations =>
+      prevInstallations.map(row => {
+        if (row.installationId !== rowId) return row;
+        if (!row.installationDays) return { ...row, installationDays: [] };
+        
+        return {
+          ...row,
+          installationDays: row.installationDays.map(day =>
+            day.id === dayId
+              ? { ...day, quantityReceived: quantity }
+              : day
+          )
+        };
+      })
+    );
   };
 
-  const handleEditOpenModal = (day: DaysInstallation) => {
+  const calculateTotalInstalled = (row: InstallationRow): number => {
+    if (!row.installationDays || row.installationDays.length === 0) return 0;
+    return row.installationDays.reduce((total, day) => total + (day.quantityReceived || 0), 0);
+  };
+
+  const calculateBaysRemaining = (row: InstallationRow): number => {
+    if (!row.baysRequired) return 0;
+    const totalInstalled = calculateTotalInstalled(row);
+    return Math.max(0, row.baysRequired - totalInstalled);
+  };
+
+  const handleAddNewDay = async () => {
+    const urlQuoteId = window.location.href.split('/quote/')[1]?.split('/')[0];
+    if (!urlQuoteId) {
+      console.log('No quoteId found in URL, skipping fetch');
+      return;
+    }
+    await fetchInstallationData(urlQuoteId);
+  };
+
+  const handleEditDay = async (day: InstallationDay) => {
+    try {
+      const response = await apiRequest<string>({
+        method: "put", 
+        url: "/installation/UpdateInstallationDay",
+        data: installations
+      });
+
+      if (response === "Ok") {
+        toast({
+          title: "Success",
+          description: "Day updated successfully"
+        });
+      } else {
+        throw new Error("Failed to update day");
+      }
+    } catch (error) {
+      console.error("Error updating day:", error);
+      toast({
+        title: "Error", 
+        description: "Failed to update day",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteDay = async (dayName: string, quotationId: string) => {
+    try {
+      const response = await apiRequest<string>({
+        method: "delete",
+        url: "/installation/DeleteInstallationDay",
+        data: {
+          quotationId,
+          dayName
+        }
+      });
+
+      if (response === "Ok") {
+        setInstallations(prevInstallations =>
+          prevInstallations.map(installation => ({
+            ...installation,
+            installationDays: installation.installationDays.filter(day => day.name !== dayName)
+          }))
+        );
+
+        toast({
+          title: "Success",
+          description: "Day deleted successfully",
+        });
+      } else {
+        throw new Error("Failed to delete day");
+      }
+    } catch (error) {
+      console.error("Error deleting day:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete day",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSync = async () => {
+    try {
+      // Mock API call to sync data
+      const response = await apiRequest<string>({
+        method: "put",
+        url: "/installation/UpdateInstallationDay",
+        data: installations
+      });
+
+      if (response === "Ok") {
+        toast({
+          title: "Success",
+          description: "Data synchronized successfully",
+        });
+      } else {
+        throw new Error("Failed to sync data");
+      }
+    } catch (error) {
+      console.error("Error syncing data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to sync data",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEditOpenModal = (day: InstallationDay) => {
     setSelectedDay(day);
     setOpenEditDay(true);
   };
 
-  const handleEditDay = (day: DaysInstallation) => {
-    console.log(day);
+  const formatDate = (date: Date): string => {
+    return new Date(date).toLocaleDateString('en-US', {
+      month: '2-digit',
+      day: '2-digit',
+      year: '2-digit'
+    });
   };
+
+  if (loading) {
+    return <div>Loading installation data...</div>;
+  }
 
   return (
     <div>
-      <div className="flex space-x-4">
-        <AddDayInstallationTab onAdd={handleAddNewDay} days={days} />
-        {selectedDay && (
-          <EditDayInstallationTab
-            day={selectedDay}
-            onEdit={handleEditDay}
-            open={openEditDay}
-            onOpenChange={setOpenEditDay}
+      <div className="flex justify-between mb-4">
+        <div className="flex space-x-4">
+          <AddDayInstallationTab 
+            onAdd={handleAddNewDay}
+            days={installations[0]?.installationDays || []} 
+            quoteId={quoteId}
           />
-        )}
-        <Button onClick={() => console.log("save")}>Save</Button>
+          {selectedDay && (
+            <EditDayInstallationTab
+              day={selectedDay}
+              onEdit={handleEditDay}
+              open={openEditDay}
+              onOpenChange={setOpenEditDay}
+            />
+          )}
+        </div>
+        <Button 
+          onClick={handleSync}
+          className="bg-green-600 hover:bg-green-700"
+        >
+          Save Changes
+        </Button>
       </div>
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[100px] border">Rows No.</TableHead>
+            <TableHead className="w-[100px] border">Row Name</TableHead>
             <TableHead className="border">Bays Required</TableHead>
             <TableHead className="border">Bays Installed</TableHead>
             <TableHead className="border">Bays Remaining</TableHead>
-            {days.map((day) => (
-              <TableHead
-                key={day.id}
-                onClick={() => handleEditOpenModal(day)}
-                className="cursor-pointer border"
-              >
-                Day {day.id}
-              </TableHead>
-            ))}
+            {installations[0]?.installationDays && installations[0].installationDays.length > 0 ? (
+              installations[0].installationDays
+                .sort((a, b) => new Date(a.day).getTime() - new Date(b.day).getTime())
+                .map((day) => (
+                  <TableHead
+                    key={`header-day-${day.id}`}
+                    className="cursor-pointer border group"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span onClick={() => handleEditOpenModal(day)}>
+                        {day.name} - {formatDate(day.day)}
+                      </span>
+                      <Trash2 
+                        className="h-4 w-4 text-red-500 cursor-pointer ml-2" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const urlQuoteId = window.location.href.split('?')[0].split('/quote/')[1]?.split('/')[0];
+                          if (!urlQuoteId) return;
+                          handleDeleteDay(day.name, urlQuoteId);
+                        }}
+                      />
+                    </div>
+                  </TableHead>
+                ))
+            ) : null}
           </TableRow>
         </TableHeader>
         <TableBody>
-          {rows.map((row) => (
-            <TableRow key={row.id} className="cursor-pointer border">
-              <TableCell className="border">Row-{row.id}</TableCell>
+          {installations.map((row) => (
+            <TableRow key={`installation-${row.installationId}`} className="cursor-pointer border">
+              <TableCell className="border">{row.rowName}</TableCell>
               <TableCell className="border">{row.baysRequired}</TableCell>
-              <TableCell className="border">{row.baysInstalled}</TableCell>
-              <TableCell className="border">
-                {calculateBaysRemaining(row)}
-              </TableCell>
-              {days.map((day) => (
-                <TableCell key={`${day.id}-${row.id}`} className="border">
-                  <Input
-                    type="number"
-                    value={receivedQuantities[day.id]?.[row.id] || 0}
-                    onChange={(e) =>
-                      handleQuantityChange(
-                        row.id,
-                        day.id,
-                        parseInt(e.target.value) || 0
-                      )
-                    }
-                    className="w-16"
-                  />
-                </TableCell>
-              ))}
+              <TableCell className="border">{calculateTotalInstalled(row)}</TableCell>
+              <TableCell className="border">{calculateBaysRemaining(row)}</TableCell>
+              {row.installationDays && row.installationDays.length > 0 ? (
+                row.installationDays
+                  .sort((a, b) => new Date(a.day).getTime() - new Date(b.day).getTime())
+                  .map((day) => (
+                    <TableCell key={`cell-${row.installationId}-${day.id}`} className="border">
+                      <Input
+                        type="number"
+                        value={day.quantityReceived}
+                        onChange={(e) =>
+                          handleQuantityChange(
+                            row.installationId,
+                            day.id,
+                            parseInt(e.target.value) || 0
+                          )
+                        }
+                        className="w-20"
+                      />
+                    </TableCell>
+                  ))
+              ) : null}
             </TableRow>
           ))}
         </TableBody>

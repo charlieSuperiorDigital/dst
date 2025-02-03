@@ -22,13 +22,14 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
-import { DaysInstallation } from "./installation-table";
+import { InstallationDay, InstallationRow } from "./installation-table";
+import { apiRequest } from "@/utils/client-side-api";
+import { toast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
-  day: z.string().min(1, "Day is required"),
-  date: z.date({
+  name: z.string().min(1, "Name is required"),
+  day: z.date({
     required_error: "Date is required",
     invalid_type_error: "That's not a valid date!",
   }),
@@ -37,41 +38,62 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 interface Props {
-  onAdd: (day: DaysInstallation) => void;
-  days: DaysInstallation[];
+  onAdd: () => Promise<void>;
+  days: InstallationDay[];
+  quoteId: string;
 }
 
-export function AddDayInstallationTab({ onAdd, days }: Props) {
+export function AddDayInstallationTab({ onAdd, days, quoteId }: Props) {
   const [open, setOpen] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      day: "",
-      date: new Date(),
+      name: "",
+      day: new Date(),
     },
   });
 
-  const handleAdd = (values: Omit<DaysInstallation, "id">) => {
-    const currentMaxId = Math.max(0, ...days.map((day) => Number(day.id)));
+  const handleAdd = async (values: FormValues) => {
+    try {
+      // Encode parameters to handle special characters
+      const encodedName = encodeURIComponent(values.name);
+      const encodedDate = encodeURIComponent(values.day.toISOString());
+      
+      // Extract quote ID from URL
+      const urlQuoteId = window.location.href.split('/quote/')[1]?.split('/')[0]?.split('?')[0];
+      if (!urlQuoteId) {
+        console.log('No quoteId found in URL, skipping fetch');
+        return;
+      }
 
-    const newInstallationDay: DaysInstallation = {
-      id: currentMaxId + 1,
-      ...values,
-    };
+      // Make API call to add the day
+      const response = await apiRequest<InstallationRow[]>({
+        method: "post",
+        url: `/installation/AddDayToInstallation?id=${urlQuoteId}&name=${encodedName}&day=${encodedDate}`
+      });
 
-    onAdd(newInstallationDay);
-    setOpen(false);
-    form.reset();
-  };
+      if (response && response.length > 0) {
+        toast({
+          title: "Success",
+          description: "Day added successfully",
+        });
+        setOpen(false);
+        form.reset();
 
-  const onSubmit = (data: { day: string; date: Date }) => {
-    const formattedData: Omit<DaysInstallation, "id"> = {
-      day: data.day,
-      date: data.date.toString(),
-    };
-
-    handleAdd(formattedData);
+        // Trigger parent refresh
+        await onAdd();
+      } else {
+        throw new Error("Failed to add day");
+      }
+    } catch (error) {
+      console.error("Error adding day:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add new day",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -86,13 +108,13 @@ export function AddDayInstallationTab({ onAdd, days }: Props) {
           <DialogTitle>Add Day</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleAdd)} className="space-y-4">
             <FormField
               control={form.control}
-              name="day"
+              name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Day:</FormLabel>
+                  <FormLabel>Name:</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -102,7 +124,7 @@ export function AddDayInstallationTab({ onAdd, days }: Props) {
             />
             <FormField
               control={form.control}
-              name="date"
+              name="day"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Date</FormLabel>
@@ -120,15 +142,13 @@ export function AddDayInstallationTab({ onAdd, days }: Props) {
                           : null;
                         field.onChange(selectedDate);
                       }}
-                      min="1900-01-01"
-                      max={new Date().toISOString().split("T")[0]}
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button type="submit">Add Load</Button>
+            <Button type="submit">Add Day</Button>
           </form>
         </Form>
       </DialogContent>
