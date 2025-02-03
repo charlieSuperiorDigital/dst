@@ -19,13 +19,12 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
-import { DaysInstallation } from "./installation-table";
+import { InstallationDay } from "./installation-table";
 
 const formSchema = z.object({
-  day: z.string().min(1, "Day is required"),
-  date: z.date({
+  name: z.string().min(1, "Day is required"),
+  day: z.date({
     required_error: "Date is required",
     invalid_type_error: "That's not a valid date!",
   }),
@@ -34,8 +33,8 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 interface Props {
-  onEdit: (day: DaysInstallation) => void;
-  day: DaysInstallation;
+  onEdit: (day: InstallationDay) => void;
+  day: InstallationDay;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -49,20 +48,23 @@ export function EditDayInstallationTab({
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      day: day.day,
-      date: new Date(),
+      name: day.name,
+      day: new Date(day.day),
     },
   });
 
-  const handleOnEdit = (values: Omit<DaysInstallation, "id">) => {
+  const handleOnEdit = (values: Omit<InstallationDay, "id">) => {
     onEdit({ ...values, id: day.id });
     onOpenChange(false);
   };
 
-  const onSubmit = (data: { day: string; date: Date }) => {
-    const formattedData: Omit<DaysInstallation, "id"> = {
+  const onSubmit = (data: { name: string; day: Date }) => {
+    const formattedData: Omit<InstallationDay, "id"> = {
+      name: data.name,
       day: data.day,
-      date: data.date.toString(),
+      installationId: day.installationId,
+      quotationId: day.quotationId,
+      quantityReceived: day.quantityReceived || 0
     };
 
     handleOnEdit(formattedData);
@@ -78,7 +80,7 @@ export function EditDayInstallationTab({
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="day"
+              name="name"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Day:</FormLabel>
@@ -91,7 +93,7 @@ export function EditDayInstallationTab({
             />
             <FormField
               control={form.control}
-              name="date"
+              name="day"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Date</FormLabel>
@@ -118,7 +120,7 @@ export function EditDayInstallationTab({
                 </FormItem>
               )}
             />
-            <Button type="submit">Add Load</Button>
+            <Button type="submit">Save Changes</Button>
           </form>
         </Form>
       </DialogContent>

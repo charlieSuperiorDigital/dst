@@ -27,7 +27,7 @@ const QuoteClientSide = ({ quoteId }: Props) => {
       {tab === "row-count" && <RowCounts quoteId={quoteId} />}
       {tab === "part-list" && <PartsListTable quoteId={quoteId} />}
       {tab === "receiving" && <ReceivingTable />}
-      {tab === "installation" && <InstallationTable />}
+      {tab === "installation" && <InstallationTable quoteId={quoteId} />}
       {tab === "bay-definitions" && <TableComponent quoteId={quoteId} />}
       {tab === "frameline-definition" && <FrameLineTable quoteId={quoteId} />}
       {tab === "flue-definition" && <FlueTable quoteId={quoteId} />}
