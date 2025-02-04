@@ -94,6 +94,19 @@ export function UpdateQuoteModal({
         </div>
         <div className="grid grid-cols-4 items-center gap-4">
           <Label htmlFor="description" className="text-right">
+            Contact Name 2
+          </Label>
+          <Input
+            id="contactName"
+            value={editedPart.contactName2}
+            onChange={(e) =>
+              setEditedPart({ ...editedPart, contactName2: e.target.value })
+            }
+            className="col-span-3"
+          />
+        </div>
+        <div className="grid grid-cols-4 items-center gap-4">
+          <Label htmlFor="description" className="text-right">
             Email
           </Label>
           <Input
@@ -141,6 +154,19 @@ export function UpdateQuoteModal({
             value={editedPart.address}
             onChange={(e) =>
               setEditedPart({ ...editedPart, address: e.target.value })
+            }
+            className="col-span-3"
+          />
+        </div>
+        <div className="grid grid-cols-4 items-center gap-4">
+          <Label htmlFor="description" className="text-right">
+            City
+          </Label>
+          <Input
+            id="city"
+            value={editedPart.city}
+            onChange={(e) =>
+              setEditedPart({ ...editedPart, city: e.target.value })
             }
             className="col-span-3"
           />

@@ -40,6 +40,7 @@ export default function PartsListTable({ quoteId }: Props) {
       method: "get",
       url: `/api/Part/PartsFromQuotation/${quoteId}`,
     });
+    console.log(response);
     setFilteredParts(response.parts);
   };
 
@@ -100,6 +101,18 @@ export default function PartsListTable({ quoteId }: Props) {
 
   const handleAdd = async (part: Part, partNumber: string) => {
     try {
+      const isDuplicate = filteredParts.some(
+        (p) => p.description === part.description
+      );
+      if (isDuplicate) {
+        toast({
+          title: "Error",
+          description: "This part was already added",
+          variant: "destructive",
+        });
+        return;
+      }
+
       await apiRequest({
         method: "post",
         url: `/api/part`,

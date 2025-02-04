@@ -37,6 +37,8 @@ interface QuoteContextType {
   bayDefinitionContext?: PartWithBays[];
   frameLinesDefinitionContext?: PartWithFrames[];
   fluesDefinitionContext?: PartWithFlues[];
+  setQuoteContext: React.Dispatch<React.SetStateAction<Quotes>>;
+  quoteContext: Quotes;
 }
 
 const QuoteContext = createContext<QuoteContextType | undefined>(undefined);
@@ -56,8 +58,14 @@ export function QuoteProvider({
     | "bayDefinitionContext"
     | "frameLinesDefinitionContext"
     | "fluesDefinitionContext"
+    | "setQuoteContext"
+    | "quoteContext"
   >;
 }) {
+  const [quoteContext, setQuoteContext] = useState<Quotes>(
+    initialValue?.quote || ({} as Quotes)
+  );
+
   const [bayDefinitionContext, setBayDefinitionContext] = useState<
     PartWithBays[]
   >(initialValue?.bayDefinition || []);
@@ -188,6 +196,8 @@ export function QuoteProvider({
         error,
         setFluesDefinitionContext,
         setFrameLinesDefinitionContext,
+        setQuoteContext,
+        quoteContext,
       }}
     >
       {children}

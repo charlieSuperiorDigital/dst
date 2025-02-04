@@ -9,93 +9,125 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { CostItem, MarginTax } from "./row-count-summary";
 import { Card } from "@/components/ui/card";
 import { useQuote } from "../../context/quote-context";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { toast } from "@/hooks/use-toast";
+import { apiRequest } from "@/utils/client-side-api";
+
+export interface CostItem {
+  freight?: number;
+  installation?: number;
+  rentals?: number;
+  permits?: number;
+  engCals?: number;
+  salesTax?: number;
+}
+
+export interface MarginTax {
+  freightMargin?: number;
+  installationMargin?: number;
+  rentalsMargin?: number;
+  permitsMargin?: number;
+  engCalsMargin?: number;
+  salesTaxRate?: number;
+}
 
 type Props = {
-  marginTaxes: MarginTax[];
-  costItems: CostItem[];
-  setCostItems: (costItems: CostItem[]) => void;
+  marginTaxes: MarginTax;
+  costItems: CostItem;
+  setCostItems: (costItems: CostItem) => void;
+  materialCost: number;
 };
 
 export default function CostBreakdownTable({
   marginTaxes,
   costItems,
   setCostItems,
+  materialCost,
 }: Props) {
-  const { isLocked } = useQuote();
+  const { isLocked, quoteContext, setQuoteContext } = useQuote();
+  const [totalBeforeTaxes, setTotalBeforeTaxes] = useState(0);
+  const [grandTotal, setGrandTotal] = useState(0);
 
-  const [manualSalesTax, setManualSalesTax] = useState<number | null>(null);
-
-  const handlePriceChange = (index: number, newPrice: string) => {
-    const updatedItems = [...costItems];
-    updatedItems[index].price = parseFloat(newPrice) || 0;
-    setCostItems(updatedItems);
+  const handleCostChange = (key: keyof CostItem, value: string) => {
+    const newCostItems = { ...costItems, [key]: Number(value) || 0 };
+    setCostItems(newCostItems);
   };
 
-  const handleSalesTaxChange = (newTax: string) => {
-    setManualSalesTax(parseFloat(newTax) || 0);
-  };
+  const calculateTotalWithMargin = useCallback(
+    (cost: number | undefined, margin: number | undefined): number => {
+      if (cost === undefined || margin === undefined) return 0;
+      return cost + (cost * margin) / 100;
+    },
+    []
+  );
 
-  const calculateWithMargins = () => {
-    let totalBeforeTaxes = 0;
-    let totalSalesTax = 0;
-    let totalTaxableSales = 0;
-
-    const updatedItems = costItems.map((item) => {
-      let taxAmount = 0;
-
-      if (item.item.toLowerCase().includes("material")) {
-        const materialMargin = marginTaxes.find((tax) =>
-          tax.name.toLowerCase().includes("material margin")
-        );
-        taxAmount = (item.price * (materialMargin?.price || 0)) / 100;
-      } else if (item.item.toLowerCase().includes("calculations")) {
-        const permitsCostPlus = marginTaxes.find((tax) =>
-          tax.name.toLowerCase().includes("permits cost plus")
-        );
-        taxAmount = (item.price * (permitsCostPlus?.price || 0)) / 100;
-      }
-
-      const totalWithTax = item.price + taxAmount;
-      totalBeforeTaxes += totalWithTax;
-
-      return {
-        ...item,
-        totalWithTax,
-      };
-    });
-
-    // Use manual sales tax if provided, otherwise calculate it
-    const salesTaxRate = marginTaxes.find((tax) =>
-      tax.name.toLowerCase().includes("sales tax rate")
+  useEffect(() => {
+    let total = materialCost;
+    total += calculateTotalWithMargin(
+      costItems.freight,
+      marginTaxes.freightMargin
     );
-    totalSalesTax =
-      manualSalesTax !== null
-        ? manualSalesTax
-        : (totalBeforeTaxes * (salesTaxRate?.price || 0)) / 100;
-
-    const taxableSalesRate = marginTaxes.find((tax) =>
-      tax.name.toLowerCase().includes("taxable sales")
+    total += calculateTotalWithMargin(
+      costItems.installation,
+      marginTaxes.installationMargin
     );
-    totalTaxableSales =
-      (totalBeforeTaxes * (taxableSalesRate?.price || 0)) / 100;
+    total += calculateTotalWithMargin(
+      costItems.rentals,
+      marginTaxes.rentalsMargin
+    );
+    total += calculateTotalWithMargin(
+      costItems.permits,
+      marginTaxes.permitsMargin
+    );
+    total += calculateTotalWithMargin(
+      costItems.engCals,
+      marginTaxes.engCalsMargin
+    );
 
-    const grandTotal = totalBeforeTaxes + totalSalesTax + totalTaxableSales;
+    setTotalBeforeTaxes(total);
+    setGrandTotal(total + (costItems.salesTax || 0));
+  }, [costItems, marginTaxes, materialCost, calculateTotalWithMargin]);
 
-    return {
-      updatedItems,
-      totalBeforeTaxes,
-      totalSalesTax,
-      totalTaxableSales,
-      grandTotal,
-    };
+  const costItemsArray: { key: keyof CostItem; label: string }[] = [
+    { key: "freight", label: "Freight" },
+    { key: "installation", label: "Installation" },
+    { key: "rentals", label: "Rentals" },
+    { key: "permits", label: "Permits" },
+    { key: "engCals", label: "Engineering Calculations" },
+  ];
+
+  const handleBlur = async (field: keyof CostItem, value: string) => {
+    const updatedValue = parseFloat(value) || 0;
+    const updatedCostItems = { ...costItems, [field]: updatedValue };
+
+    try {
+      const response = await apiRequest({
+        method: "put",
+        url: `/api/Quotation`,
+        data: {
+          ...quoteContext,
+          [field]: updatedValue,
+        },
+      });
+
+      toast({
+        title: "Success",
+        description: "Cost item updated successfully",
+      });
+
+      setQuoteContext(response);
+      setCostItems(updatedCostItems); // Update local state after successful request
+    } catch (e) {
+      console.error(e);
+      toast({
+        title: "Error",
+        description: "Error updating cost item",
+        variant: "destructive",
+      });
+    }
   };
-
-  const { updatedItems, totalBeforeTaxes, totalSalesTax, grandTotal } =
-    calculateWithMargins();
 
   return (
     <Card className="w-[500px]">
@@ -104,30 +136,40 @@ export default function CostBreakdownTable({
           <TableHeader>
             <TableRow>
               <TableHead className="w-[200px]">Item</TableHead>
-              <TableHead className="text-right">Price</TableHead>
-              <TableHead className="text-right">
-                Total w/ Margin or Tax
-              </TableHead>
-              <TableHead className="w-[300px]"></TableHead>
+              <TableHead className="text-right">Cost</TableHead>
+              <TableHead className="text-right">Total w/ Margin</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {updatedItems.map((item, index) => (
-              <TableRow key={index}>
-                <TableCell className="font-medium">{item.item}</TableCell>
+            <TableRow>
+              <TableCell className="font-medium">Material Cost</TableCell>
+              <TableCell className="text-right">
+                ${materialCost.toLocaleString()}
+              </TableCell>
+              <TableCell className="text-right">
+                ${materialCost.toLocaleString()}
+              </TableCell>
+            </TableRow>
+            {costItemsArray.map(({ key, label }) => (
+              <TableRow key={key}>
+                <TableCell className="font-medium">{label}</TableCell>
                 <TableCell className="text-right">
                   <Input
                     type="number"
-                    value={item.price}
-                    onChange={(e) => handlePriceChange(index, e.target.value)}
+                    value={costItems[key] || 0}
+                    onChange={(e) => handleCostChange(key, e.target.value)}
+                    onBlur={(e) => handleBlur(key, e.target.value)}
                     className="w-32 text-right"
                     disabled={isLocked}
                   />
                 </TableCell>
                 <TableCell className="text-right">
-                  ${item.totalWithTax.toLocaleString()}
+                  $
+                  {calculateTotalWithMargin(
+                    costItems[key],
+                    marginTaxes[`${key}Margin` as keyof MarginTax]
+                  ).toLocaleString()}
                 </TableCell>
-                <TableCell>{item.note}</TableCell>
               </TableRow>
             ))}
             <TableRow className="font-bold">
@@ -136,7 +178,6 @@ export default function CostBreakdownTable({
               <TableCell className="text-right">
                 ${totalBeforeTaxes.toLocaleString()}
               </TableCell>
-              <TableCell></TableCell>
             </TableRow>
             <TableRow>
               <TableCell>Sales Tax</TableCell>
@@ -144,15 +185,13 @@ export default function CostBreakdownTable({
               <TableCell className="text-right">
                 <Input
                   type="number"
-                  value={
-                    manualSalesTax !== null ? manualSalesTax : totalSalesTax
-                  }
-                  onChange={(e) => handleSalesTaxChange(e.target.value)}
+                  value={costItems.salesTax || 0}
+                  onChange={(e) => handleCostChange("salesTax", e.target.value)}
+                  onBlur={(e) => handleBlur("salesTax", e.target.value)}
                   className="w-32 text-right"
                   disabled={isLocked}
                 />
               </TableCell>
-              <TableCell></TableCell>
             </TableRow>
             <TableRow className="font-bold">
               <TableCell>Grand Total</TableCell>
@@ -160,7 +199,6 @@ export default function CostBreakdownTable({
               <TableCell className="text-right">
                 ${grandTotal.toLocaleString()}
               </TableCell>
-              <TableCell></TableCell>
             </TableRow>
           </TableBody>
         </Table>
