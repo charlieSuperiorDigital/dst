@@ -1,23 +1,30 @@
 import { apiRequest } from "@/utils/client-side-api";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { AddRowsTab } from "./add-row";
+import { SectionCreationModal } from "./section-creation-modal";
+import { Button } from "@/components/ui/button";
+import { RowInfoModal } from "./row-info-modal";
+import { formatCurrency } from "@/utils/format-currency";
+import { Scan } from "lucide-react";
 
-type Row = {
+export type Row = {
   rowName: string;
   rowId: string;
   quantity: number;
+  displayName?: string;
 };
 
 type Part = {
   id: string;
   partNumber: string;
   description: string;
+  unitCost: number;
 };
-type PartWithRows = {
+export type PartWithRows = {
   part: Part;
   rows: Row[];
 };
@@ -31,6 +38,8 @@ const RowCountTable = ({ quoteId }: Props) => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [hideZeroQuantity, setHideZeroQuantity] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedRow, setSelectedRow] = useState(null);
 
   const fetchData = async () => {
     try {
@@ -39,7 +48,17 @@ const RowCountTable = ({ quoteId }: Props) => {
         method: "get",
       });
 
-      setbayWithRows(response);
+      const sanitizedResponse = response.map((item) => ({
+        part: item.part || {
+          id: "",
+          partNumber: "",
+          description: "",
+          unitCost: 0,
+        },
+        rows: item.rows || [],
+      }));
+
+      setbayWithRows(sanitizedResponse);
       setLoading(false);
     } catch (err) {
       setError("Error Loading data");
@@ -53,9 +72,29 @@ const RowCountTable = ({ quoteId }: Props) => {
   }, [quoteId]);
 
   const allBays = Array.from(
-    new Set(bayWithRows.flatMap((part) => part.rows.map((row) => row.rowName)))
-  );
+    new Map(
+      bayWithRows
+        .flatMap((part) =>
+          part.rows.map((row) => ({ rowName: row.rowName, rowId: row.rowId }))
+        )
+        .map((row) => [`${row.rowName}-${row.rowId}`, row]) // Use a unique key for each row
+    ).values() // Extract the unique rows from the Map
+  ).sort((a, b) => {
+    const isARowNumber = a.rowName.match(/Row-(\d+)/);
+    const isBRowNumber = b.rowName.match(/Row-(\d+)/);
 
+    if (!isARowNumber && !isBRowNumber) {
+      return a.rowName.localeCompare(b.rowName);
+    } else if (!isARowNumber) {
+      return -1;
+    } else if (!isBRowNumber) {
+      return 1;
+    } else {
+      const aNumber = parseInt(isARowNumber[1], 10);
+      const bNumber = parseInt(isBRowNumber[1], 10);
+      return aNumber - bNumber;
+    }
+  });
   if (loading) {
     return <div>Loading ...</div>;
   }
@@ -67,17 +106,31 @@ const RowCountTable = ({ quoteId }: Props) => {
     return partWithBays.rows.reduce((total, bay) => total + bay.quantity, 0);
   };
 
+  const calculateTotalCost = (partWithBays: PartWithRows): number => {
+    return partWithBays.rows.reduce(
+      (total, row) => total + row.quantity * partWithBays.part.unitCost,
+      0
+    );
+  };
+  const calculateTotalCostForAllParts = (parts: PartWithRows[]): number => {
+    return parts.reduce((total, partWithBays) => {
+      return total + calculateTotalCost(partWithBays);
+    }, 0);
+  };
+
   const filteredBayWithRows = bayWithRows.filter((partWithBays) => {
-    const matchesSearch = partWithBays.part.partNumber
+    // Ensure partWithBays.part exists and partNumber is a valid string
+    const partNumber = partWithBays?.part?.partNumber ?? ""; // Default to empty string if null/undefined
+    const matchesSearch = partNumber
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
-    const hasNonZeroQuantity = partWithBays.rows.some(
-      (row) => row.quantity !== 0
-    );
-    if (hideZeroQuantity) {
-      return matchesSearch && hasNonZeroQuantity;
-    }
-    return matchesSearch;
+
+    const hasNonZeroQuantity =
+      partWithBays?.rows?.some((row) => row.quantity !== 0) ?? false;
+
+    return hideZeroQuantity
+      ? matchesSearch && hasNonZeroQuantity
+      : matchesSearch;
   });
 
   const handleAddRow = async (quantity: number) => {
@@ -90,7 +143,6 @@ const RowCountTable = ({ quoteId }: Props) => {
       return;
     }
 
-    // Find the highest existing row number
     const existingRows = bayWithRows.flatMap((part) =>
       part.rows.map((row) => row.rowName)
     );
@@ -103,7 +155,6 @@ const RowCountTable = ({ quoteId }: Props) => {
       return max;
     }, 0);
 
-    // Generate new rows
     const newRows = Array.from({ length: quantity }, (_, index) => {
       const newRowNumber = highestRowNumber + index + 1;
       return {
@@ -113,7 +164,6 @@ const RowCountTable = ({ quoteId }: Props) => {
       };
     });
 
-    // Update the state with new rows
     const updatedPartsWithBays = bayWithRows.map((part) => ({
       ...part,
       rows: [...part.rows, ...newRows],
@@ -122,15 +172,14 @@ const RowCountTable = ({ quoteId }: Props) => {
     // Update the state
     setbayWithRows(updatedPartsWithBays);
 
-    // Optionally, send a request to the backend to save the new rows
     try {
       const requests = newRows.map((row) =>
         apiRequest({
           url: `/api/Row/Add`,
           method: "post",
           data: {
-            quotationId: quoteId, // Use the quoteId from props
-            rowName: row.rowName, // Send the row name
+            quotationId: quoteId,
+            rowName: row.rowName,
           },
         })
       );
@@ -150,10 +199,35 @@ const RowCountTable = ({ quoteId }: Props) => {
       });
     }
   };
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleOnSubmit = async (value) => {
+    console.log(value);
+  };
+  const handleOnEdit = async (value) => {
+    console.log(value);
+  };
+
+  const handleHeaderClick = (row) => {
+    setSelectedRow(row);
+  };
 
   return (
     <div className="mt-6">
+      <SectionCreationModal
+        allRows={allBays}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onSubmit={handleOnSubmit}
+        onEdit={handleOnEdit}
+        existingSections={[]}
+      />
       <div className="flex items-center space-x-4 mb-4">
+        <Button onClick={() => setIsModalOpen(true)}>
+          <Scan />
+        </Button>
         <div>
           <Input
             type="text"
@@ -172,6 +246,12 @@ const RowCountTable = ({ quoteId }: Props) => {
           <Label htmlFor="hide-zero">Hide zero quantity</Label>
         </div>
         <AddRowsTab onAdd={handleAddRow} />
+        <div className="flex items-center space-x-2">
+          <span className="font-bold">Total Cost:</span>
+          <span className="text-blue-600 font-semibold">
+            {formatCurrency(calculateTotalCostForAllParts(filteredBayWithRows))}
+          </span>
+        </div>
       </div>
 
       <div className="table-component overflow-auto max-w-full max-h-full outline-none relative">
@@ -183,11 +263,12 @@ const RowCountTable = ({ quoteId }: Props) => {
               </th>
               {allBays.map((bayName, colIndex) => (
                 <th
-                  key={colIndex}
-                  className={`border border-gray-300 p-2 font-bold text-center `}
+                  key={colIndex + bayName.rowId}
+                  className={`border border-gray-300 p-2 font-bold text-center  cursor-pointer`}
                   style={{ minWidth: "100px" }}
+                  onDoubleClick={() => handleHeaderClick(bayName)}
                 >
-                  {bayName}
+                  {bayName.rowName}
                 </th>
               ))}
               <th className="border border-gray-300 p-2 font-bold text-center sticky right-0 bg-white z-20">
@@ -206,7 +287,7 @@ const RowCountTable = ({ quoteId }: Props) => {
               filteredBayWithRows.map((partWithBays, rowIndex) => {
                 const totalQuantity = calculateTotalQuantity(partWithBays);
                 return (
-                  <tr key={partWithBays.part.id}>
+                  <tr key={`${partWithBays.part.id}-${rowIndex}`}>
                     <td
                       className={`border w-[350px] border-gray-300 p-2 text-left sticky left-0 bg-white z-10 flex items-center`}
                       style={{
@@ -224,13 +305,13 @@ const RowCountTable = ({ quoteId }: Props) => {
                     </td>
                     {allBays.map((bayName, colIndex) => {
                       const bay = partWithBays.rows.find(
-                        (b) => b.rowName === bayName
+                        (b) => b.rowName === bayName.rowName
                       );
                       const quantity = bay ? bay.quantity : 0;
 
                       return (
                         <td
-                          key={`${partWithBays.part.id}-${bayName}`}
+                          key={`${partWithBays.part.id}-${bayName.rowId}-${colIndex}`}
                           className="border border-gray-300 p-2 text-center"
                           style={{ minWidth: "100px" }}
                         >
@@ -253,6 +334,12 @@ const RowCountTable = ({ quoteId }: Props) => {
           </tbody>
         </table>
       </div>
+      <RowInfoModal
+        isOpen={!!selectedRow}
+        onClose={() => setSelectedRow(null)}
+        row={selectedRow}
+        setbayWithRows={setbayWithRows}
+      />
     </div>
   );
 };

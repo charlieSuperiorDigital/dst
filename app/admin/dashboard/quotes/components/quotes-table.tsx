@@ -1,5 +1,5 @@
 "use client";
-import { Pencil, Plus, Trash2, User } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import {
   Table,
@@ -34,12 +34,12 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { PaginatedResponse } from "@/app/entities/Paginate-Response-Base";
-import { Quotes, QuotesStatus } from "@/app/entities/Quotes";
+import type { PaginatedResponse } from "@/app/entities/Paginate-Response-Base";
+import { type Quotes, QuotesStatus } from "@/app/entities/Quotes";
 import { apiRequest } from "@/utils/client-side-api";
 import { toast } from "@/hooks/use-toast";
 import { useQuotes } from "@/hooks/user-quotes";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { UpdateQuoteModal } from "./update-quote-modal";
 import { useRouter } from "next/navigation";
 
@@ -50,6 +50,7 @@ interface ExtensibleTableProps {
 export function QuotesTable({ initialQuotes }: ExtensibleTableProps) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [quoteToEdit, setQuoteToEdit] = useState<Quotes | null>(null);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false); // Added state for add dialog
   const {
     QuotesResponse,
     currentPage,
@@ -60,12 +61,15 @@ export function QuotesTable({ initialQuotes }: ExtensibleTableProps) {
   } = useQuotes(initialQuotes.quotations);
 
   const router = useRouter();
+  const dialogRef = useRef<HTMLDialogElement>(null); // Changed ref type to HTMLDialogElement
 
   const form = useForm<Quotes>({
     defaultValues: {
       name: "",
       customerName: "",
       contactName: "",
+      contactName2: "",
+      city: "",
       address: "",
       phoneNumber1: "",
       phoneNumber2: "",
@@ -77,22 +81,27 @@ export function QuotesTable({ initialQuotes }: ExtensibleTableProps) {
 
   const handleAdd = async (quote: Quotes) => {
     try {
-      await apiRequest<number>({
+      const response = await apiRequest<number>({
         method: "post",
         url: "/api/quotation",
         data: quote,
       });
+      console.log(response);
       toast({
         title: "Quote Added",
         description: "Quote has been added successfully.",
       });
       fetchQuotes(currentPage, searchTerm);
+      form.reset(); // Reset the form
+      setIsAddDialogOpen(false); // Close the dialog
+      return true; // Return true to indicate success
     } catch (error) {
-      console.error("Error adding part:", error);
+      console.error("Error adding quote:", error);
       toast({
         title: "Error",
         description: "Error adding quote.",
       });
+      return false; // Return false to indicate failure
     }
   };
 
@@ -116,12 +125,14 @@ export function QuotesTable({ initialQuotes }: ExtensibleTableProps) {
   };
 
   const handleEditQuote = async (quote) => {
+    console.log("edit", quote);
     try {
       await apiRequest({
         method: "put",
         url: `/api/quotation/`,
         data: quote,
       });
+      setIsEditDialogOpen(false);
       toast({
         title: "Quote Updated",
         description: "Quote has been updated successfully.",
@@ -162,9 +173,9 @@ export function QuotesTable({ initialQuotes }: ExtensibleTableProps) {
             className="w-64"
           />
         </form>
-        <Dialog>
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button variant="success">
+            <Button variant="success" onClick={() => setIsAddDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" /> Add Quote
             </Button>
           </DialogTrigger>
@@ -174,7 +185,12 @@ export function QuotesTable({ initialQuotes }: ExtensibleTableProps) {
             </DialogHeader>
             <Form {...form}>
               <form
-                onSubmit={form.handleSubmit(handleAdd)}
+                onSubmit={form.handleSubmit(async (data) => {
+                  const success = await handleAdd(data);
+                  if (success) {
+                    setIsAddDialogOpen(false); // Close the dialog after successful add
+                  }
+                })}
                 className="grid grid-cols-1 md:grid-cols-2 gap-4"
               >
                 <FormField
@@ -205,10 +221,10 @@ export function QuotesTable({ initialQuotes }: ExtensibleTableProps) {
                 />
                 <FormField
                   control={form.control}
-                  name="address"
+                  name="contactName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Address</FormLabel>
+                      <FormLabel>Contact Name</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -218,10 +234,10 @@ export function QuotesTable({ initialQuotes }: ExtensibleTableProps) {
                 />
                 <FormField
                   control={form.control}
-                  name="contactName"
+                  name="contactName2"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Contact Name</FormLabel>
+                      <FormLabel>Contact Name 2</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -257,10 +273,36 @@ export function QuotesTable({ initialQuotes }: ExtensibleTableProps) {
                 />
                 <FormField
                   control={form.control}
-                  name="email"
+                  name="address"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel>Address</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="city"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>City</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="state"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>State</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -281,12 +323,13 @@ export function QuotesTable({ initialQuotes }: ExtensibleTableProps) {
                     </FormItem>
                   )}
                 />
+
                 <FormField
                   control={form.control}
-                  name="state"
+                  name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>State</FormLabel>
+                      <FormLabel>Email</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
