@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -9,215 +9,269 @@ import {
 } from "@/components/ui/table";
 import { AddPartReceivingTab } from "./add-part";
 import { AddLoadReceivingTab } from "./add-load";
-import { PartRecieve } from "@/app/entities/PartRecieve";
-import { Load } from "@/app/entities/Load";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { EditLoadReceivingTab } from "./edit-load";
 import { EditPartReceivingTab } from "./edit-part";
+import { ReceivingInfo, ReceivingLoad } from "@/app/entities/ReceivingInfo";
+import { apiRequest } from "@/utils/client-side-api";
+import { toast } from "@/hooks/use-toast";
+import { Trash2, Loader2 } from "lucide-react";
 
-const initialParts: PartRecieve[] = [
-  {
-    id: "0001",
-    qtyRequired: 3,
-    qtyOrdered: 3,
-    qtyReceived: 3,
-    description: "445-312-42 Frame, boxed both legs 164/164, w/ WRR, WPP4",
-  },
-  {
-    id: "0002",
-    qtyRequired: 3,
-    qtyOrdered: 3,
-    qtyReceived: 3,
-    description: "335-312-42 Frame, boxed 096/096, w/WRR, WPP4",
-  },
-  {
-    id: "0003",
-    qtyRequired: 3,
-    qtyOrdered: 3,
-    qtyReceived: 3,
-    description: "335-240-42 DOCK Frame,NO BASE PLATES",
-  },
-  {
-    id: "0009",
-    qtyRequired: 3,
-    qtyOrdered: 3,
-    qtyReceived: 3,
-    description: "335-96 Beam, 4200 lbs cap/level",
-  },
-  {
-    id: "0010",
-    qtyRequired: 3,
-    qtyOrdered: 3,
-    qtyReceived: 3,
-    description: "445-96 Beam, 7700 lbs cap/level",
-  },
-];
+interface Props {
+  quoteId: string;
+}
 
-const ReceivingTable = () => {
-  const [parts, setParts] = useState<PartRecieve[]>(initialParts);
-  const [loads, setLoads] = useState<Load[]>([
-    {
-      id: 1,
-      bol: "BOL001",
-      carrier: "Carrier A",
-      date: new Date("2025-01-01"),
-    },
-  ]);
-  const [receivedQuantities, setReceivedQuantities] = useState<{
-    [key: string]: { [key: string]: number };
-  }>({});
-  const [loadToEdit, setLoadToEdit] = useState<Load | null>(null);
-  const [partToEdit, setPartToEdit] = useState<PartRecieve | null>(null);
+const ReceivingTable = ({ quoteId }: Props) => {
+  const [receivingInfo, setReceivingInfo] = useState<ReceivingInfo[]>([]);
+  const [loadToEdit, setLoadToEdit] = useState<ReceivingLoad | null>(null);
+  const [partToEdit, setPartToEdit] = useState<ReceivingInfo | null>(null);
   const [isLoadDialogOpen, setIsLoadDialogOpen] = useState(false);
   const [isPartDialogOpen, setIsPartDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadingLoads, setLoadingLoads] = useState<{ [key: string]: boolean }>({});
 
-  const handleAddPart = (part: PartRecieve) => {
-    setParts((prevParts) => [...prevParts, part]);
+  const fetchReceivingData = async () => {
+    try {
+      const response = await apiRequest<ReceivingInfo[]>({
+        method: "get",
+        url: `/receiving/${quoteId}`,
+      });
+      setReceivingInfo(response || []);
+    } catch (error) {
+      console.error("Error fetching receiving data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch receiving data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleLoad = (load: Load) => {
-    setLoads((prevLoads) => [...prevLoads, load]);
-    setReceivedQuantities((prevQuantities) => ({
-      ...prevQuantities,
-      [load.id]: {},
-    }));
+  useEffect(() => {
+    fetchReceivingData();
+  }, [quoteId]);
+
+  const handleAddLoad = async (name: string) => {
+    try {
+      setLoadingLoads(prev => ({ ...prev, [name]: true }));
+      const response = await apiRequest<ReceivingLoad[]>({
+        method: "post",
+        url: `/receiving/AddLoad?id=${quoteId}&name=${encodeURIComponent(name)}`,
+      });
+      
+      if (response) {
+        await fetchReceivingData();
+        toast({
+          title: "Success",
+          description: "Load added successfully",
+        });
+      }
+    } catch (error) {
+      console.error("Error adding load:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add load",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingLoads(prev => {
+        const newState = { ...prev };
+        delete newState[name];
+        return newState;
+      });
+    }
   };
 
-  const handleQuantityChange = (
+  const handleQuantityChange = async (
     partId: string,
-    loadId: number,
+    loadId: string,
     quantity: number
   ) => {
-    setReceivedQuantities((prevQuantities) => ({
-      ...prevQuantities,
-      [loadId]: {
-        ...prevQuantities[loadId],
-        [partId]: quantity,
-      },
-    }));
+    const updatedInfo = receivingInfo.map(info => {
+      if (info.partId === partId) {
+        const updatedLoads = info.receivingLoad.map(load => {
+          if (load.id === loadId) {
+            return { ...load, quantityReceived: quantity };
+          }
+          return load;
+        });
+        return { ...info, receivingLoad: updatedLoads };
+      }
+      return info;
+    });
+
+    setReceivingInfo(updatedInfo);
   };
 
-  const calculateTotalReceived = (partId: string) => {
-    return Object.values(receivedQuantities).reduce((total, loadQuantities) => {
-      return total + (loadQuantities[partId] || 0);
-    }, 0);
+  const handleSync = async () => {
+    try {
+      const response = await apiRequest({
+        method: "put",
+        url: "/receiving/UpdateReceiving",
+        data: receivingInfo,
+      });
+
+      if (response === "Ok") {
+        toast({
+          title: "Success",
+          description: "Data synchronized successfully",
+        });
+        await fetchReceivingData();
+      }
+    } catch (error) {
+      console.error("Error syncing data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to synchronize data",
+        variant: "destructive",
+      });
+    }
   };
 
-  const calculateBalanceDue = (part: PartRecieve) => {
-    const totalReceived = calculateTotalReceived(part.id);
-    return part.qtyOrdered - totalReceived;
+  const handleDeleteLoad = async (loadName: string) => {
+    try {
+      setLoadingLoads(prev => ({ ...prev, [loadName]: true }));
+      const response = await apiRequest({
+        method: "delete",
+        url: "/receiving/DeleteLoad",
+        data: {
+          quotationId: quoteId,
+          loadName: loadName,
+        },
+      });
+
+      if (response === "Ok") {
+        await fetchReceivingData();
+        toast({
+          title: "Success",
+          description: "Load deleted successfully",
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting load:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete load",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingLoads(prev => {
+        const newState = { ...prev };
+        delete newState[loadName];
+        return newState;
+      });
+    }
   };
 
-  const handleLoadToEdit = (load: Load) => {
-    console.log(load);
-    setLoadToEdit(load);
-  };
-
-  const handleOpenModal = (load: Load) => {
-    console.log(load);
+  const handleOpenEditLoad = (load: ReceivingLoad) => {
     setLoadToEdit(load);
     setIsLoadDialogOpen(true);
   };
-  const handleDelete = (load: Load) => {
-    console.log("delete", load);
-  };
 
-  const handleOpenEditPart = (part: PartRecieve) => {
-    console.log(part);
+  const handleOpenEditPart = (part: ReceivingInfo) => {
     setPartToEdit(part);
     setIsPartDialogOpen(true);
-  };
-  const handleEditPart = (part: PartRecieve) => {
-    console.log(part);
-  };
-  const deletePart = (part: PartRecieve) => {
-    console.log(part);
   };
 
   return (
     <div>
-      <div className="flex space-x-4">
-        <AddPartReceivingTab onAdd={handleAddPart} />
-        <AddLoadReceivingTab onAdd={handleLoad} loads={loads} />
-        {loadToEdit && (
-          <EditLoadReceivingTab
-            onEdit={handleLoadToEdit}
-            load={loadToEdit}
-            open={isLoadDialogOpen}
-            onOpenChange={setIsLoadDialogOpen}
-            onDelete={handleDelete}
-          />
-        )}
-        {partToEdit && (
-          <EditPartReceivingTab
-            open={isPartDialogOpen}
-            onOpenChange={setIsPartDialogOpen}
-            partToEdit={partToEdit}
-            onEdit={handleEditPart}
-            onDelete={deletePart}
-          />
-        )}
-        <Button onClick={() => console.log("save")}>Save</Button>
+      <div className="flex justify-between mb-4 mt-4">
+        <div className="flex space-x-4">
+          <AddLoadReceivingTab onAdd={handleAddLoad} />
+          {loadToEdit && (
+            <EditLoadReceivingTab
+              onEdit={fetchReceivingData}
+              load={loadToEdit}
+              open={isLoadDialogOpen}
+              onOpenChange={setIsLoadDialogOpen}
+              onDelete={handleDeleteLoad}
+            />
+          )}
+        </div>
+        <Button 
+          onClick={handleSync}
+          className="bg-green-600 hover:bg-green-700"
+        >
+          Save Changes
+        </Button>
       </div>
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead className="w-[100px] border">Part No.</TableHead>
             <TableHead className="border">Description</TableHead>
-            <TableHead className="border">Finish</TableHead>
+            <TableHead className="border">Color</TableHead>
             <TableHead className="border">Qty Required</TableHead>
-            <TableHead className="border">Qty Ordered</TableHead>
-            <TableHead className="border">Qty Received</TableHead>
+            <TableHead className="border">Total Received</TableHead>
             <TableHead className="border">Balance Due</TableHead>
-            {loads.map((load) => (
+            {receivingInfo[0]?.receivingLoad.map((load) => (
               <TableHead
                 key={load.id}
-                onClick={() => handleOpenModal(load)}
-                className="cursor-pointer border"
+                className="cursor-pointer border group"
               >
-                Load {load.id}
+                <div className="flex items-center justify-between">
+                  <span onClick={() => handleOpenEditLoad(load)}>
+                    Load {load.name}
+                  </span>
+                  {loadingLoads[load.name] ? (
+                    <Loader2 className="h-4 w-4 animate-spin ml-2" />
+                  ) : (
+                    <Trash2 
+                      className="h-4 w-4 text-red-500 cursor-pointer ml-2" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteLoad(load.name);
+                      }}
+                    />
+                  )}
+                </div>
               </TableHead>
             ))}
           </TableRow>
         </TableHeader>
         <TableBody>
-          {parts.map((part) => (
-            <TableRow key={part.id} className="cursor-pointer border">
-              <TableCell className="border">{part.id}</TableCell>
-              <TableCell
-                onClick={() => handleOpenEditPart(part)}
-                className="border"
-              >
-                {part.description}
+          {loading ? (
+            <TableRow>
+              <TableCell colSpan={6 + (receivingInfo[0]?.receivingLoad.length || 0)} className="text-center">
+                Loading...
               </TableCell>
-              <TableCell className="border">-</TableCell>
-              <TableCell className="border">{part.qtyRequired}</TableCell>
-              <TableCell className="border">{part.qtyOrdered}</TableCell>
-              <TableCell className="border">
-                {calculateTotalReceived(part.id)}
-              </TableCell>
-              <TableCell className="border">
-                {calculateBalanceDue(part)}
-              </TableCell>
-              {loads.map((load) => (
-                <TableCell key={`${part.id}-${load.id}`} className="border">
-                  <Input
-                    type="number"
-                    value={receivedQuantities[load.id]?.[part.id] || 0}
-                    onChange={(e) =>
-                      handleQuantityChange(
-                        part.id,
-                        load.id,
-                        parseInt(e.target.value) || 0
-                      )
-                    }
-                    className="w-16"
-                  />
-                </TableCell>
-              ))}
             </TableRow>
-          ))}
+          ) : (
+            receivingInfo.map((info) => (
+              <TableRow key={info.partId} className="border">
+                <TableCell className="border">{info.partNo}</TableCell>
+                <TableCell
+                  onClick={() => handleOpenEditPart(info)}
+                  className="border cursor-pointer"
+                >
+                  {info.partDescription}
+                </TableCell>
+                <TableCell className="border">{info.color?.name || "-"}</TableCell>
+                <TableCell className="border">{info.quantityRequired}</TableCell>
+                <TableCell className="border">{info.totalQuantityReceived}</TableCell>
+                <TableCell className="border">{info.balanceDue}</TableCell>
+                {info.receivingLoad.map((load) => (
+                  <TableCell key={`${info.partId}-${load.id}`} className="border">
+                    <Input
+                      type="number"
+                      value={load.quantityReceived}
+                      onChange={(e) =>
+                        handleQuantityChange(
+                          info.partId,
+                          load.id,
+                          parseInt(e.target.value) || 0
+                        )
+                      }
+                      className="w-16"
+                    />
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
     </div>

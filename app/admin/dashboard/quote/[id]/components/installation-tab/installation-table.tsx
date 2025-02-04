@@ -235,7 +235,7 @@ const InstallationTable = ({ quoteId }: Props) => {
 
   return (
     <div>
-      <div className="flex justify-between mb-4">
+      <div className="flex justify-between mb-4 mt-4">
         <div className="flex space-x-4">
           <AddDayInstallationTab 
             onAdd={handleAddNewDay}

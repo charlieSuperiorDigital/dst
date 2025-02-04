@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -22,49 +22,38 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
-import { Load } from "@/app/entities/Load";
 
 const formSchema = z.object({
-  bol: z.string().min(1, "BOL is required"),
-  carrier: z.string().min(1, "Carrier is required"),
-  date: z.date({
-    required_error: "Date is required",
-    invalid_type_error: "That's not a valid date!",
-  }),
+  name: z.string().min(1, "Name is required"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 interface Props {
-  onAdd: (load: Load) => void;
-  loads: Load[];
+  onAdd: (name: string) => Promise<void>;
 }
 
-export function AddLoadReceivingTab({ onAdd, loads }: Props) {
+export function AddLoadReceivingTab({ onAdd }: Props) {
   const [open, setOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      bol: "",
-      carrier: "",
-      date: new Date(),
+      name: "",
     },
   });
 
-  const handleAdd = (values: FormValues) => {
-    const currentMaxId = Math.max(0, ...loads.map((load) => Number(load.id)));
-
-    const newLoad = {
-      id: currentMaxId + 1,
-      ...values,
-    };
-
-    onAdd(newLoad as Load);
-    setOpen(false);
-    form.reset();
+  const handleAdd = async (values: FormValues) => {
+    try {
+      setIsLoading(true);
+      await onAdd(values.name);
+      setOpen(false);
+      form.reset();
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -82,59 +71,27 @@ export function AddLoadReceivingTab({ onAdd, loads }: Props) {
           <form onSubmit={form.handleSubmit(handleAdd)} className="space-y-4">
             <FormField
               control={form.control}
-              name="bol"
+              name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>BOL:</FormLabel>
+                  <FormLabel>Name:</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} placeholder="Enter load name" disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="carrier"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Carrier</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Adding...
+                </>
+              ) : (
+                'Add Load'
               )}
-            />
-            <FormField
-              control={form.control}
-              name="date"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Date</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="date"
-                      value={
-                        field.value
-                          ? new Date(field.value).toISOString().split("T")[0]
-                          : ""
-                      }
-                      onChange={(e) => {
-                        const selectedDate = e.target.value
-                          ? new Date(e.target.value)
-                          : null;
-                        field.onChange(selectedDate);
-                      }}
-                      min="1900-01-01"
-                      max={new Date().toISOString().split("T")[0]}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button type="submit">Add Load</Button>
+            </Button>
           </form>
         </Form>
       </DialogContent>
