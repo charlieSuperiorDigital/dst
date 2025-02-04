@@ -63,6 +63,14 @@ const MiscTable = ({ quoteId }: Props) => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [hideZeroQuantity, setHideZeroQuantity] = useState(false);
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
+  const sortRows = (rows: Row[]): Row[] => {
+    return rows.sort((a, b) => {
+      const numA = parseInt(a.rowName.replace("Row-", ""), 10);
+      const numB = parseInt(b.rowName.replace("Row-", ""), 10);
+
+      return numA - numB;
+    });
+  };
 
   const fetchData = async () => {
     try {
@@ -71,7 +79,12 @@ const MiscTable = ({ quoteId }: Props) => {
         method: "get",
       });
 
-      setbayWithRows(response);
+      const sortedResponse = response.map((part) => ({
+        ...part,
+        rows: sortRows(part.rows),
+      }));
+
+      setbayWithRows(sortedResponse);
       setLoading(false);
     } catch (err) {
       setError("Error Loading data");
@@ -93,7 +106,6 @@ const MiscTable = ({ quoteId }: Props) => {
     return <div>{error}</div>;
   }
 
-  // Funciones adaptadas para trabajar con `partsWithBays`
   const copySelectedCells = () => {
     const range = getSelectionRange();
     if (!range) return;
@@ -125,21 +137,20 @@ const MiscTable = ({ quoteId }: Props) => {
       return;
     }
 
-    const newPartsWithBays = [...bayWithRows]; // Copia del estado actual
+    const newPartsWithBays = [...bayWithRows];
     const updates: { partid: string; rowId: string; quantity: number }[] = [];
     for (let rowOffset = 0; rowOffset < copiedCells.length; rowOffset++) {
       for (let colOffset = 0; colOffset < copiedCells[0].length; colOffset++) {
         const row = targetRow + rowOffset;
         const col = targetCol + colOffset;
 
-        // Verificar límites de la tabla
         if (row < newPartsWithBays.length && col < allBays.length) {
           const part = newPartsWithBays[row];
           const bay = part.rows.find((b) => b.rowName === allBays[col]);
           if (bay) {
             const newQuantity =
               parseInt(copiedCells[rowOffset][colOffset]) || 0;
-            bay.quantity = newQuantity; // Actualizar la cantidad
+            bay.quantity = newQuantity;
             updates.push({
               partid: part.part.id,
               rowId: bay.rowId,
@@ -150,13 +161,7 @@ const MiscTable = ({ quoteId }: Props) => {
       }
     }
 
-    // Actualizar el estado de la tabla
-    console.log("Actualizando celdas:", updates); // Para depuración
     setbayWithRows(newPartsWithBays);
-    // if (updateBayDefinitionContext) {
-    //   updateBayDefinitionContext(newPartsWithBays);
-    //   console.error("updateBayDefinitionContext is undefined");
-    // }
 
     updateMultipleQuantities(updates);
   };

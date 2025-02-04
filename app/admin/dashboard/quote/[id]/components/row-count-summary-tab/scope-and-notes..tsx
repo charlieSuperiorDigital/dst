@@ -2,61 +2,177 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2 } from "lucide-react";
-import React, { useState } from "react";
-import { useSession } from "next-auth/react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useQuote } from "../../context/quote-context";
-interface Note {
+import { apiRequest } from "@/utils/client-side-api";
+type Note = {
   id: string;
-  content: string;
-  author: string;
-  createdAt: string;
-}
-interface ScopeItem {
+  order: number;
+  note: string;
+  quotationId: string;
+};
+type ScopeOfWork = {
   id: string;
-  content: string;
-}
+  order?: number;
+  scopeOfWork: string;
+  quotationId: string;
+};
+
 const ScopeItemsAndNotes = () => {
-  const [scopeItems, setScopeItems] = useState<ScopeItem[]>([]);
+  const { quoteContext } = useQuote();
+  const [scopeItems, setScopeItems] = useState<ScopeOfWork[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
   const [newItem, setNewItem] = useState("");
   const [newNote, setNewNote] = useState("");
   const { isLocked } = useQuote();
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [editedText, setEditedText] = useState("");
 
-  const { data: session } = useSession();
+  const fetchScopeItems = async () => {
+    try {
+      const response = await apiRequest({
+        method: "get",
+        url: `/api/Quotation/ScopeOfWork/${quoteContext.id}`,
+      });
 
-  const handleAddItem = () => {
-    if (newItem.trim()) {
-      setScopeItems([
-        ...scopeItems,
-        {
-          id: Math.random().toString(36).substr(2, 9),
-          content: newItem.trim(),
+      setScopeItems(response);
+    } catch (error) {
+      console.error("Error fetching scope items:", error);
+    }
+  };
+  const fetchNotes = async () => {
+    try {
+      const response = await apiRequest({
+        method: "get",
+        url: `/api/Quotation/Note/${quoteContext.id}`,
+      });
+
+      setNotes(response);
+    } catch (error) {
+      console.error("Error fetching notes:", error);
+    }
+  };
+
+  const handleAddItem = async () => {
+    if (!newItem.trim()) return; // Evita agregar elementos vacíos
+
+    try {
+      await apiRequest({
+        method: "post",
+        url: `/api/Quotation/ScopeOfWork`,
+        data: {
+          quotationId: quoteContext.id,
+          scopeOfWorkText: newItem.trim(), // Usar `newItem`, no `scopeItems`
         },
-      ]);
+      });
+
       setNewItem("");
+      fetchScopeItems();
+    } catch (error) {
+      console.error("Error adding item:", error);
     }
   };
-  const handleNewNote = () => {
-    if (newNote.trim()) {
-      setNotes([
-        ...notes,
-        {
-          id: Math.random().toString(36).substr(2, 9),
-          content: newNote.trim(),
-          author: session?.user?.name || "Unknown",
-          createdAt: new Date().toISOString(),
+  const handleNewNote = async () => {
+    try {
+      apiRequest({
+        method: "post",
+        url: `/api/Quotation/Note`,
+        data: {
+          quotationId: quoteContext.id,
+          noteText: newNote,
         },
-      ]);
+      });
       setNewNote("");
+      fetchNotes();
+    } catch (error) {
+      console.error("Error adding note:", error);
     }
   };
-  const handleRemoveItem = (id: string) => {
-    setScopeItems(scopeItems.filter((item) => item.id !== id));
+  const handleRemoveItem = async (id: string) => {
+    try {
+      await apiRequest({
+        method: "delete",
+        url: `/api/Quotation/ScopeOfWork/${id}`,
+      });
+
+      setScopeItems(scopeItems.filter((item) => item.id !== id));
+    } catch (error) {
+      console.error("Error removing item:", error);
+    }
   };
-  const handleRemoveNote = (id: string) => {
-    setNotes(notes.filter((item) => item.id !== id));
+  const handleRemoveNote = async (id: string) => {
+    try {
+      await apiRequest({
+        method: "delete",
+        url: `/api/Quotation/Note/${id}`,
+      });
+      setNotes(notes.filter((item) => item.id !== id));
+    } catch (error) {
+      console.error("Error removing note:", error);
+    }
   };
+
+  const handleEdit = (id: string, type: "scope" | "note") => {
+    if (type === "scope") {
+      const item = scopeItems.find((item) => item.id === id);
+      if (item) {
+        setEditingItemId(id);
+        setEditedText(item.scopeOfWork);
+      }
+    } else {
+      const note = notes.find((note) => note.id === id);
+      if (note) {
+        setEditingNoteId(id);
+        setEditedText(note.note);
+      }
+    }
+  };
+
+  const handleSaveEdit = async (id: string, type: "scope" | "note") => {
+    try {
+      if (type === "scope") {
+        await apiRequest({
+          method: "put",
+          url: `/api/Quotation/ScopeOfWork`,
+          data: {
+            sowId: id,
+            scopeOfWorkText: editedText,
+          },
+        });
+        setScopeItems(
+          scopeItems.map((item) =>
+            item.id === id ? { ...item, scopeOfWork: editedText } : item
+          )
+        );
+        setEditingItemId(null);
+      } else {
+        await apiRequest({
+          method: "put",
+          url: `/api/Quotation/Note`,
+          data: {
+            noteId: id,
+            noteText: editedText,
+          },
+        });
+        setNotes(
+          notes.map((note) =>
+            note.id === id ? { ...note, note: editedText } : note
+          )
+        );
+        setEditingNoteId(null);
+      }
+      setEditedText("");
+    } catch (error) {
+      console.error(`Error updating ${type}:`, error);
+    }
+  };
+
+  useEffect(() => {
+    fetchScopeItems();
+    fetchNotes();
+  }, []);
 
   return (
     <div className="flex space-x-1">
@@ -71,16 +187,42 @@ const ScopeItemsAndNotes = () => {
                 key={item.id}
                 className="flex items-center justify-between p-3 bg-muted/50 rounded-lg group"
               >
-                <span className="flex-grow">
-                  {index + 1}. {item.content}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleRemoveItem(item.id)}
-                >
-                  {!isLocked && <Trash2 className="w-4 h-4 text-red-500 " />}
-                </Button>
+                {editingItemId === item.id ? (
+                  <div className="flex items-center w-full">
+                    <Input
+                      value={editedText}
+                      onChange={(e) => setEditedText(e.target.value)}
+                      className="flex-grow mr-2"
+                    />
+                    <Button onClick={() => handleSaveEdit(item.id, "scope")}>
+                      Save
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <span className="flex-grow">
+                      {index + 1}. {item.scopeOfWork}
+                    </span>
+                    {!isLocked && (
+                      <div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(item.id, "scope")}
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveItem(item.id)}
+                        >
+                          <Trash2 className="w-4 h-4 text-red-500" />
+                        </Button>
+                      </div>
+                    )}
+                  </>
+                )}
               </li>
             ))}
           </ul>
@@ -120,24 +262,50 @@ const ScopeItemsAndNotes = () => {
                 key={item.id}
                 className="flex flex-col p-3 bg-muted/50 rounded-lg group space-y-1"
               >
-                <div className="flex items-center justify-between">
-                  <span className="flex-grow">
-                    {index + 1}. {item.content}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleRemoveNote(item.id)}
-                  >
-                    {!isLocked && <Trash2 className="w-4 h-4 text-red-500" />}
-                  </Button>
-                </div>
-                <div className="text-sm text-gray-500 flex justify-between">
-                  <span>Author: {item.author}</span>
-                  <span>
-                    Created: {new Date(item.createdAt).toLocaleDateString()}
-                  </span>
-                </div>
+                {editingNoteId === item.id ? (
+                  <div className="flex items-center w-full">
+                    <Input
+                      value={editedText}
+                      onChange={(e) => setEditedText(e.target.value)}
+                      className="flex-grow mr-2"
+                    />
+                    <Button onClick={() => handleSaveEdit(item.id, "note")}>
+                      Save
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <span className="flex-grow">
+                        {index + 1}. {item.note}
+                      </span>
+                      {!isLocked && (
+                        <div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEdit(item.id, "note")}
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveNote(item.id)}
+                          >
+                            <Trash2 className="w-4 h-4 text-red-500" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-sm text-gray-500 flex justify-between">
+                      {/* <span>Author: {item.author}</span> */}
+                      <span>
+                        {/* Created: {new Date(item.createdAt).toLocaleDateString()} */}
+                      </span>
+                    </div>
+                  </>
+                )}
               </li>
             ))}
           </ul>

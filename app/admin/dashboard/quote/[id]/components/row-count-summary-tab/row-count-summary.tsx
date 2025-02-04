@@ -4,55 +4,48 @@ import CostBreakdownTable from "./cost-breakdown-table";
 import MarginTaxes from "./margin-taxes";
 import ScopeItemsAndNotes from "./scope-and-notes.";
 import { apiRequest } from "@/utils/client-side-api";
+import { useQuote } from "../../context/quote-context";
 
 export interface MarginTax {
-  name: string;
-  price: number;
+  freightMargin?: number;
+  installationMargin?: number;
+  rentalsMargin?: number;
+  permitsMargin?: number;
+  engCalsMargin?: number;
+  materialMargin?: number;
 }
 
 export interface CostItem {
-  item: string;
-  price: number;
-  highlight?: boolean;
-  note?: string;
+  freight?: number;
+  installation?: number;
+  rentals?: number;
+  permits?: number;
+  engCals?: number;
+  salesTax?: number;
 }
-
-const mockMarginTaxes: MarginTax[] = [
-  {
-    name: "Material Margin",
-    price: 15, // 15%
-  },
-  {
-    name: "Sales Tax Rate",
-    price: 8.25, // 20.5%
-  },
-  {
-    name: "Permits Cost Plus",
-    price: 5.75, // 5.75%
-  },
-];
 
 interface Props {
   quoteId: string;
 }
 
 export default function RownCountSummary({ quoteId }: Props) {
-  console.log(quoteId);
-  const [marginTaxes, setMarginTaxes] = useState<MarginTax[]>(mockMarginTaxes);
-  const [costItems, setCostItems] = useState<CostItem[]>([
-    { item: "Material", price: 0 },
-    { item: "Freight", price: 19618 },
-    { item: "Installation (non union)", price: 62750 },
-    { item: "Rentals", price: 8900 },
-    {
-      item: "Permits Package",
-      price: 2800,
-    },
-    {
-      item: "Engineer calculations",
-      price: 2800,
-    },
-  ]);
+  const { quote } = useQuote();
+  const [materialCost, setMaterialCost] = useState<number>(0);
+  const [marginTaxes, setMarginTaxes] = useState<MarginTax>({
+    freightMargin: quote.freightMargin,
+    installationMargin: quote.installationMargin,
+    rentalsMargin: quote.rentalsMargin,
+    permitsMargin: quote.permitsMargin,
+    engCalsMargin: quote.engCalsMargin,
+  });
+  const [costItems, setCostItems] = useState<CostItem>({
+    freight: quote.freight,
+    installation: quote.installation,
+    rentals: quote.rentals,
+    permits: quote.permits,
+    engCals: quote.engCals,
+    salesTax: quote.salesTax,
+  });
 
   useEffect(() => {
     const fetchMaterialCost = async () => {
@@ -60,17 +53,8 @@ export default function RownCountSummary({ quoteId }: Props) {
         method: "get",
         url: `/api/Part/TotalMaterialCost/${quoteId}`,
       });
-
-      setCostItems((prev) => {
-        return prev.map((item) => {
-          if (item.item === "Material") {
-            return { ...item, price: response };
-          }
-          return item;
-        });
-      });
+      setMaterialCost(response);
     };
-
     fetchMaterialCost();
   }, [quoteId]);
 
@@ -78,16 +62,14 @@ export default function RownCountSummary({ quoteId }: Props) {
     <div className="flex flex-col p-6 gap-1 w-full">
       <ScopeItemsAndNotes />
 
-      <div className="flex gap-1 w-full">
+      <div className="flex gap-1 w-full justify-center">
         <CostBreakdownTable
           marginTaxes={marginTaxes}
           costItems={costItems}
           setCostItems={setCostItems}
+          materialCost={materialCost}
         />
-        <MarginTaxes
-          marginTaxes={marginTaxes}
-          setMarginTaxes={setMarginTaxes}
-        />
+        <MarginTaxes marginTax={marginTaxes} setMarginTax={setMarginTaxes} />
       </div>
     </div>
   );
