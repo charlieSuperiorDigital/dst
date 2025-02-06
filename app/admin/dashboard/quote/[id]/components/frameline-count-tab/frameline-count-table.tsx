@@ -2,11 +2,19 @@ import { apiRequest } from "@/utils/client-side-api";
 import React, { useState, useRef, useEffect } from "react";
 import { toast } from "@/hooks/use-toast";
 import { useQuote } from "../../context/quote-context";
-import { AddBayDefinitonTab } from "../bay-definition-tab/add-bay-definition";
 import { AddFrameLineDefinitonTab } from "../frameline-definition-tab/add-frameline-definition";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+
+const sortRows = (rows: Row[]): Row[] => {
+  return rows.sort((a, b) => {
+    const numA = parseInt(a.rowName.replace("Row-", ""), 10);
+    const numB = parseInt(b.rowName.replace("Row-", ""), 10);
+
+    return numA - numB;
+  });
+};
 
 type Row = {
   rowName: string;
@@ -39,7 +47,7 @@ type Props = {
   quoteId: string;
 };
 const FramilineCountTable = ({ quoteId }: Props) => {
-  const { setFrameLinesDefinitionContext } = useQuote();
+  const { setFrameLinesDefinitionContext, isLocked } = useQuote();
   const [bayWithRows, setbayWithRows] = useState<FrameWithRows[]>([]);
   const [selectedCell, setSelectedCell] = useState({ row: -1, col: -1 });
   const [editingCell, setEditingCell] = useState({ row: -1, col: -1 });
@@ -75,7 +83,12 @@ const FramilineCountTable = ({ quoteId }: Props) => {
         method: "get",
       });
 
-      setbayWithRows(response);
+      const sortedResponse = response.map((part) => ({
+        ...part,
+        rows: sortRows(part.rows),
+      }));
+
+      setbayWithRows(sortedResponse);
       setLoading(false);
     } catch (err) {
       setError("Error Loading data");
@@ -1038,7 +1051,7 @@ const FramilineCountTable = ({ quoteId }: Props) => {
           />
           <Label htmlFor="hide-zero">Hide zero quantity</Label>
         </div>
-        <AddFrameLineDefinitonTab onAdd={handleAddFrameline} />
+        {!isLocked && <AddFrameLineDefinitonTab onAdd={handleAddFrameline} />}
       </div>
       <div
         className="table-component overflow-auto max-w-full max-h-full outline-none relative"

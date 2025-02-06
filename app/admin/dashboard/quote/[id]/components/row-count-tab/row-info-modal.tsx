@@ -13,7 +13,6 @@ import { useState } from "react";
 import { apiRequest } from "@/utils/client-side-api";
 import { toast } from "@/hooks/use-toast";
 import { PartWithRows } from "./row-counts-table";
-
 type RowInfoModalProps = {
   isOpen: boolean;
   onClose: () => void;
@@ -65,6 +64,34 @@ export const RowInfoModal: React.FC<RowInfoModalProps> = ({
     }
   };
 
+  const handleDeleteRow = async () => {
+    try {
+      const response = await apiRequest({
+        url: `/api/row/del/${row.rowId}`,
+        method: "delete",
+      });
+      console.log(response);
+      setbayWithRows((prev) =>
+        prev.map((part) => {
+          const updatedPart = { ...part };
+          updatedPart.rows = part.rows.filter((r) => r.rowId !== row.rowId);
+          return updatedPart;
+        })
+      );
+      toast({
+        title: "Success",
+        description: "Row Deleted",
+      });
+    } catch (err) {
+      console.error(err);
+      toast({
+        title: "Success",
+        description: "Something went wrong",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
@@ -72,11 +99,11 @@ export const RowInfoModal: React.FC<RowInfoModalProps> = ({
           <DialogTitle>{row.displayName || row.rowName} </DialogTitle>
         </DialogHeader>
         <div className="py-4">
-          <p>
+          {/* <p>
             <strong>Row Name:</strong> {row.rowName}
-          </p>
+          </p> */}
           <div className="mt-4">
-            <Label>Display Name :</Label>
+            <Label>New Name :</Label>
             <Input
               type="text"
               value={value}
@@ -86,12 +113,21 @@ export const RowInfoModal: React.FC<RowInfoModalProps> = ({
           {/* Add more information about the row here */}
         </div>
         <DialogClose asChild>
-          <div>
-            <Button type="button" onClick={handleUpdateDisplayName}>
-              Save
-            </Button>
-            <Button type="button" variant="secondary">
-              Close
+          <div className="flex justify-between ">
+            <div>
+              <Button type="button" onClick={handleUpdateDisplayName}>
+                Save
+              </Button>
+              <Button type="button" variant="secondary">
+                Close
+              </Button>
+            </div>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleDeleteRow}
+            >
+              Delete
             </Button>
           </div>
         </DialogClose>

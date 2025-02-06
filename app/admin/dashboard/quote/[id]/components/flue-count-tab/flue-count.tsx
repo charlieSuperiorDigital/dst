@@ -38,7 +38,7 @@ type Props = {
   quoteId: string;
 };
 const FlueCountTable = ({ quoteId }: Props) => {
-  const { setFluesDefinitionContext } = useQuote();
+  const { setFluesDefinitionContext, isLocked } = useQuote();
   const [bayWithRows, setbayWithRows] = useState<FlueWithRows[]>([]);
   const [selectedCell, setSelectedCell] = useState({ row: -1, col: -1 });
   const [editingCell, setEditingCell] = useState({ row: -1, col: -1 });
@@ -1031,7 +1031,7 @@ const FlueCountTable = ({ quoteId }: Props) => {
           />
           <Label htmlFor="hide-zero">Hide zero quantity</Label>
         </div>
-        <AddFlueDefinitonTab onAdd={handleAddFlue} />
+        {!isLocked && <AddFlueDefinitonTab onAdd={handleAddFlue} />}
       </div>
       <div
         className="table-component overflow-auto max-w-full max-h-full outline-none relative"

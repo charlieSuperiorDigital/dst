@@ -7,6 +7,8 @@ import { AddFlueDefinitonTab } from "./add-flue-definition";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Trash2 } from "lucide-react";
+import { ConfirmationModal } from "@/components/ui/confirmation-modal";
 // import { AddFrameLineDefinitonTab } from "./add-frameline-definition";
 
 type Part = {
@@ -41,7 +43,7 @@ type Props = {
   quoteId: string;
 };
 const FlueTable = ({ quoteId }: Props) => {
-  const { setFluesDefinitionContext } = useQuote();
+  const { setFluesDefinitionContext, quote, isLocked } = useQuote();
   const [partsWithBays, setPartsWithBays] = useState<PartWithFlues[]>([]);
   const [selectedCell, setSelectedCell] = useState({ row: -1, col: -1 });
   const [editingCell, setEditingCell] = useState({ row: -1, col: -1 });
@@ -68,6 +70,9 @@ const FlueTable = ({ quoteId }: Props) => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [hideZeroQuantity, setHideZeroQuantity] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const fetchData = async () => {
@@ -182,8 +187,6 @@ const FlueTable = ({ quoteId }: Props) => {
   };
 
   const startEditing = (row: number, col: number) => {
-    console.log(`Editando celda: Fila ${row}, Columna ${col}`);
-    // Verificar que la fila y la columna estén dentro de los límites
     if (
       row >= 0 &&
       row < partsWithBays.length &&
@@ -606,33 +609,6 @@ const FlueTable = ({ quoteId }: Props) => {
     table.classList.add("resizing");
   };
 
-  const startRowResize = (event: React.MouseEvent, rowIndex: number) => {
-    event.preventDefault();
-    const table = tableRef.current?.querySelector("table");
-    if (!table) return;
-
-    const row = table.rows[rowIndex + 1];
-    const initialSize = row.offsetHeight;
-    const initialMousePos = event.clientY;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const delta = e.clientY - initialMousePos;
-      const newSize = Math.max(20, initialSize + delta);
-      setRowHeights((prev) => ({ ...prev, [rowIndex]: newSize }));
-    };
-
-    const stopResize = () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", stopResize);
-      table.classList.remove("resizing");
-    };
-
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", stopResize);
-
-    table.classList.add("resizing");
-  };
-
   const autoSizeColumn = (colIndex: number) => {
     const measureSpan = document.createElement("span");
     measureSpan.style.visibility = "hidden";
@@ -950,8 +926,71 @@ const FlueTable = ({ quoteId }: Props) => {
     }
     stopEditing();
   };
+  const handleOpenDeleteModal = async (bayName) => {
+    const findBay = partsWithBays.find((partWithBays) =>
+      partWithBays.flues.some((bay) => bay.flueName === bayName)
+    );
+    if (!findBay) return;
+    setItemToDelete(findBay.flues[0].flueId);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!itemToDelete) return;
+
+    try {
+      setIsDeleting(true);
+      console.log(quote.id, itemToDelete);
+
+      const response = await apiRequest({
+        url: `/api/Definition/flue/${quote.id}?FlueId=${itemToDelete}`,
+        method: "delete",
+      });
+      console.log(response);
+      setPartsWithBays((prevState) =>
+        prevState.map((partWithBays) => ({
+          ...partWithBays,
+          flues: partWithBays.flues.filter(
+            (bay) => bay.flueId !== itemToDelete
+          ),
+        }))
+      );
+      setFluesDefinitionContext?.((prevState) =>
+        prevState.map((partWithBays) => ({
+          ...partWithBays,
+          flues: partWithBays.flues.filter(
+            (bay) => bay.flueId !== itemToDelete
+          ),
+        }))
+      );
+      toast({
+        title: "Success",
+        description: ` deleted successfully.`,
+      });
+
+      setIsDeleteModalOpen(false);
+    } catch (error) {
+      console.error(`Error deleting `, error);
+      toast({
+        title: "Error",
+        description: `Failed to delete Please try again.`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
   return (
     <div className="mt-6">
+      <ConfirmationModal
+        confirmText="Delete"
+        title="Delete Flue Definition"
+        description={`Are you sure you want to delete this flue definition? This action cannot be undone.`}
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        isConfirming={isDeleting}
+        onConfirm={handleDelete}
+      />
       <div className="flex items-center space-x-4 mb-6">
         <div className="">
           <Input
@@ -970,7 +1009,7 @@ const FlueTable = ({ quoteId }: Props) => {
           />
           <Label htmlFor="hide-zero">Hide zero quantity</Label>
         </div>
-        <AddFlueDefinitonTab onAdd={handleAddFlue} />
+        {!isLocked && <AddFlueDefinitonTab onAdd={handleAddFlue} />}
       </div>
       <div
         className="table-component overflow-auto max-w-full max-h-full outline-none relative"
@@ -1007,8 +1046,12 @@ const FlueTable = ({ quoteId }: Props) => {
                     isColumnSelected(colIndex) ? "bg-blue-100" : "bg-gray-100"
                   }`}
                   style={{ minWidth: "100px", ...getColumnStyle(colIndex) }}
+                  onClick={() => handleOpenDeleteModal(bayName)}
                 >
-                  {bayName}
+                  <p className="flex items-center justify-center gap-1">
+                    {bayName}
+                    {!isLocked && <Trash2 size={18} />}
+                  </p>
                   <div
                     className="col-resize-handle absolute top-0 right-0 w-1 h-full cursor-col-resize opacity-0 hover:opacity-100 hover:bg-blue-300"
                     onMouseDown={(e) => startColumnResize(e, colIndex)}
