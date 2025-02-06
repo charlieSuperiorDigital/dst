@@ -25,11 +25,14 @@ type RowData = {
   rowId: string;
 };
 
-type SectionData = {
-  id: string;
-  name: string;
-  bays: RowData[];
-  color: string;
+export type SectionArea = {
+  area: {
+    id: string;
+    quotationId: string;
+    color: string;
+    name: string;
+  };
+  rows: string[]; // Array of rowIds
 };
 
 interface SectionCreationModalProps {
@@ -37,9 +40,17 @@ interface SectionCreationModalProps {
   onClose: () => void;
   onSubmit: (sectionData: SectionData) => void;
   onEdit: (sectionData: SectionData) => void;
+  onRemove: (sectionId: string) => void;
   allRows: RowData[];
-  existingSections: SectionData[];
+  existingSections: SectionArea[];
 }
+
+type SectionData = {
+  id?: string;
+  name: string;
+  rows: RowData[];
+  color: string;
+};
 
 const colors = [
   "#ef4444",
@@ -68,6 +79,7 @@ export function SectionCreationModal({
   onEdit,
   allRows,
   existingSections,
+  onRemove,
 }: SectionCreationModalProps) {
   const [isEditMode, setIsEditMode] = useState(false);
   const [sectionName, setSectionName] = useState("");
@@ -78,39 +90,48 @@ export function SectionCreationModal({
     null
   );
 
+  const getAvailableRows = () => {
+    const assignedRowIds = new Set(
+      existingSections.flatMap((section) => section.rows)
+    );
+    return allRows.filter((row) => !assignedRowIds.has(row.rowId));
+  };
+
   useEffect(() => {
     if (isEditMode && selectedSectionId) {
       const sectionToEdit = existingSections.find(
-        (section) => section.id === selectedSectionId
+        (section) => section.area.id === selectedSectionId
       );
       if (sectionToEdit) {
-        setSectionName(sectionToEdit.name);
-        setSelectedBays(sectionToEdit.bays);
-        setSelectedColor(sectionToEdit.color);
+        setSectionName(sectionToEdit.area.name);
+        setSelectedColor(sectionToEdit.area.color);
+        const rowsForSection = allRows.filter((row) =>
+          sectionToEdit.rows.includes(row.rowId)
+        );
+        setSelectedBays(rowsForSection);
       }
     } else {
       resetForm();
     }
-  }, [isEditMode, selectedSectionId, existingSections]);
+  }, [isEditMode, selectedSectionId, existingSections, allRows]);
 
   const resetForm = () => {
     setSectionName("");
     setSelectedBays([]);
     setSelectedColor("#3b82f6");
     setSelectedSectionId(null);
+    setIsDropdownOpen(false);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const sectionData: SectionData = {
-      id:
-        isEditMode && selectedSectionId
-          ? selectedSectionId
-          : Date.now().toString(),
+      id: selectedSectionId || undefined,
       name: sectionName,
-      bays: selectedBays,
+      rows: selectedBays,
       color: selectedColor,
     };
+
     if (isEditMode) {
       onEdit(sectionData);
     } else {
@@ -121,17 +142,30 @@ export function SectionCreationModal({
   };
 
   const toggleBay = (bay: RowData) => {
-    setSelectedBays((prev) =>
-      prev.some((b) => b.rowId === bay.rowId)
-        ? prev.filter((b) => b.rowId !== bay.rowId)
-        : [...prev, bay]
-    );
+    setSelectedBays((prev) => {
+      const isSelected = prev.some((b) => b.rowId === bay.rowId);
+      if (isSelected) {
+        return prev.filter((b) => b.rowId !== bay.rowId);
+      } else {
+        return [...prev, bay];
+      }
+    });
   };
 
   const handleBayRemove = (bay: RowData) => {
     setSelectedBays((prev) => prev.filter((b) => b.rowId !== bay.rowId));
   };
 
+  const closeDropdown = () => {
+    setIsDropdownOpen(false);
+  };
+  const handleDelete = () => {
+    if (selectedSectionId) {
+      onRemove(selectedSectionId);
+      onClose();
+      resetForm();
+    }
+  };
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
@@ -155,8 +189,8 @@ export function SectionCreationModal({
             </SelectTrigger>
             <SelectContent>
               {existingSections.map((section) => (
-                <SelectItem key={section.id} value={section.id}>
-                  {section.name}
+                <SelectItem key={section.area.id} value={section.area.id}>
+                  {section.area.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -192,11 +226,14 @@ export function SectionCreationModal({
                 {isDropdownOpen && (
                   <div className="absolute z-10 w-full mt-1 bg-popover border rounded-md shadow-lg">
                     <div className="max-h-60 overflow-auto">
-                      {allRows.map((bay) => (
+                      {getAvailableRows().map((bay) => (
                         <div
                           key={bay.rowId}
                           className="flex items-center px-3 py-2 hover:bg-accent cursor-pointer"
-                          onClick={() => toggleBay(bay)}
+                          onClick={() => {
+                            toggleBay(bay);
+                            closeDropdown();
+                          }}
                         >
                           <input
                             type="checkbox"
@@ -230,6 +267,7 @@ export function SectionCreationModal({
                     }`}
                     style={{ backgroundColor: color }}
                     onClick={() => setSelectedColor(color)}
+                    aria-label={`Select color ${color}`}
                   />
                 ))}
               </div>
@@ -246,6 +284,7 @@ export function SectionCreationModal({
                   type="button"
                   onClick={() => handleBayRemove(bay)}
                   className="ml-1 text-accent-foreground hover:text-destructive"
+                  aria-label={`Remove ${bay.rowName}`}
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -253,9 +292,12 @@ export function SectionCreationModal({
             ))}
           </div>
           <DialogFooter>
-            <Button type="submit">
-              {isEditMode ? "Update Section" : "Create Section"}
-            </Button>
+            {isEditMode && (
+              <Button variant="outline" onClick={handleDelete}>
+                Delete
+              </Button>
+            )}
+            <Button>{isEditMode ? "Update Section" : "Create Section"}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

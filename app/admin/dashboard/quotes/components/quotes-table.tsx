@@ -125,13 +125,21 @@ export function QuotesTable({ initialQuotes }: ExtensibleTableProps) {
   };
 
   const handleEditQuote = async (quote) => {
-    console.log("edit", quote);
     try {
-      await apiRequest({
-        method: "put",
-        url: `/api/quotation/`,
-        data: quote,
-      });
+      if (quote.status === 1) {
+        const response = await apiRequest({
+          method: "get",
+          url: `/api/quotation/clone/${quote.id}`,
+        });
+        console.log(response);
+      } else {
+        await apiRequest({
+          method: "put",
+          url: `/api/quotation/`,
+          data: quote,
+        });
+      }
+
       setIsEditDialogOpen(false);
       toast({
         title: "Quote Updated",

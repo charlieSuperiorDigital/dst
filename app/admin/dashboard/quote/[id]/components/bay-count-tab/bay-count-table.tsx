@@ -6,6 +6,14 @@ import { AddBayDefinitonTab } from "../bay-definition-tab/add-bay-definition";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+const sortRows = (rows: Row[]): Row[] => {
+  return rows.sort((a, b) => {
+    const numA = parseInt(a.rowName.replace("Row-", ""), 10);
+    const numB = parseInt(b.rowName.replace("Row-", ""), 10);
+
+    return numA - numB;
+  });
+};
 
 type Row = {
   rowName: string;
@@ -38,7 +46,7 @@ type Props = {
   quoteId: string;
 };
 const TableComponent = ({ quoteId }: Props) => {
-  const { setBayDefinitionContext } = useQuote();
+  const { setBayDefinitionContext, isLocked } = useQuote();
   const [bayWithRows, setbayWithRows] = useState<BayWithRows[]>([]);
   const [selectedCell, setSelectedCell] = useState({ row: -1, col: -1 });
   const [editingCell, setEditingCell] = useState({ row: -1, col: -1 });
@@ -74,7 +82,12 @@ const TableComponent = ({ quoteId }: Props) => {
         method: "get",
       });
 
-      setbayWithRows(response);
+      const sortedResponse = response.map((part) => ({
+        ...part,
+        rows: sortRows(part.rows),
+      }));
+
+      setbayWithRows(sortedResponse);
       setLoading(false);
     } catch (err) {
       setError("Error Loading data");
@@ -96,7 +109,6 @@ const TableComponent = ({ quoteId }: Props) => {
     return <div>{error}</div>;
   }
 
-  // Funciones adaptadas para trabajar con `partsWithBays`
   const copySelectedCells = () => {
     const range = getSelectionRange();
     if (!range) return;
@@ -111,16 +123,16 @@ const TableComponent = ({ quoteId }: Props) => {
         const rowDataItem = bayWithRows1.rows[col];
         rowData.push(rowDataItem ? rowDataItem.quantity.toString() : "");
       }
-      // Para depuración
+
       copiedData.push(rowData);
     }
-    console.log("Celdas copiadas:", copiedData); // Para depuración
+    console.log("Celdas copiadas:", copiedData);
     setCopiedCells(copiedData);
     toast({
       title: "Success",
       description: "Cells copied successfully",
     });
-    console.log("Celdas copiadas:", copiedData); // Para depuración
+    console.log("Celdas copiadas:", copiedData);
   };
   const pasteCopiedCells = (targetRow: number, targetCol: number) => {
     if (copiedCells.length === 0 || copiedCells[0].length === 0) {
@@ -128,7 +140,7 @@ const TableComponent = ({ quoteId }: Props) => {
       return;
     }
 
-    const newPartsWithBays = [...bayWithRows]; // Copia del estado actual
+    const newPartsWithBays = [...bayWithRows];
     const updates: { bayId: string; rowId: string; quantity: number }[] = [];
     for (let rowOffset = 0; rowOffset < copiedCells.length; rowOffset++) {
       for (let colOffset = 0; colOffset < copiedCells[0].length; colOffset++) {
@@ -142,7 +154,7 @@ const TableComponent = ({ quoteId }: Props) => {
           if (bay) {
             const newQuantity =
               parseInt(copiedCells[rowOffset][colOffset]) || 0;
-            bay.quantity = newQuantity; // Actualizar la cantidad
+            bay.quantity = newQuantity;
             updates.push({
               bayId: part.bay.id,
               rowId: bay.rowId,
@@ -153,13 +165,8 @@ const TableComponent = ({ quoteId }: Props) => {
       }
     }
 
-    // Actualizar el estado de la tabla
-    console.log("Actualizando celdas:", updates); // Para depuración
+    console.log("Actualizando celdas:", updates);
     setbayWithRows(newPartsWithBays);
-    // if (updateBayDefinitionContext) {
-    //   updateBayDefinitionContext(newPartsWithBays);
-    //   console.error("updateBayDefinitionContext is undefined");
-    // }
 
     updateMultipleQuantities(updates);
   };
@@ -565,11 +572,6 @@ const TableComponent = ({ quoteId }: Props) => {
     return width ? { width: `${width}px` } : {};
   };
 
-  const getRowStyle = (rowIndex: number) => {
-    const height = rowHeights[rowIndex];
-    return height ? { height: `${height}px` } : {};
-  };
-
   const startColumnResize = (event: React.MouseEvent, colIndex: number) => {
     if (event.button !== 0 || event.detail > 1) return;
 
@@ -585,33 +587,6 @@ const TableComponent = ({ quoteId }: Props) => {
       const delta = e.clientX - initialMousePos;
       const newSize = Math.max(20, initialSize + delta);
       setColumnWidths((prev) => ({ ...prev, [colIndex]: newSize }));
-    };
-
-    const stopResize = () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", stopResize);
-      table.classList.remove("resizing");
-    };
-
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", stopResize);
-
-    table.classList.add("resizing");
-  };
-
-  const startRowResize = (event: React.MouseEvent, rowIndex: number) => {
-    event.preventDefault();
-    const table = tableRef.current?.querySelector("table");
-    if (!table) return;
-
-    const row = table.rows[rowIndex + 1];
-    const initialSize = row.offsetHeight;
-    const initialMousePos = event.clientY;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const delta = e.clientY - initialMousePos;
-      const newSize = Math.max(20, initialSize + delta);
-      setRowHeights((prev) => ({ ...prev, [rowIndex]: newSize }));
     };
 
     const stopResize = () => {
@@ -721,69 +696,6 @@ const TableComponent = ({ quoteId }: Props) => {
       startEditing(newRow, newCol);
     } else {
       selectCell(newRow, newCol);
-    }
-  };
-
-  const autoSizeRow = (rowIndex: number) => {
-    const table = tableRef.current?.querySelector("table");
-    if (!table) return;
-
-    const cells = Array.from(table.rows[rowIndex + 1].cells);
-
-    let maxHeight = 40;
-    cells.forEach((cell) => {
-      const content = cell.querySelector(".cell-content");
-      if (content) {
-        const temp = document.createElement("div");
-        temp.style.position = "absolute";
-        temp.style.visibility = "hidden";
-        temp.style.width = cell.offsetWidth + "px";
-        temp.style.whiteSpace = "normal";
-        temp.innerHTML = content.innerHTML;
-        document.body.appendChild(temp);
-
-        const contentHeight = temp.offsetHeight;
-        maxHeight = Math.max(maxHeight, contentHeight + 16);
-
-        document.body.removeChild(temp);
-      }
-    });
-
-    setRowHeights((prev) => ({ ...prev, [rowIndex]: maxHeight }));
-  };
-
-  const handleEnterKey = (rowIndex: number) => {
-    // Mover a la siguiente fila al presionar Enter
-    moveToNextCell("down");
-  };
-
-  const handleArrowInEdit = (
-    direction: "up" | "down" | "left" | "right",
-    event: React.KeyboardEvent
-  ) => {
-    const input = activeInput.current;
-    if (!input) return;
-
-    const currentCellContent =
-      bayWithRows[editingCell.row].rows[editingCell.col].quantity.toString();
-
-    // Para movimiento izquierda/derecha, verificar la posición del cursor
-    if (direction === "left") {
-      // Solo mover a la celda anterior si el cursor está al inicio
-      if (input.selectionStart === 0 && input.selectionEnd === 0) {
-        moveToNextCell(direction, event);
-      }
-    } else if (direction === "right") {
-      // Solo mover a la celda siguiente si el cursor está al final
-      if (
-        input.selectionStart === currentCellContent.length &&
-        input.selectionEnd === currentCellContent.length
-      ) {
-        moveToNextCell(direction, event);
-      }
-    } else {
-      // Para movimiento arriba/abajo, siempre mover
-      moveToNextCell(direction, event);
     }
   };
 
@@ -1016,7 +928,7 @@ const TableComponent = ({ quoteId }: Props) => {
   return (
     <div className="mt-6">
       <div className="flex items-center space-x-4  mb-4">
-        <AddBayDefinitonTab onAdd={handleAddBay} />
+        {!isLocked && <AddBayDefinitonTab onAdd={handleAddBay} />}
         <div>
           <Input
             type="text"
@@ -1082,7 +994,7 @@ const TableComponent = ({ quoteId }: Props) => {
                   ></div>
                 </th>
               ))}
-              {/* New Total Column */}
+
               <th className="border border-gray-300 p-2 font-bold text-center sticky right-0 bg-white z-20">
                 Total
               </th>
@@ -1090,7 +1002,7 @@ const TableComponent = ({ quoteId }: Props) => {
           </thead>
           <tbody>
             {filteredBayWithRows.map((partWithBays, rowIndex) => {
-              const totalQuantity = calculateTotalQuantity(partWithBays); // Calculate the total for the row
+              const totalQuantity = calculateTotalQuantity(partWithBays);
               return (
                 <tr key={partWithBays.bay.id}>
                   <td

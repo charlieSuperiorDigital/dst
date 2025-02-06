@@ -6,6 +6,9 @@ import { useQuote } from "../../context/quote-context";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Trash2 } from "lucide-react";
+import { ConfirmationModal } from "../../../../../../../components/ui/confirmation-modal";
+import { set } from "react-hook-form";
 
 type Part = {
   id: string;
@@ -39,7 +42,12 @@ type Props = {
   quoteId: string;
 };
 const TableComponent = ({ quoteId }: Props) => {
-  const { updateBayDefinitionContext, setBayDefinitionContext } = useQuote();
+  const {
+    updateBayDefinitionContext,
+    setBayDefinitionContext,
+    quote,
+    isLocked,
+  } = useQuote();
   const [partsWithBays, setPartsWithBays] = useState<PartWithBays[]>([]);
   const [selectedCell, setSelectedCell] = useState({ row: -1, col: -1 });
   const [editingCell, setEditingCell] = useState({ row: -1, col: -1 });
@@ -60,12 +68,14 @@ const TableComponent = ({ quoteId }: Props) => {
   const [columnWidths, setColumnWidths] = useState<{ [key: number]: number }>(
     {}
   );
-  const [rowHeights, setRowHeights] = useState<{ [key: number]: number }>({});
   const [copiedCells, setCopiedCells] = useState<string[][]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [hideZeroQuantity, setHideZeroQuantity] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const fetchData = async () => {
@@ -98,7 +108,6 @@ const TableComponent = ({ quoteId }: Props) => {
     return <div>Error loading </div>;
   }
 
-  // Funciones adaptadas para trabajar con `partsWithBays`
   const copySelectedCells = () => {
     const range = getSelectionRange();
     if (!range) return;
@@ -565,11 +574,6 @@ const TableComponent = ({ quoteId }: Props) => {
     return width ? { width: `${width}px` } : {};
   };
 
-  const getRowStyle = (rowIndex: number) => {
-    const height = rowHeights[rowIndex];
-    return height ? { height: `${height}px` } : {};
-  };
-
   const startColumnResize = (event: React.MouseEvent, colIndex: number) => {
     if (event.button !== 0 || event.detail > 1) return;
 
@@ -585,33 +589,6 @@ const TableComponent = ({ quoteId }: Props) => {
       const delta = e.clientX - initialMousePos;
       const newSize = Math.max(20, initialSize + delta);
       setColumnWidths((prev) => ({ ...prev, [colIndex]: newSize }));
-    };
-
-    const stopResize = () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", stopResize);
-      table.classList.remove("resizing");
-    };
-
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", stopResize);
-
-    table.classList.add("resizing");
-  };
-
-  const startRowResize = (event: React.MouseEvent, rowIndex: number) => {
-    event.preventDefault();
-    const table = tableRef.current?.querySelector("table");
-    if (!table) return;
-
-    const row = table.rows[rowIndex + 1];
-    const initialSize = row.offsetHeight;
-    const initialMousePos = event.clientY;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const delta = e.clientY - initialMousePos;
-      const newSize = Math.max(20, initialSize + delta);
-      setRowHeights((prev) => ({ ...prev, [rowIndex]: newSize }));
     };
 
     const stopResize = () => {
@@ -722,34 +699,6 @@ const TableComponent = ({ quoteId }: Props) => {
     } else {
       selectCell(newRow, newCol);
     }
-  };
-
-  const autoSizeRow = (rowIndex: number) => {
-    const table = tableRef.current?.querySelector("table");
-    if (!table) return;
-
-    const cells = Array.from(table.rows[rowIndex + 1].cells);
-
-    let maxHeight = 40;
-    cells.forEach((cell) => {
-      const content = cell.querySelector(".cell-content");
-      if (content) {
-        const temp = document.createElement("div");
-        temp.style.position = "absolute";
-        temp.style.visibility = "hidden";
-        temp.style.width = cell.offsetWidth + "px";
-        temp.style.whiteSpace = "normal";
-        temp.innerHTML = content.innerHTML;
-        document.body.appendChild(temp);
-
-        const contentHeight = temp.offsetHeight;
-        maxHeight = Math.max(maxHeight, contentHeight + 16);
-
-        document.body.removeChild(temp);
-      }
-    });
-
-    setRowHeights((prev) => ({ ...prev, [rowIndex]: maxHeight }));
   };
 
   const handleAddBay = async (bayName) => {
@@ -954,7 +903,6 @@ const TableComponent = ({ quoteId }: Props) => {
     }, 500); // 500 ms de retraso
   };
 
-  // Forzar la ejecución del debounce en onBlur
   const handleBlur = () => {
     if (debounceTimeout.current) {
       clearTimeout(debounceTimeout.current); // Cancelar el debounce
@@ -967,8 +915,69 @@ const TableComponent = ({ quoteId }: Props) => {
     }
     stopEditing();
   };
+
+  const handleOpenDeleteModal = async (bayName) => {
+    const findBay = partsWithBays.find((partWithBays) =>
+      partWithBays.bays.some((bay) => bay.bayName === bayName)
+    );
+    if (!findBay) return;
+    setItemToDelete(findBay.bays[0].bayId);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!itemToDelete) return;
+
+    try {
+      setIsDeleting(true);
+      console.log(quote.id, itemToDelete);
+
+      const response = await apiRequest({
+        url: `/api/Definition/Bay/${quote.id}?BayId=${itemToDelete}`,
+        method: "delete",
+      });
+      console.log("response", response);
+      setPartsWithBays((prevState) =>
+        prevState.map((partWithBays) => ({
+          ...partWithBays,
+          bays: partWithBays.bays.filter((bay) => bay.bayId !== itemToDelete),
+        }))
+      );
+      setBayDefinitionContext?.((prevState) =>
+        prevState.map((partWithBays) => ({
+          ...partWithBays,
+          bays: partWithBays.bays.filter((bay) => bay.bayId !== itemToDelete),
+        }))
+      );
+      toast({
+        title: "Success",
+        description: ` deleted successfully.`,
+      });
+
+      setIsDeleteModalOpen(false);
+    } catch (error) {
+      console.error(`Error deleting `, error);
+      toast({
+        title: "Error",
+        description: `Failed to delete Please try again.`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div className="mt-6">
+      <ConfirmationModal
+        confirmText="Delete"
+        title="Delete Bay Definition"
+        description={`Are you sure you want to delete this bay definition? This action cannot be undone.`}
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        isConfirming={isDeleting}
+        onConfirm={handleDelete}
+      />
       <div className="flex items-center space-x-4 mb-6">
         <div className="">
           <Input
@@ -987,7 +996,7 @@ const TableComponent = ({ quoteId }: Props) => {
           />
           <Label htmlFor="hide-zero">Hide zero quantity</Label>
         </div>
-        <AddBayDefinitonTab onAdd={handleAddBay} />
+        {!isLocked && <AddBayDefinitonTab onAdd={handleAddBay} />}
       </div>
       <div
         className="table-component overflow-auto max-w-full max-h-full outline-none relative"
@@ -1024,8 +1033,13 @@ const TableComponent = ({ quoteId }: Props) => {
                     isColumnSelected(colIndex) ? "bg-blue-100" : "bg-gray-100"
                   }`}
                   style={{ minWidth: "100px", ...getColumnStyle(colIndex) }}
+                  onClick={() => handleOpenDeleteModal(bayName)}
                 >
-                  {bayName}
+                  <p className="flex items-center justify-center gap-1">
+                    {bayName}
+                    {!isLocked && <Trash2 size={18} />}
+                  </p>
+
                   <div
                     className="col-resize-handle absolute top-0 right-0 w-1 h-full cursor-col-resize opacity-0 hover:opacity-100 hover:bg-blue-300"
                     onMouseDown={(e) => startColumnResize(e, colIndex)}

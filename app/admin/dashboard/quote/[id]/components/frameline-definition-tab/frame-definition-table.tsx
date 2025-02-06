@@ -7,6 +7,8 @@ import { AddFrameLineDefinitonTab } from "./add-frameline-definition";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Trash2 } from "lucide-react";
+import { ConfirmationModal } from "@/components/ui/confirmation-modal";
 
 type Part = {
   id: string;
@@ -40,7 +42,7 @@ type Props = {
   quoteId: string;
 };
 const FrameLineTable = ({ quoteId }: Props) => {
-  const { setFrameLinesDefinitionContext } = useQuote();
+  const { setFrameLinesDefinitionContext, quote, isLocked } = useQuote();
   const [partsWithBays, setPartsWithBays] = useState<PartWithFrames[]>([]);
   const [selectedCell, setSelectedCell] = useState({ row: -1, col: -1 });
   const [editingCell, setEditingCell] = useState({ row: -1, col: -1 });
@@ -67,6 +69,9 @@ const FrameLineTable = ({ quoteId }: Props) => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [hideZeroQuantity, setHideZeroQuantity] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const fetchData = async () => {
@@ -930,16 +935,13 @@ const FrameLineTable = ({ quoteId }: Props) => {
     quantity: number;
   }) => {
     if (debounceTimeout.current) {
-      clearTimeout(debounceTimeout.current); // Cancelar el debounce anterior
+      clearTimeout(debounceTimeout.current);
     }
-
-    // Establecer un nuevo debounce
     debounceTimeout.current = setTimeout(() => {
       updateSingleQuantity(update);
-    }, 500); // 500 ms de retraso
+    }, 500);
   };
 
-  // Forzar la ejecución del debounce en onBlur
   const handleBlur = () => {
     if (debounceTimeout.current) {
       clearTimeout(debounceTimeout.current); // Cancelar el debounce
@@ -955,9 +957,73 @@ const FrameLineTable = ({ quoteId }: Props) => {
     }
     stopEditing();
   };
+  const handleOpenDeleteModal = async (bayName) => {
+    console.log(bayName);
+    const findBay = partsWithBays.find((partWithBays) =>
+      partWithBays.framelines.some((bay) => bay.framelineName === bayName)
+    );
+
+    if (!findBay) return;
+    setItemToDelete(findBay.framelines[0].framelineId);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!itemToDelete) return;
+
+    try {
+      setIsDeleting(true);
+
+      await apiRequest({
+        url: `/api/Definition/FrameLine/${quote.id}?FramelineId=${itemToDelete}`,
+        method: "delete",
+      });
+
+      setPartsWithBays((prevState) =>
+        prevState.map((partWithBays) => ({
+          ...partWithBays,
+          framelines: partWithBays.framelines.filter(
+            (bay) => bay.framelineId !== itemToDelete
+          ),
+        }))
+      );
+      setFrameLinesDefinitionContext?.((prevState) =>
+        prevState.map((partWithBays) => ({
+          ...partWithBays,
+          framelines: partWithBays.framelines.filter(
+            (bay) => bay.framelineId !== itemToDelete
+          ),
+        }))
+      );
+      toast({
+        title: "Success",
+        description: ` deleted successfully.`,
+      });
+
+      setIsDeleteModalOpen(false);
+    } catch (error) {
+      console.error(`Error deleting `, error);
+      toast({
+        title: "Error",
+        description: `Failed to delete Please try again.`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <div className="mt-6">
+      <ConfirmationModal
+        confirmText="Delete"
+        title="Delete Frameline Definition"
+        description={`Are you sure you want to delete this frameline definition? This action cannot be undone.`}
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        isConfirming={isDeleting}
+        onConfirm={handleDelete}
+      />
       <div className="flex items-center space-x-4 mb-6">
         <div className="">
           <Input
@@ -976,7 +1042,7 @@ const FrameLineTable = ({ quoteId }: Props) => {
           />
           <Label htmlFor="hide-zero">Hide zero quantity</Label>
         </div>
-        <AddFrameLineDefinitonTab onAdd={handleAddFrameline} />
+        {!isLocked && <AddFrameLineDefinitonTab onAdd={handleAddFrameline} />}
       </div>
 
       <div
@@ -1014,8 +1080,12 @@ const FrameLineTable = ({ quoteId }: Props) => {
                     isColumnSelected(colIndex) ? "bg-blue-100" : "bg-gray-100"
                   }`}
                   style={{ minWidth: "100px", ...getColumnStyle(colIndex) }}
+                  onClick={() => handleOpenDeleteModal(bayName)}
                 >
-                  {bayName}
+                  <p className="flex items-center justify-center gap-1">
+                    {bayName}
+                    {!isLocked && <Trash2 size={18} />}
+                  </p>
                   <div
                     className="col-resize-handle absolute top-0 right-0 w-1 h-full cursor-col-resize opacity-0 hover:opacity-100 hover:bg-blue-300"
                     onMouseDown={(e) => startColumnResize(e, colIndex)}

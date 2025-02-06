@@ -1,5 +1,5 @@
 import { apiRequest } from "@/utils/client-side-api";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +10,15 @@ import { Button } from "@/components/ui/button";
 import { RowInfoModal } from "./row-info-modal";
 import { formatCurrency } from "@/utils/format-currency";
 import { Scan } from "lucide-react";
+import { useQuote } from "../../context/quote-context";
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export type Row = {
   rowName: string;
@@ -28,11 +37,21 @@ export type PartWithRows = {
   part: Part;
   rows: Row[];
 };
+export type SectionArea = {
+  area: {
+    id: string;
+    quotationId: string;
+    color: string;
+    name: string;
+  };
+  rows: string[];
+};
 
 type Props = {
   quoteId: string;
 };
 const RowCountTable = ({ quoteId }: Props) => {
+  const { quote, isLocked } = useQuote();
   const [bayWithRows, setbayWithRows] = useState<PartWithRows[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,6 +59,24 @@ const RowCountTable = ({ quoteId }: Props) => {
   const [hideZeroQuantity, setHideZeroQuantity] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState(null);
+  const [sectionData, setSectionData] = useState<SectionArea[] | null>(null);
+  const [selectionAreaId, setSelectedAreaId] = useState<string | null>(null);
+  const [totalCost, setTotalCost] = useState<number>(0);
+
+  const getBayColor = useCallback(
+    (rowId: string): string | null => {
+      if (!sectionData) return null;
+
+      for (const section of sectionData) {
+        if (section.rows.includes(rowId)) {
+          return section.area.color;
+        }
+      }
+
+      return null;
+    },
+    [sectionData]
+  );
 
   const fetchData = async () => {
     try {
@@ -66,19 +103,40 @@ const RowCountTable = ({ quoteId }: Props) => {
       console.error(err);
     }
   };
+  const fetchSectionData = async () => {
+    try {
+      const areaResponse = await apiRequest({
+        url: `/api/Area/${quoteId}`,
+        method: "get",
+      });
+      console.log(areaResponse);
+      setSectionData(areaResponse);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   useEffect(() => {
     fetchData();
+    fetchSectionData();
   }, [quoteId]);
+
+  const filteredBays = bayWithRows
+    .flatMap((part) =>
+      part.rows.map((row) => ({ rowName: row.rowName, rowId: row.rowId }))
+    )
+    .filter((row) => {
+      if (!selectionAreaId || selectionAreaId === "clear") return true; // Si no hay filtro, incluir todas
+      const section = sectionData?.find(
+        (section) => section.area.id === selectionAreaId
+      );
+      return section?.rows.includes(row.rowId); // Incluir solo si está en la sección
+    });
 
   const allBays = Array.from(
     new Map(
-      bayWithRows
-        .flatMap((part) =>
-          part.rows.map((row) => ({ rowName: row.rowName, rowId: row.rowId }))
-        )
-        .map((row) => [`${row.rowName}-${row.rowId}`, row]) // Use a unique key for each row
-    ).values() // Extract the unique rows from the Map
+      filteredBays.map((row) => [`${row.rowName}-${row.rowId}`, row])
+    ).values()
   ).sort((a, b) => {
     const isARowNumber = a.rowName.match(/Row-(\d+)/);
     const isBRowNumber = b.rowName.match(/Row-(\d+)/);
@@ -95,32 +153,8 @@ const RowCountTable = ({ quoteId }: Props) => {
       return aNumber - bNumber;
     }
   });
-  if (loading) {
-    return <div>Loading ...</div>;
-  }
-  if (error) {
-    return <div>{error}</div>;
-  }
-
-  const calculateTotalQuantity = (partWithBays: PartWithRows): number => {
-    return partWithBays.rows.reduce((total, bay) => total + bay.quantity, 0);
-  };
-
-  const calculateTotalCost = (partWithBays: PartWithRows): number => {
-    return partWithBays.rows.reduce(
-      (total, row) => total + row.quantity * partWithBays.part.unitCost,
-      0
-    );
-  };
-  const calculateTotalCostForAllParts = (parts: PartWithRows[]): number => {
-    return parts.reduce((total, partWithBays) => {
-      return total + calculateTotalCost(partWithBays);
-    }, 0);
-  };
-
   const filteredBayWithRows = bayWithRows.filter((partWithBays) => {
-    // Ensure partWithBays.part exists and partNumber is a valid string
-    const partNumber = partWithBays?.part?.partNumber ?? ""; // Default to empty string if null/undefined
+    const partNumber = partWithBays?.part?.partNumber ?? "";
     const matchesSearch = partNumber
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
@@ -128,10 +162,77 @@ const RowCountTable = ({ quoteId }: Props) => {
     const hasNonZeroQuantity =
       partWithBays?.rows?.some((row) => row.quantity !== 0) ?? false;
 
+    const matchesArea =
+      selectionAreaId && selectionAreaId !== "clear"
+        ? partWithBays.rows.some((row) => {
+            const section = sectionData?.find(
+              (section) => section.area.id === selectionAreaId
+            );
+            return section?.rows.includes(row.rowId);
+          })
+        : true;
     return hideZeroQuantity
-      ? matchesSearch && hasNonZeroQuantity
-      : matchesSearch;
+      ? matchesSearch && hasNonZeroQuantity && matchesArea
+      : matchesSearch && matchesArea;
   });
+
+  const calculateTotalCostForAllParts = (
+    parts: PartWithRows[],
+    areaId: string | null
+  ): number => {
+    return parts.reduce((total, partWithBays) => {
+      const filteredRows =
+        areaId && areaId !== "clear"
+          ? partWithBays.rows.filter((row) => {
+              const section = sectionData?.find(
+                (section) => section.area.id === areaId
+              );
+              return section?.rows.includes(row.rowId);
+            })
+          : partWithBays.rows; // Si no hay filtro, usar todas las filas
+
+      return (
+        total +
+        filteredRows.reduce(
+          (subtotal, row) =>
+            subtotal + row.quantity * partWithBays.part.unitCost,
+          0
+        )
+      );
+    }, 0);
+  };
+
+  useEffect(() => {
+    const newTotalCost = calculateTotalCostForAllParts(
+      filteredBayWithRows,
+      selectionAreaId
+    );
+    setTotalCost(newTotalCost);
+  }, [filteredBayWithRows, selectionAreaId]);
+
+  if (loading) {
+    return <div>Loading ...</div>;
+  }
+  if (error) {
+    return <div>{error}</div>;
+  }
+
+  const calculateTotalQuantity = (
+    partWithBays: PartWithRows,
+    areaId: string | null
+  ): number => {
+    const filteredRows =
+      areaId && areaId !== "clear"
+        ? partWithBays.rows.filter((row) => {
+            const section = sectionData?.find(
+              (section) => section.area.id === areaId
+            );
+            return section?.rows.includes(row.rowId);
+          })
+        : partWithBays.rows; // Si no hay filtro, usar todas las filas
+
+    return filteredRows.reduce((total, row) => total + row.quantity, 0);
+  };
 
   const handleAddRow = async (quantity: number) => {
     if (quantity <= 0) {
@@ -169,7 +270,6 @@ const RowCountTable = ({ quoteId }: Props) => {
       rows: [...part.rows, ...newRows],
     }));
 
-    // Update the state
     setbayWithRows(updatedPartsWithBays);
 
     try {
@@ -184,7 +284,6 @@ const RowCountTable = ({ quoteId }: Props) => {
         })
       );
 
-      // Wait for all requests to complete
       await Promise.all(requests);
       toast({
         title: "Success",
@@ -203,13 +302,195 @@ const RowCountTable = ({ quoteId }: Props) => {
     setIsModalOpen(false);
   };
 
-  const handleOnSubmit = async (value) => {
-    console.log(value);
+  const handleOnSubmit = async (sectionData1) => {
+    try {
+      const response = await apiRequest({
+        url: `/api/Area`,
+        method: "post",
+        data: {
+          quotationId: quote.id,
+          name: sectionData1.name,
+          color: sectionData1.color,
+        },
+      });
+      const addRows = sectionData1.rows.map((row) => {
+        return apiRequest({
+          url: `/api/area/row/${response}/${row.rowId}`,
+          method: "post",
+        });
+      });
+      await Promise.all(addRows);
+      setSectionData((prevSectionData) => [
+        ...(prevSectionData || []),
+        {
+          area: {
+            id: response,
+            quotationId: quote.id.toString(), // Ensure quotationId is a string
+            color: sectionData1.color,
+            name: sectionData1.name,
+          },
+          rows: sectionData1.rows.map((row) => row.rowId),
+        },
+      ]);
+      toast({
+        title: "Success",
+        description: "Section added successfully.",
+      });
+    } catch (e) {
+      console.log(e);
+      toast({
+        title: "Error",
+        description: "Failed to add section. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
   const handleOnEdit = async (value) => {
-    console.log(value);
-  };
+    const findSection = sectionData?.find(
+      (section) => section.area.id === value.id
+    );
+    if (
+      findSection?.area.color !== value.color ||
+      findSection?.area.name !== value.name
+    ) {
+      try {
+        await apiRequest({
+          url: `/api/Area/`,
+          method: "put",
+          data: {
+            areaId: value.id,
+            color: value.color,
+            name: value.name,
+          },
+        });
 
+        toast({
+          title: "Success",
+          description: "Section updated successfully.",
+        });
+        if (sectionData) {
+          setSectionData(
+            sectionData.map((section) => {
+              if (section.area.id === value.id) {
+                return {
+                  ...section,
+                  area: {
+                    ...section.area,
+                    color: value.color,
+                    name: value.name,
+                  },
+                };
+              }
+              return section;
+            })
+          );
+        }
+      } catch (e) {
+        console.log(e);
+        toast({
+          title: "Error",
+          description: "Failed to update section. Please try again.",
+          variant: "destructive",
+        });
+      }
+    }
+
+    const findRows = findSection?.rows || [];
+    const rowsToAdd = value.rows.filter((row) => !findRows.includes(row.rowId));
+
+    const rowsToRemove = findRows.filter(
+      (row) => !value.rows.map((r) => r.rowId).includes(row)
+    );
+
+    if (rowsToAdd.length > 0) {
+      try {
+        const addRows = rowsToAdd.map((row) => {
+          return apiRequest({
+            url: `/api/area/row/${value.id}/${row.rowId}`,
+            method: "post",
+          });
+        });
+        await Promise.all(addRows);
+
+        if (sectionData) {
+          setSectionData(
+            sectionData.map((section) => {
+              if (section.area.id === value.id) {
+                return {
+                  ...section,
+                  rows: [...section.rows, ...rowsToAdd.map((row) => row.rowId)],
+                };
+              }
+              return section;
+            })
+          );
+        }
+        toast({
+          title: "Success",
+          description: "Rows added successfully.",
+        });
+      } catch (e) {
+        console.log(e);
+        toast({
+          title: "Error",
+          description: "Failed to add rows. Please try again.",
+          variant: "destructive",
+        });
+      }
+    }
+    if (rowsToRemove.length > 0) {
+      try {
+        const removeRows = rowsToRemove.map((row) => {
+          return apiRequest({
+            url: `/api/area/row/${value.id}/${row}`,
+            method: "delete",
+          });
+        });
+        await Promise.all(removeRows);
+        if (sectionData) {
+          setSectionData(
+            sectionData.map((section) => {
+              if (section.area.id === value.id) {
+                return {
+                  ...section,
+                  rows: section.rows.filter(
+                    (row) => !rowsToRemove.includes(row)
+                  ),
+                };
+              }
+              return section;
+            })
+          );
+        }
+        toast({
+          title: "Success",
+          description: "Rows removed successfully.",
+        });
+      } catch (e) {
+        console.log(e);
+        toast({
+          title: "Error",
+          description: "Failed to remove rows. Please try again.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+  const handleRemoveArea = async (areaId) => {
+    try {
+      await apiRequest({
+        url: `/api/Area?AreaId=${areaId}`,
+        method: "delete",
+      });
+      if (sectionData) {
+        setSectionData(
+          sectionData.filter((section) => section.area.id !== areaId)
+        );
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  };
   const handleHeaderClick = (row) => {
     setSelectedRow(row);
   };
@@ -222,35 +503,61 @@ const RowCountTable = ({ quoteId }: Props) => {
         onClose={handleCloseModal}
         onSubmit={handleOnSubmit}
         onEdit={handleOnEdit}
-        existingSections={[]}
+        onRemove={handleRemoveArea}
+        existingSections={sectionData || []}
       />
-      <div className="flex items-center space-x-4 mb-4">
-        <Button onClick={() => setIsModalOpen(true)}>
-          <Scan />
-        </Button>
-        <div>
-          <Input
-            type="text"
-            placeholder="Search by Part Number..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="p-2 border border-gray-300 rounded"
-          />
+      <div className="flex justify-between mb-4">
+        <div className=" flex items-center space-x-4">
+          <div>
+            <Input
+              type="text"
+              placeholder="Search by Part Number..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="p-2 border border-gray-300 rounded"
+            />
+          </div>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="hide-zero"
+              checked={hideZeroQuantity}
+              onCheckedChange={setHideZeroQuantity}
+            />
+            <Label htmlFor="hide-zero">Hide zero quantity</Label>
+          </div>
+          {!isLocked && <AddRowsTab onAdd={handleAddRow} />}
+          <div className="flex items-center space-x-2">
+            <span className="font-bold">Total Cost:</span>
+            <span className="text-blue-600 font-semibold">
+              {formatCurrency(totalCost)}
+            </span>
+          </div>
         </div>
         <div className="flex items-center space-x-2">
-          <Switch
-            id="hide-zero"
-            checked={hideZeroQuantity}
-            onCheckedChange={setHideZeroQuantity}
-          />
-          <Label htmlFor="hide-zero">Hide zero quantity</Label>
-        </div>
-        <AddRowsTab onAdd={handleAddRow} />
-        <div className="flex items-center space-x-2">
-          <span className="font-bold">Total Cost:</span>
-          <span className="text-blue-600 font-semibold">
-            {formatCurrency(calculateTotalCostForAllParts(filteredBayWithRows))}
-          </span>
+          <div className="w-44">
+            <Select
+              onValueChange={(value) =>
+                setSelectedAreaId(value === "clear" ? null : value)
+              }
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select section to edit" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="clear">Clear Filter</SelectItem>
+                {sectionData?.map((section) => (
+                  <SelectItem key={section.area.id} value={section.area.id}>
+                    {section.area.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {!isLocked && (
+            <Button onClick={() => setIsModalOpen(true)}>
+              <Scan />
+            </Button>
+          )}
         </div>
       </div>
 
@@ -261,16 +568,27 @@ const RowCountTable = ({ quoteId }: Props) => {
               <th className="border border-gray-300 p-2 font-bold text-left w-[350px] sticky left-0 bg-white z-20">
                 Part Number / Description
               </th>
-              {allBays.map((bayName, colIndex) => (
-                <th
-                  key={colIndex + bayName.rowId}
-                  className={`border border-gray-300 p-2 font-bold text-center  cursor-pointer`}
-                  style={{ minWidth: "100px" }}
-                  onDoubleClick={() => handleHeaderClick(bayName)}
-                >
-                  {bayName.rowName}
-                </th>
-              ))}
+              {allBays.map((bayName, colIndex) => {
+                const areaName =
+                  sectionData?.find((section) =>
+                    section.rows.includes(bayName.rowId)
+                  )?.area.name || "No Area";
+                return (
+                  <th
+                    key={colIndex + bayName.rowId}
+                    className={`border border-gray-300 p-2 font-bold text-center cursor-pointer`}
+                    style={{
+                      minWidth: "100px",
+                      backgroundColor:
+                        getBayColor(bayName.rowId) || "transparent",
+                    }}
+                    onDoubleClick={() => handleHeaderClick(bayName)}
+                    title={`Area: ${areaName}`}
+                  >
+                    {bayName.rowName}
+                  </th>
+                );
+              })}
               <th className="border border-gray-300 p-2 font-bold text-center sticky right-0 bg-white z-20">
                 Total
               </th>
@@ -285,7 +603,10 @@ const RowCountTable = ({ quoteId }: Props) => {
               </tr>
             ) : (
               filteredBayWithRows.map((partWithBays, rowIndex) => {
-                const totalQuantity = calculateTotalQuantity(partWithBays);
+                const totalQuantity = calculateTotalQuantity(
+                  partWithBays,
+                  selectionAreaId
+                );
                 return (
                   <tr key={`${partWithBays.part.id}-${rowIndex}`}>
                     <td
