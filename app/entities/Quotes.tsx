@@ -27,6 +27,7 @@ export type Quotes = {
   permitsMargin?: number;
   engCalsMargin?: number;
   salesTax?: number;
+  materialMargin?: number;
 };
 
 export enum QuotesStatus {

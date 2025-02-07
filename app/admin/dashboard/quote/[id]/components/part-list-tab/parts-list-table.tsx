@@ -19,6 +19,9 @@ import { paintTypes } from "@/app/entities/colors-enum";
 import { toast } from "@/hooks/use-toast";
 import { apiRequest } from "@/utils/client-side-api";
 import { useQuote } from "../../context/quote-context";
+import { AddPartDialog } from "@/app/admin/dashboard/components/add-part.modal";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 
 const materialMargin = 0.2;
 
@@ -34,6 +37,7 @@ export default function PartsListTable({ quoteId }: Props) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const [isCustomPartModalOpen, setIsCustomPartModalOpen] = useState(false);
 
   const fetchParts = async () => {
     const response = await apiRequest({
@@ -138,15 +142,6 @@ export default function PartsListTable({ quoteId }: Props) {
     }
   };
 
-  const totalSell = parts.reduce(
-    (acc, part) =>
-      acc +
-      ((part.unitWeight * part.unitMatLb + part.unitLabor) /
-        (1 - materialMargin)) *
-        (part.qty ?? 0),
-    0
-  );
-
   const handleSearchPartlist = (search: string) => {
     setSearchTerm(search);
 
@@ -159,6 +154,37 @@ export default function PartsListTable({ quoteId }: Props) {
       part.description.toLowerCase().includes(search.toLowerCase())
     );
     setFilteredParts(filteredParts);
+  };
+
+  const handleAddCustomPart = async (customPart) => {
+    try {
+      const response = await apiRequest<number>({
+        method: "post",
+        url: "/api/PartLibrary",
+        data: customPart,
+      });
+      await apiRequest({
+        method: "post",
+        url: `/api/part`,
+        data: {
+          partLibId: response,
+          quotationId: quoteId,
+          partNumber: customPart.partNumber,
+        },
+      });
+      await fetchParts();
+      toast({
+        title: "Part Added",
+        description: "Part has been added successfully",
+      });
+    } catch (error) {
+      console.error("Error adding part:", error);
+      toast({
+        title: "Error",
+        description: "Error adding part",
+        variant: "destructive",
+      });
+    }
   };
 
   useEffect(() => {
@@ -200,19 +226,33 @@ export default function PartsListTable({ quoteId }: Props) {
         </form>
         <div className=" flex gap-3">
           {!isLocked && <PartsDialog onAdd={handleAdd} />}
+          {!isLocked && (
+            <Button
+              variant="success"
+              onClick={() => setIsCustomPartModalOpen(true)}
+            >
+              <Plus className="mr-2 h-4 w-4" /> Add Custom Part
+            </Button>
+          )}
+          {!isLocked && (
+            <AddPartDialog
+              isOpen={isCustomPartModalOpen}
+              onClose={() => setIsCustomPartModalOpen(false)}
+              onAdd={handleAddCustomPart}
+            />
+          )}
         </div>
       </div>
       <Table>
         <TableHeader className="border">
           <TableRow>
-            {/* <TableHead className="w-[100px]">Total</TableHead> */}
             <TableHead className="w-[100px] border ">Part No.</TableHead>
             <TableHead className="border">Qty</TableHead>
             <TableHead className="border">Description</TableHead>
             <TableHead className="border">Color</TableHead>
             <TableHead className="text-right border">Unit Weight</TableHead>
             <TableHead className=" border text-right">Total Weight</TableHead>
-            {/* <TableHead className="text-right">Unit Mat/lb</TableHead> */}
+
             <TableHead className="text-right border">Unit Labor</TableHead>
             <TableHead className="text-right border">Unit Cost</TableHead>
             <TableHead className="text-right border">Total Cost</TableHead>
