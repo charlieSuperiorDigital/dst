@@ -22,6 +22,7 @@ export interface CostItem {
   permits?: number;
   engCals?: number;
   salesTax?: number;
+  materialCost?: number;
 }
 
 interface Props {
@@ -37,6 +38,7 @@ export default function RownCountSummary({ quoteId }: Props) {
     rentalsMargin: quote.rentalsMargin,
     permitsMargin: quote.permitsMargin,
     engCalsMargin: quote.engCalsMargin,
+    materialMargin: quote.materialMargin,
   });
   const [costItems, setCostItems] = useState<CostItem>({
     freight: quote.freight,

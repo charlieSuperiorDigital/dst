@@ -31,6 +31,7 @@ export interface MarginTax {
   permitsMargin?: number;
   engCalsMargin?: number;
   salesTaxRate?: number;
+  materialMargin?: number;
 }
 
 type Props = {
@@ -64,7 +65,10 @@ export default function CostBreakdownTable({
   );
 
   useEffect(() => {
-    let total = materialCost;
+    let total = calculateTotalWithMargin(
+      materialCost,
+      marginTaxes.materialMargin
+    );
     total += calculateTotalWithMargin(
       costItems.freight,
       marginTaxes.freightMargin
@@ -85,6 +89,7 @@ export default function CostBreakdownTable({
       costItems.engCals,
       marginTaxes.engCalsMargin
     );
+    total += calculateTotalWithMargin(materialCost, marginTaxes.materialMargin);
 
     setTotalBeforeTaxes(total);
     setGrandTotal(total + (costItems.salesTax || 0));
@@ -147,7 +152,11 @@ export default function CostBreakdownTable({
                 ${materialCost.toLocaleString()}
               </TableCell>
               <TableCell className="text-right">
-                ${materialCost.toLocaleString()}
+                $
+                {calculateTotalWithMargin(
+                  materialCost,
+                  marginTaxes.materialMargin
+                ).toLocaleString()}
               </TableCell>
             </TableRow>
             {costItemsArray.map(({ key, label }) => (

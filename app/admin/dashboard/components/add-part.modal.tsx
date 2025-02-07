@@ -51,7 +51,10 @@ export function AddPartDialog({ isOpen, onClose, onAdd }: AddPartDialogProps) {
     const { name, value } = e.target;
     setNewPart({
       ...newPart,
-      [name]: name === "description" || name === "partNumber" ? value : parseFloat(value),
+      [name]:
+        name === "description" || name === "partNumber"
+          ? value
+          : parseFloat(value),
     });
   };
 
@@ -132,7 +135,7 @@ export function AddPartDialog({ isOpen, onClose, onAdd }: AddPartDialogProps) {
               required
             />
           </div>
-          {/* <div>
+          <div>
             <Label htmlFor="unitCost">Unit Cost</Label>
             <Input
               id="unitCost"
@@ -143,7 +146,7 @@ export function AddPartDialog({ isOpen, onClose, onAdd }: AddPartDialogProps) {
               onChange={handleChange}
               required
             />
-          </div> */}
+          </div>
           {/* <div>
             <Label htmlFor="unitSell">Unit Sell</Label>
             <Input
