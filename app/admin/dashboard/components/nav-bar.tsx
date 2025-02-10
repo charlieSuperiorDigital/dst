@@ -3,7 +3,7 @@
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { LogOut, Users } from "lucide-react";
+import { LogOut, Users, ScrollText } from "lucide-react";
 
 export function Navbar() {
   const { data: session, status } = useSession();
@@ -23,6 +23,11 @@ export function Navbar() {
               <p>Loading...</p>
             ) : session ? (
               <>
+                <Link href="/admin/dashboard/logs">
+                  <Button variant="outline" className="text-gray-500 border-gray-500 hover:bg-gray-500 hover:text-white">
+                    <ScrollText className="h-4 w-4" />
+                  </Button>
+                </Link>
                 <Link href="/admin/dashboard/user-list">
                   <Button variant="outline" className="text-gray-500 border-gray-500 hover:bg-gray-500 hover:text-white">
                     <Users className="h-4 w-4" />
