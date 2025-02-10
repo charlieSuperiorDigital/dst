@@ -20,6 +20,8 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { toast } from "@/hooks/use-toast";
+import { ArrowUpDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface Log {
   id: string;
@@ -37,25 +39,31 @@ interface LogsResponse {
   totalCount: number;
 }
 
+type SortColumn = "When" | "WhoName" | "What" | "QuotationId";
+
 export default function LogsPage() {
   const [logs, setLogs] = useState<Log[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [orderBy, setOrderBy] = useState<SortColumn>("When");
+  const [isAscending, setIsAscending] = useState(false);
 
   const fetchLogs = async (page: number, search: string) => {
     try {
       setIsLoading(true);
+      const queryParams = new URLSearchParams({
+        search,
+        page: page.toString(),
+        perPage: "15",
+        orderBy,
+        isAscending: isAscending.toString()
+      });
+      
       const response = await apiRequest<LogsResponse>({
-        method: "post",
-        url: "/api/Log",
-        data: {
-          search: search,
-          page: page,
-          perpage: 15,
-          quotationId: null
-        },
+        method: "get",
+        url: `/api/Log/search?${queryParams}`,
       });
 
       if (response) {
@@ -76,12 +84,21 @@ export default function LogsPage() {
 
   useEffect(() => {
     fetchLogs(currentPage, searchTerm);
-  }, [currentPage, searchTerm]);
+  }, [currentPage, searchTerm, orderBy, isAscending]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setCurrentPage(1);
     fetchLogs(1, searchTerm);
+  };
+
+  const handleSort = (column: SortColumn) => {
+    if (orderBy === column) {
+      setIsAscending(!isAscending);
+    } else {
+      setOrderBy(column);
+      setIsAscending(true);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -145,10 +162,46 @@ export default function LogsPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>When</TableHead>
-              <TableHead>Who</TableHead>
-              <TableHead>Action</TableHead>
-              <TableHead>Quote ID</TableHead>
+              <TableHead>
+                <Button
+                  variant="ghost"
+                  onClick={() => handleSort("When")}
+                  className="flex items-center gap-1"
+                >
+                  When
+                  <ArrowUpDown className="h-4 w-4" />
+                </Button>
+              </TableHead>
+              <TableHead>
+                <Button
+                  variant="ghost"
+                  onClick={() => handleSort("WhoName")}
+                  className="flex items-center gap-1"
+                >
+                  Who
+                  <ArrowUpDown className="h-4 w-4" />
+                </Button>
+              </TableHead>
+              <TableHead>
+                <Button
+                  variant="ghost"
+                  onClick={() => handleSort("What")}
+                  className="flex items-center gap-1"
+                >
+                  Action
+                  <ArrowUpDown className="h-4 w-4" />
+                </Button>
+              </TableHead>
+              <TableHead>
+                <Button
+                  variant="ghost"
+                  onClick={() => handleSort("QuotationId")}
+                  className="flex items-center gap-1"
+                >
+                  Quote ID
+                  <ArrowUpDown className="h-4 w-4" />
+                </Button>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
