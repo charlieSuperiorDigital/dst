@@ -2,6 +2,7 @@ import { useState } from "react";
 import { getUserList, updateUser } from "@/utils/client-side-api";
 import { toast } from "sonner";
 import axios from "axios";
+import { getSession } from "next-auth/react";
 
 interface User {
   id: string;
@@ -112,11 +113,17 @@ export function useUsers(): UseUsersReturn {
   const deleteUser = async (userId: string): Promise<boolean> => {
     setIsSaving(true);
     try {
+      const session = await getSession();
+      if (!session) {
+        throw new Error("No active session found");
+      }
+
       const response = await axios.delete(
         `${process.env.NEXT_PUBLIC_API_URL}/User/${userId}`,
         {
           headers: {
             "Content-Type": "application/json",
+            "Authorization": `Bearer ${session.user.token}`
           },
         }
       );
