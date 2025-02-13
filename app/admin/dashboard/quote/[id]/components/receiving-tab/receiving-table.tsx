@@ -31,6 +31,15 @@ const ReceivingTable = ({ quoteId }: Props) => {
   const [loading, setLoading] = useState(true);
   const [loadingLoads, setLoadingLoads] = useState<{ [key: string]: boolean }>({});
 
+  const calculateTotalReceived = (info: ReceivingInfo): number => {
+    if (!info.receivingLoad || info.receivingLoad.length === 0) return 0;
+    return info.receivingLoad.reduce((sum, load) => sum + (load.quantityReceived || 0), 0);
+  };
+
+  const calculateBalanceDue = (info: ReceivingInfo, totalReceived: number): number => {
+    return Math.max(0, info.quantityRequired - totalReceived);
+  };
+
   const fetchReceivingData = async () => {
     try {
       const response = await apiRequest<ReceivingInfo[]>({
@@ -38,13 +47,15 @@ const ReceivingTable = ({ quoteId }: Props) => {
         url: `/receiving/${quoteId}`,
       });
       
-      // Calculate balance due for each part
+      // Calculate totals for each part
       const updatedResponse = response?.map(info => {
-        const totalReceived = info.receivingLoad.reduce((sum, load) => sum + (load.quantityReceived || 0), 0);
+        const totalReceived = calculateTotalReceived(info);
+        const balanceDue = calculateBalanceDue(info, totalReceived);
+        
         return {
           ...info,
           totalQuantityReceived: totalReceived,
-          balanceDue: Math.max(0, info.quantityRequired - totalReceived)
+          balanceDue: balanceDue
         };
       }) || [];
 
@@ -110,9 +121,8 @@ const ReceivingTable = ({ quoteId }: Props) => {
           return load;
         });
         
-        // Calculate total received from all loads
-        const totalReceived = updatedLoads.reduce((sum, load) => sum + (load.quantityReceived || 0), 0);
-        const balanceDue = Math.max(0, info.quantityRequired - totalReceived);
+        const totalReceived = calculateTotalReceived({ ...info, receivingLoad: updatedLoads });
+        const balanceDue = calculateBalanceDue({ ...info, receivingLoad: updatedLoads }, totalReceived);
         
         return { 
           ...info, 

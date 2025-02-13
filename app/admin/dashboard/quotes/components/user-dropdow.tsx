@@ -20,8 +20,13 @@ export function UserDropdown({ onChange, value }: Props) {
 
   useEffect(() => {
     const fetchUsers = async () => {
-      const response = await getUserList("", 1, 100);
-      console.log(response.users);
+      const queryParams = new URLSearchParams({
+        search: "",
+        page: "1",
+        perpage: "100"
+      }).toString();
+      
+      const response = await getUserList(queryParams);
       SetUsers(response.users);
     };
     fetchUsers();
