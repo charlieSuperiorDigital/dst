@@ -53,7 +53,10 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background">
+      <div className="mb-8">
+        <img src="/e-distribution-logo.png" alt="E-Distribution Logo" className="h-24" />
+      </div>
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Log in to your account</CardTitle>
