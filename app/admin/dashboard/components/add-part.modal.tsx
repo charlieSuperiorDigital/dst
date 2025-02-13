@@ -21,7 +21,7 @@ interface AddPartDialogProps {
 }
 
 export function AddPartDialog({ isOpen, onClose, onAdd }: AddPartDialogProps) {
-  const [newPart, setNewPart] = useState<Partial<Part>>({
+  const defaultPartState = {
     description: "",
     colorId: 1,
     partNumber: "",
@@ -31,7 +31,16 @@ export function AddPartDialog({ isOpen, onClose, onAdd }: AddPartDialogProps) {
     unitMatLb: 0,
     unitSell: 0,
     unitWeight: 0,
-  });
+  };
+
+  const [newPart, setNewPart] = useState<Partial<Part>>(defaultPartState);
+
+  const handleCloseModal = (open: boolean) => {
+    if (!open) {
+      setNewPart(defaultPartState); // Reset form to default values
+    }
+    onClose();
+  };
 
   const handleColorChange = (colorId: string) => {
     if (colorId) {
@@ -65,7 +74,7 @@ export function AddPartDialog({ isOpen, onClose, onAdd }: AddPartDialogProps) {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleCloseModal}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add New Part</DialogTitle>
@@ -171,7 +180,12 @@ export function AddPartDialog({ isOpen, onClose, onAdd }: AddPartDialogProps) {
               required
             />
           </div>
-          <Button type="submit">Add Part</Button>
+          <div className="flex justify-between gap-4 pt-4">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit">Add Part</Button>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

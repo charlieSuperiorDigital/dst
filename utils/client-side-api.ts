@@ -67,16 +67,10 @@ export const apiRequest = async <T = any>({
   }
 };
 
-export const getUserList = async (
-  search: string = "",
-  page: number = 1,
-  perpage: number = 12
-): Promise<PaginatedUsers> => {
+export const getUserList = async (queryParams: string): Promise<PaginatedUsers> => {
   return apiRequest({
     method: "get",
-    url: `/User/UserList?search=${encodeURIComponent(
-      search
-    )}&page=${page}&perpage=${perpage}`,
+    url: `/User/UserList?${queryParams}`,
   });
 };
 

@@ -19,7 +19,7 @@ interface UseUsersReturn {
   isLoading: boolean;
   isSaving: boolean;
   error: string;
-  fetchUsers: (search: string, page: number) => Promise<void>;
+  fetchUsers: (search: string, page: number, orderBy?: string, isAscending?: boolean) => Promise<void>;
   updateUserDetails: (user: User) => Promise<boolean>;
   registerUser: (user: { fullName: string; email: string; password: string; confirmPassword: string }) => Promise<boolean>;
   deleteUser: (userId: string) => Promise<boolean>;
@@ -32,11 +32,19 @@ export function useUsers(): UseUsersReturn {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const fetchUsers = async (search: string, page: number) => {
+  const fetchUsers = async (search: string, page: number, orderBy: string = "fullName", isAscending: boolean = true) => {
     setIsLoading(true);
     setError("");
     try {
-      const data = await getUserList(search, page);
+      const queryParams = new URLSearchParams({
+        search,
+        page: page.toString(),
+        perpage: "10",
+        orderBy,
+        isAscending: isAscending.toString()
+      });
+      
+      const data = await getUserList(queryParams.toString());
       setUsers(data.users || []);
       setTotalPages(Math.ceil(data.totalCount / data.perPage));
     } catch (error: any) {

@@ -32,7 +32,21 @@ export function EditPartDialog({
 
   useEffect(() => {
     if (part) {
-      setEditedPart({ ...part });
+      // Convert null values to appropriate defaults
+      const sanitizedPart = {
+        ...part,
+        qty: part.qty ?? undefined, // Convert null to undefined for qty
+        color: part.color ?? undefined, // Convert null to undefined for color
+        description: part.description ?? '', // Convert null to empty string for description
+        partNumber: part.partNumber ?? '', // Convert null to empty string for partNumber
+        unitWeight: part.unitWeight ?? 0, // Convert null to 0 for numeric values
+        unitLabor: part.unitLabor ?? 0,
+        unitMatLb: part.unitMatLb ?? 0,
+        unitSell: part.unitSell ?? 0,
+        unitCost: part.unitCost ?? 0,
+        laborEA: part.laborEA ?? 0
+      };
+      setEditedPart(sanitizedPart as PartList);
     }
   }, [part]);
 
@@ -235,12 +249,12 @@ export function EditPartDialog({
           </div> */}
         </div>
         <DialogFooter>
-          <div className="flex space-x-4">
-            <Button type="submit" onClick={handleSave}>
-              Save changes
-            </Button>
-            <Button type="submit" onClick={handleDelete}>
+          <div className="flex justify-between w-full">
+            <Button type="submit" variant="destructive" onClick={handleDelete}>
               Delete part
+            </Button>
+            <Button type="submit" variant="success" onClick={handleSave}>
+              Save changes
             </Button>
           </div>
         </DialogFooter>

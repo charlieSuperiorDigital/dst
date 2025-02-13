@@ -52,6 +52,17 @@ export function PartsDialog({ onAdd }: Props) {
     },
   });
 
+  const handleCloseModal = (open: boolean) => {
+    setOpen(open);
+    if (!open) {
+      // Reset all form data when modal is closed
+      form.reset();
+      setSearchQuery("");
+      setSelectedPart(null);
+      setFilteredParts([]);
+    }
+  };
+
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
     setSelectedPart(null);
@@ -73,7 +84,7 @@ export function PartsDialog({ onAdd }: Props) {
   const handlePartSelect = (part: Part) => {
     setSelectedPart(part);
     form.setValue("partId", part.id);
-
+    form.setValue("partNumber", part.partNumber);
     setFilteredParts([]);
   };
 
@@ -85,7 +96,7 @@ export function PartsDialog({ onAdd }: Props) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleCloseModal}>
       <DialogTrigger asChild>
         <Button onClick={() => setOpen(true)}>
           <Plus className="mr-2 h-4 w-4" /> Add Part

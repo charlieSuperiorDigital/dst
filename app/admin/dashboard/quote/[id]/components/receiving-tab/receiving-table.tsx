@@ -37,7 +37,18 @@ const ReceivingTable = ({ quoteId }: Props) => {
         method: "get",
         url: `/receiving/${quoteId}`,
       });
-      setReceivingInfo(response || []);
+      
+      // Calculate balance due for each part
+      const updatedResponse = response?.map(info => {
+        const totalReceived = info.receivingLoad.reduce((sum, load) => sum + (load.quantityReceived || 0), 0);
+        return {
+          ...info,
+          totalQuantityReceived: totalReceived,
+          balanceDue: Math.max(0, info.quantityRequired - totalReceived)
+        };
+      }) || [];
+
+      setReceivingInfo(updatedResponse);
     } catch (error) {
       console.error("Error fetching receiving data:", error);
       toast({
@@ -98,7 +109,17 @@ const ReceivingTable = ({ quoteId }: Props) => {
           }
           return load;
         });
-        return { ...info, receivingLoad: updatedLoads };
+        
+        // Calculate total received from all loads
+        const totalReceived = updatedLoads.reduce((sum, load) => sum + (load.quantityReceived || 0), 0);
+        const balanceDue = Math.max(0, info.quantityRequired - totalReceived);
+        
+        return { 
+          ...info, 
+          receivingLoad: updatedLoads,
+          totalQuantityReceived: totalReceived,
+          balanceDue: balanceDue
+        };
       }
       return info;
     });

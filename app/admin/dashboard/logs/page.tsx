@@ -20,7 +20,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { toast } from "@/hooks/use-toast";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface Log {
@@ -219,7 +219,7 @@ export default function LogsPage() {
               </TableRow>
             ) : (
               logs.map((log) => (
-                <TableRow key={log.id}>
+                <TableRow key={log.id} className="even:bg-gray-50">
                   <TableCell>{formatDate(log.when)}</TableCell>
                   <TableCell>{log.whoName}</TableCell>
                   <TableCell>{log.what}</TableCell>
@@ -235,20 +235,14 @@ export default function LogsPage() {
         <Pagination>
           <PaginationContent>
             <PaginationItem>
-              <PaginationPrevious
-                onClick={() => handlePageJump('backward', 10)}
-                className="cursor-pointer"
-              >
-                {"<<"}
-              </PaginationPrevious>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationPrevious
+              <Button
+                variant="ghost"
                 onClick={() => handlePageJump('backward', 1)}
-                className="cursor-pointer"
+                className={`h-9 w-9 p-0 ${currentPage <= 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={currentPage <= 1}
               >
-                {"<"}
-              </PaginationPrevious>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
             </PaginationItem>
             
             {getVisiblePages(currentPage, totalPages).map((pageNum, idx) => (
@@ -268,20 +262,14 @@ export default function LogsPage() {
             ))}
 
             <PaginationItem>
-              <PaginationNext
+              <Button
+                variant="ghost"
                 onClick={() => handlePageJump('forward', 1)}
-                className="cursor-pointer"
+                className={`h-9 w-9 p-0 ${currentPage >= totalPages ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={currentPage >= totalPages}
               >
-                {">"}
-              </PaginationNext>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationNext
-                onClick={() => handlePageJump('forward', 10)}
-                className="cursor-pointer"
-              >
-                {">>"}
-              </PaginationNext>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </PaginationItem>
           </PaginationContent>
         </Pagination>

@@ -13,7 +13,7 @@ import { Part } from "@/app/entities/Part";
 import { formatCurrency } from "@/utils/format-currency";
 import { AddPartDialog } from "./add-part.modal";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { apiRequest } from "@/utils/client-side-api";
 import { DeletePartDialog } from "./delete-part.modal";
 import { UpdatePartDialog } from "./update-part.modal";
@@ -23,8 +23,6 @@ import {
   PaginationContent,
   PaginationItem,
   PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
 } from "@/components/ui/pagination";
 import { Input } from "@/components/ui/input";
 import { useParts } from "@/hooks/use-parts";
@@ -196,28 +194,35 @@ export default function PartsTable({ initialPartsResponse }: Props) {
         <Pagination>
           <PaginationContent>
             <PaginationItem>
-              <PaginationPrevious
+              <Button
+                variant="ghost"
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                // disabled={currentPage === 1}
-              />
+                className={`h-9 w-9 p-0 ${currentPage <= 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={currentPage <= 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
             </PaginationItem>
             {[...Array(totalPages)].map((_, index) => (
               <PaginationItem key={index}>
                 <PaginationLink
                   onClick={() => setCurrentPage(index + 1)}
                   isActive={currentPage === index + 1}
+                  className="cursor-pointer"
                 >
                   {index + 1}
                 </PaginationLink>
               </PaginationItem>
             ))}
             <PaginationItem>
-              <PaginationNext
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                }
-                // disabled={currentPage === totalPages}
-              />
+              <Button
+                variant="ghost"
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                className={`h-9 w-9 p-0 ${currentPage >= totalPages ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={currentPage >= totalPages}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </PaginationItem>
           </PaginationContent>
         </Pagination>
