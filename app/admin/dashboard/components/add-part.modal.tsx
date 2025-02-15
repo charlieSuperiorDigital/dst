@@ -115,7 +115,7 @@ export function AddPartDialog({ isOpen, onClose, onAdd }: AddPartDialogProps) {
               name="unitWeight"
               type="number"
               step="0.01"
-              value={newPart.unitWeight}
+              value={(newPart.unitWeight ?? 0).toFixed(2)}
               onChange={handleChange}
               required
             />
@@ -127,7 +127,7 @@ export function AddPartDialog({ isOpen, onClose, onAdd }: AddPartDialogProps) {
               name="unitMatLb"
               type="number"
               step="0.01"
-              value={newPart.unitMatLb}
+              value={(newPart.unitMatLb ?? 0).toFixed(2)}
               onChange={handleChange}
               required
             />
@@ -139,35 +139,43 @@ export function AddPartDialog({ isOpen, onClose, onAdd }: AddPartDialogProps) {
               name="unitLabor"
               type="number"
               step="0.01"
-              value={newPart.unitLabor}
+              value={(newPart.unitLabor ?? 0).toFixed(2)}
               onChange={handleChange}
               required
             />
           </div>
           <div>
             <Label htmlFor="unitCost">Unit Cost</Label>
-            <Input
-              id="unitCost"
-              name="unitCost"
-              type="number"
-              step="0.01"
-              value={newPart.unitCost}
-              onChange={handleChange}
-              required
-            />
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2">$</span>
+              <Input
+                id="unitCost"
+                name="unitCost"
+                type="number"
+                step="0.01"
+                value={(newPart.unitCost ?? 0).toFixed(2)}
+                onChange={handleChange}
+                required
+                className="pl-6"
+              />
+            </div>
           </div>
-          {/* <div>
+          <div>
             <Label htmlFor="unitSell">Unit Sell</Label>
-            <Input
-              id="unitSell"
-              name="unitSell"
-              type="number"
-              step="0.01"
-              value={newPart.unitSell}
-              onChange={handleChange}
-              required
-            />
-          </div> */}
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2">$</span>
+              <Input
+                id="unitSell"
+                name="unitSell"
+                type="number"
+                step="0.01"
+                value={(newPart.unitSell ?? 0).toFixed(2)}
+                onChange={handleChange}
+                required
+                className="pl-6"
+              />
+            </div>
+          </div>
           <div>
             <Label htmlFor="laborEA">Labor EA</Label>
             <Input
@@ -175,7 +183,7 @@ export function AddPartDialog({ isOpen, onClose, onAdd }: AddPartDialogProps) {
               name="laborEA"
               type="number"
               step="0.01"
-              value={newPart.laborEA}
+              value={(newPart.laborEA ?? 0).toFixed(2)}
               onChange={handleChange}
               required
             />

@@ -25,9 +25,10 @@ export default function MarginTaxes({ marginTax, setMarginTax }: Props) {
 
   const handleMarginChange = (field: keyof MarginTax, newValue: string) => {
     const updatedMarginTax = { ...marginTax };
-    updatedMarginTax[field] = parseFloat(newValue) || 0; // Update the specific field
-    setMarginTax(updatedMarginTax); // Update the state
+    updatedMarginTax[field] = parseFloat(newValue) || 0;
+    setMarginTax(updatedMarginTax);
   };
+
   const handleBlur = async (field: keyof MarginTax, value: string) => {
     const updatedValue = parseFloat(value) || 0;
     try {
@@ -55,13 +56,13 @@ export default function MarginTaxes({ marginTax, setMarginTax }: Props) {
   };
 
   return (
-    <Card className="w-[500px]">
-      <div className="container mx-auto p-6 max-w-3xl">
+    <Card className="w-full">
+      <div className="p-6">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead className="w-[200px]">Name</TableHead>
-              <TableHead className="w-[100px]">%</TableHead>
+              <TableHead className="text-right">%</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -73,7 +74,7 @@ export default function MarginTaxes({ marginTax, setMarginTax }: Props) {
                     .replace(/^./, (str) => str.toUpperCase())
                     .replace("Margin", "")}
                 </TableCell>
-                <TableCell>
+                <TableCell className="text-right">
                   <Input
                     type="number"
                     value={value || 0}
@@ -86,7 +87,7 @@ export default function MarginTaxes({ marginTax, setMarginTax }: Props) {
                     onBlur={(e) =>
                       handleBlur(field as keyof MarginTax, e.target.value)
                     }
-                    className="w-24"
+                    className="w-24 ml-auto"
                     step="0.01"
                     min="0"
                     max="100"

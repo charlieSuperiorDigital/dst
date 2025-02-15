@@ -1,14 +1,86 @@
+"use client";
+
 import { Quotes, QuotesStatus } from "@/app/entities/Quotes";
 import { formatDate } from "@/utils/format-date";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { useState } from "react";
+import { PartsDialog } from "../components/part-list-tab/add-part-modal";
+import { AddPartDialog } from "@/app/admin/dashboard/components/add-part.modal";
+import { Part } from "@/app/entities/Part";
+import { apiRequest } from "@/utils/client-side-api";
+import { toast } from "@/hooks/use-toast";
 
 type Props = {
   quote: Quotes;
+  onPartAdded: () => void;
+  showAddPartButtons: boolean;
 };
 
-const QuoteHeader = ({ quote }: Props) => {
+const QuoteHeader = ({ quote, onPartAdded, showAddPartButtons }: Props) => {
+  const [isCustomPartModalOpen, setIsCustomPartModalOpen] = useState(false);
+
+  const handleAdd = async (part: Part, partNumber: string) => {
+    try {
+      await apiRequest({
+        method: "post",
+        url: `/api/part`,
+        data: {
+          partLibId: part.id,
+          quotationId: quote.id,
+          partNumber: partNumber,
+        },
+      });
+
+      toast({
+        title: "Part Added",
+        description: "Part has been added successfully",
+      });
+      onPartAdded();
+    } catch (error) {
+      console.error("Error adding part:", error);
+      toast({
+        title: "Error",
+        description: "Error adding part",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAddCustomPart = async (customPart) => {
+    try {
+      const response = await apiRequest<number>({
+        method: "post",
+        url: "/api/PartLibrary",
+        data: customPart,
+      });
+      await apiRequest({
+        method: "post",
+        url: `/api/part`,
+        data: {
+          partLibId: response,
+          quotationId: quote.id,
+          partNumber: customPart.partNumber,
+        },
+      });
+      toast({
+        title: "Part Added",
+        description: "Part has been added successfully",
+      });
+      onPartAdded();
+    } catch (error) {
+      console.error("Error adding part:", error);
+      toast({
+        title: "Error",
+        description: "Error adding part",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <header className="bg-white shadow-md p-6 rounded-md">
-      <div className="grid grid-rows-2 gap-6">
+      <div className="grid grid-rows-3 gap-6">
         {/* First Row */}
         <div className="grid grid-cols-5 gap-6">
           <div className="text-center sm:text-left">
@@ -75,6 +147,24 @@ const QuoteHeader = ({ quote }: Props) => {
             </p>
           </div>
         </div>
+
+        {/* Third Row - Add Part Buttons */}
+        {showAddPartButtons && (
+          <div className="flex justify-end gap-3">
+            <PartsDialog onAdd={handleAdd} />
+            <Button
+              variant="success"
+              onClick={() => setIsCustomPartModalOpen(true)}
+            >
+              <Plus className="mr-2 h-4 w-4" /> Add Custom Part
+            </Button>
+            <AddPartDialog
+              isOpen={isCustomPartModalOpen}
+              onClose={() => setIsCustomPartModalOpen(false)}
+              onAdd={handleAddCustomPart}
+            />
+          </div>
+        )}
       </div>
     </header>
   );

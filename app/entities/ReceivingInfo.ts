@@ -16,6 +16,7 @@ export interface ReceivingInfo {
   receivingId: string;
   partDescription: string;
   color: Color | null;
+  colorId: number;
   quantityRequired: number;
   totalQuantityReceived: number;
   balanceDue: number;

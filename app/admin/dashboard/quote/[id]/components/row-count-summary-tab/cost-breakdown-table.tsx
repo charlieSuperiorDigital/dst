@@ -14,6 +14,7 @@ import { useQuote } from "../../context/quote-context";
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "@/hooks/use-toast";
 import { apiRequest } from "@/utils/client-side-api";
+import { formatCurrency } from "@/utils/format-currency";
 
 export interface CostItem {
   freight?: number;
@@ -89,7 +90,6 @@ export default function CostBreakdownTable({
       costItems.engCals,
       marginTaxes.engCalsMargin
     );
-    total += calculateTotalWithMargin(materialCost, marginTaxes.materialMargin);
 
     setTotalBeforeTaxes(total);
     setGrandTotal(total + (costItems.salesTax || 0));
@@ -123,7 +123,7 @@ export default function CostBreakdownTable({
       });
 
       setQuoteContext(response);
-      setCostItems(updatedCostItems); // Update local state after successful request
+      setCostItems(updatedCostItems);
     } catch (e) {
       console.error(e);
       toast({
@@ -135,12 +135,12 @@ export default function CostBreakdownTable({
   };
 
   return (
-    <Card className="w-[500px]">
-      <div className="container mx-auto p-6 max-w-3xl">
+    <Card className="w-full">
+      <div className="p-6">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[200px]">Item</TableHead>
+              <TableHead>Item</TableHead>
               <TableHead className="text-right">Cost</TableHead>
               <TableHead className="text-right">Total w/ Margin</TableHead>
             </TableRow>
@@ -149,14 +149,15 @@ export default function CostBreakdownTable({
             <TableRow>
               <TableCell className="font-medium">Material Cost</TableCell>
               <TableCell className="text-right">
-                ${materialCost.toLocaleString()}
+                {formatCurrency(materialCost)}
               </TableCell>
               <TableCell className="text-right">
-                $
-                {calculateTotalWithMargin(
-                  materialCost,
-                  marginTaxes.materialMargin
-                ).toLocaleString()}
+                {formatCurrency(
+                  calculateTotalWithMargin(
+                    materialCost,
+                    marginTaxes.materialMargin
+                  )
+                )}
               </TableCell>
             </TableRow>
             {costItemsArray.map(({ key, label }) => (
@@ -168,16 +169,17 @@ export default function CostBreakdownTable({
                     value={costItems[key] || 0}
                     onChange={(e) => handleCostChange(key, e.target.value)}
                     onBlur={(e) => handleBlur(key, e.target.value)}
-                    className="w-32 text-right"
+                    className="w-32 ml-auto"
                     disabled={isLocked}
                   />
                 </TableCell>
                 <TableCell className="text-right">
-                  $
-                  {calculateTotalWithMargin(
-                    costItems[key],
-                    marginTaxes[`${key}Margin` as keyof MarginTax]
-                  ).toLocaleString()}
+                  {formatCurrency(
+                    calculateTotalWithMargin(
+                      costItems[key],
+                      marginTaxes[`${key}Margin` as keyof MarginTax]
+                    )
+                  )}
                 </TableCell>
               </TableRow>
             ))}
@@ -185,7 +187,7 @@ export default function CostBreakdownTable({
               <TableCell>Total Before Taxes</TableCell>
               <TableCell></TableCell>
               <TableCell className="text-right">
-                ${totalBeforeTaxes.toLocaleString()}
+                {formatCurrency(totalBeforeTaxes)}
               </TableCell>
             </TableRow>
             <TableRow>
@@ -197,7 +199,7 @@ export default function CostBreakdownTable({
                   value={costItems.salesTax || 0}
                   onChange={(e) => handleCostChange("salesTax", e.target.value)}
                   onBlur={(e) => handleBlur("salesTax", e.target.value)}
-                  className="w-32 text-right"
+                  className="w-32 ml-auto"
                   disabled={isLocked}
                 />
               </TableCell>
@@ -206,7 +208,7 @@ export default function CostBreakdownTable({
               <TableCell>Grand Total</TableCell>
               <TableCell></TableCell>
               <TableCell className="text-right">
-                ${grandTotal.toLocaleString()}
+                {formatCurrency(grandTotal)}
               </TableCell>
             </TableRow>
           </TableBody>

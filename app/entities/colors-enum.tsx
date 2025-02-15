@@ -1,12 +1,28 @@
+import { apiRequest } from "@/utils/client-side-api";
+
 interface PaintType {
   id: number;
   description: string;
   name: string;
 }
-export const paintTypes: PaintType[] = [
-  { id: 1, description: "Standard Blue", name: "stdBlue" },
-  { id: 2, description: "Standard Orange", name: "stdOrange" },
-  { id: 3, description: "Galvazined", name: "galv" },
-  { id: 4, description: "Unpainted", name: "unpainted" },
-  { id: 5, description: "Standard Red", name: "stdRed" },
-];
+
+let paintTypes: PaintType[] = [];
+
+export const updatePaintTypes = async () => {
+  try {
+    const colors: PaintType[] = await apiRequest({
+      url: '/api/Color',
+      method: 'get'
+    });
+    paintTypes = colors;
+    return colors;
+  } catch (error) {
+    console.error('Error updating paint types:', error);
+    return paintTypes; // Return default colors if API call fails
+  }
+};
+
+// Initialize colors when the module is imported
+updatePaintTypes();
+
+export { paintTypes };

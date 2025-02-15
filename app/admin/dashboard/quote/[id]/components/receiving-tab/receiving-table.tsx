@@ -17,6 +17,7 @@ import { ReceivingInfo, ReceivingLoad } from "@/app/entities/ReceivingInfo";
 import { apiRequest } from "@/utils/client-side-api";
 import { toast } from "@/hooks/use-toast";
 import { Trash2, Loader2 } from "lucide-react";
+import { paintTypes } from "@/app/entities/colors-enum";
 
 interface Props {
   quoteId: string;
@@ -280,7 +281,9 @@ const ReceivingTable = ({ quoteId }: Props) => {
                 >
                   {info.partDescription}
                 </TableCell>
-                <TableCell className="border">{info.color?.name || "-"}</TableCell>
+                <TableCell className="border">
+                  {info.color?.description || paintTypes?.find((p) => p.id === info.colorId)?.description || "-"}
+                </TableCell>
                 <TableCell className="border">{info.quantityRequired}</TableCell>
                 <TableCell className="border">{info.totalQuantityReceived}</TableCell>
                 <TableCell className="border">{info.balanceDue}</TableCell>

@@ -12,6 +12,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
+import { PaintTypeDropdown } from "@/app/admin/dashboard/components/paint-type-dropdow";
+import { paintTypes } from "@/app/entities/colors-enum";
+import { formatCurrency } from "@/utils/format-currency";
 
 interface EditPartDialogProps {
   part: PartList | null;
@@ -70,27 +73,14 @@ export function EditPartDialog({
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="partNo" className="text-right">
+            <Label htmlFor="partNumber" className="text-right">
               Part Number
             </Label>
             <Input
-              id="partNo"
+              id="partNumber"
               value={editedPart.partNumber}
               onChange={(e) =>
                 setEditedPart({ ...editedPart, partNumber: e.target.value })
-              }
-              className="col-span-3"
-            />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="qty" className="text-right">
-              Quantity
-            </Label>
-            <Input
-              id="qty"
-              value={editedPart.qty}
-              onChange={(e) =>
-                setEditedPart({ ...editedPart, qty: Number(e.target.value) })
               }
               className="col-span-3"
             />
@@ -106,21 +96,123 @@ export function EditPartDialog({
                 setEditedPart({ ...editedPart, description: e.target.value })
               }
               className="col-span-3"
+              required
             />
           </div>
-          {/* <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="color" className="text-right">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="colorId" className="text-right">
               Color
             </Label>
+            <div className="col-span-3">
+              <PaintTypeDropdown
+                value={editedPart.colorId?.toString() || "1"}
+                paintTypes={paintTypes}
+                onChange={(colorId) => 
+                  setEditedPart({ 
+                    ...editedPart, 
+                    colorId: parseInt(colorId),
+                    color: paintTypes.find(p => p.id === parseInt(colorId)) || paintTypes[0]
+                  })
+                }
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="laborEA" className="text-right">
+              Labor EA
+            </Label>
             <Input
-              id="color"
-              value={editedPart.color}
+              id="laborEA"
+              type="number"
+              step="0.01"
+              value={editedPart.laborEA.toFixed(2)}
               onChange={(e) =>
-                setEditedPart({ ...editedPart, color: e.target.value })
+                setEditedPart({
+                  ...editedPart,
+                  laborEA: parseFloat(e.target.value),
+                })
               }
               className="col-span-3"
             />
-          </div> */}
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="unitCost" className="text-right">
+              Unit Cost
+            </Label>
+            <div className="col-span-3 relative">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2">$</span>
+              <Input
+                id="unitCost"
+                type="number"
+                step="0.01"
+                value={editedPart.unitCost.toFixed(2)}
+                onChange={(e) =>
+                  setEditedPart({
+                    ...editedPart,
+                    unitCost: parseFloat(e.target.value),
+                  })
+                }
+                className="pl-6"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="unitLabor" className="text-right">
+              Unit Labor
+            </Label>
+            <Input
+              id="unitLabor"
+              type="number"
+              step="0.01"
+              value={editedPart.unitLabor.toFixed(2)}
+              onChange={(e) =>
+                setEditedPart({
+                  ...editedPart,
+                  unitLabor: parseFloat(e.target.value),
+                })
+              }
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="unitMatLb" className="text-right">
+              Unit Mat/lb
+            </Label>
+            <Input
+              id="unitMatLb"
+              type="number"
+              step="0.01"
+              value={editedPart.unitMatLb.toFixed(2)}
+              onChange={(e) =>
+                setEditedPart({
+                  ...editedPart,
+                  unitMatLb: parseFloat(e.target.value),
+                })
+              }
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="unitSell" className="text-right">
+              Unit Sell
+            </Label>
+            <div className="col-span-3 relative">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2">$</span>
+              <Input
+                id="unitSell"
+                type="number"
+                step="0.01"
+                value={editedPart.unitSell.toFixed(2)}
+                onChange={(e) =>
+                  setEditedPart({
+                    ...editedPart,
+                    unitSell: parseFloat(e.target.value),
+                  })
+                }
+                className="pl-6"
+              />
+            </div>
+          </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="unitWeight" className="text-right">
               Unit Weight
@@ -128,7 +220,8 @@ export function EditPartDialog({
             <Input
               id="unitWeight"
               type="number"
-              value={editedPart.unitWeight}
+              step="0.01"
+              value={editedPart.unitWeight.toFixed(2)}
               onChange={(e) =>
                 setEditedPart({
                   ...editedPart,
@@ -138,115 +231,20 @@ export function EditPartDialog({
               className="col-span-3"
             />
           </div>
-          {/* <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="totalWeight" className="text-right">
-              Total Weight
-            </Label>
-            <Input
-              id="totalWeight"
-              value={editedPart.unitWeight * editedPart.qty}
-              onChange={(e) =>
-                setEditedPart({
-                  ...editedPart,
-                  totalWeight: Number(e.target.value),
-                })
-              }
-              disabled={true}
-              className="col-span-3"
-            />
-          </div> */}
-          {/* <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="unitMatLb" className="text-right">
-              Unit Mat/lb
-            </Label>
-            <Input
-              id="unitMatLb"
-              value={editedPart.unitMatLb.toString()}
-              onChange={(e) =>
-                setEditedPart({
-                  ...editedPart,
-                  unitMatLb: Number(e.target.value),
-                })
-              }
-              className="col-span-3"
-            />
-          </div> */}
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="unitLabor" className="text-right">
-              Unit Labor
+            <Label htmlFor="qty" className="text-right">
+              Quantity
             </Label>
             <Input
-              id="unitLabor"
-              value={editedPart.unitLabor.toString()}
+              id="qty"
+              type="number"
+              value={editedPart.qty}
               onChange={(e) =>
-                setEditedPart({
-                  ...editedPart,
-                  unitLabor: Number(e.target.value),
-                })
+                setEditedPart({ ...editedPart, qty: parseInt(e.target.value) })
               }
               className="col-span-3"
             />
           </div>
-          {/* <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="unitCost" className="text-right">
-              Unit Cost
-            </Label>
-            <Input
-              id="unitCost"
-              value={
-                editedPart.unitWeight * editedPart.unitMatLb +
-                editedPart.unitLabor
-              }
-              className="col-span-3"
-            />
-          </div> */}
-          {/* <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="totalCost" className="text-right">
-              Total Cost
-            </Label>
-            <Input
-              id="totalCost"
-              value={
-                (editedPart.unitWeight * editedPart.unitMatLb +
-                  editedPart.unitLabor) *
-                editedPart.qty
-              }
-              disabled={true}
-              className="col-span-3"
-            />
-          </div> */}
-          {/* <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="unitSell" className="text-right">
-              Unit Sell
-            </Label>
-            <Input
-              id="unitSell"
-              value={editedPart.unitSell}
-              onChange={(e) =>
-                setEditedPart({
-                  ...editedPart,
-                  unitSell: Number(e.target.value),
-                })
-              }
-              className="col-span-3"
-            />
-          </div> */}
-          {/* <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="totalSell" className="text-right">
-              Total Sell
-            </Label>
-            <Input
-              id="totalSell"
-              value={editedPart.totalSell}
-              onChange={(e) =>
-                setEditedPart({
-                  ...editedPart,
-                  totalSell: Number(e.target.value),
-                })
-              }
-              className="col-span-3"
-            />
-          </div> */}
         </div>
         <DialogFooter>
           <div className="flex justify-between w-full">

@@ -33,12 +33,12 @@ export default function RownCountSummary({ quoteId }: Props) {
   const { quote } = useQuote();
   const [materialCost, setMaterialCost] = useState<number>(0);
   const [marginTaxes, setMarginTaxes] = useState<MarginTax>({
+    materialMargin: quote.materialMargin,
     freightMargin: quote.freightMargin,
     installationMargin: quote.installationMargin,
     rentalsMargin: quote.rentalsMargin,
     permitsMargin: quote.permitsMargin,
     engCalsMargin: quote.engCalsMargin,
-    materialMargin: quote.materialMargin,
   });
   const [costItems, setCostItems] = useState<CostItem>({
     freight: quote.freight,
@@ -61,17 +61,21 @@ export default function RownCountSummary({ quoteId }: Props) {
   }, [quoteId]);
 
   return (
-    <div className="flex flex-col p-6 gap-1 w-full">
+    <div className="flex flex-col p-6 gap-6 w-full">
       <ScopeItemsAndNotes />
 
-      <div className="flex gap-1 w-full justify-center">
-        <CostBreakdownTable
-          marginTaxes={marginTaxes}
-          costItems={costItems}
-          setCostItems={setCostItems}
-          materialCost={materialCost}
-        />
-        <MarginTaxes marginTax={marginTaxes} setMarginTax={setMarginTaxes} />
+      <div className="grid grid-cols-2 gap-4">
+        <div className="w-full">
+          <CostBreakdownTable
+            marginTaxes={marginTaxes}
+            costItems={costItems}
+            setCostItems={setCostItems}
+            materialCost={materialCost}
+          />
+        </div>
+        <div className="w-full">
+          <MarginTaxes marginTax={marginTaxes} setMarginTax={setMarginTaxes} />
+        </div>
       </div>
     </div>
   );

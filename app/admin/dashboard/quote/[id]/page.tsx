@@ -1,12 +1,10 @@
 import QuoteClientSide from "./components/quote-client-side";
-import QuoteHeader from "./components/quote-header";
 import { QuoteProvider } from "./context/quote-context";
-
 import { getBayDefinitions } from "./lib/get-bay-definition";
 import { getFlueDefinitions } from "./lib/get-flue-definitions";
 import { getFramelineDefinitions } from "./lib/get-frameline-definition";
 import { getSingleQuote } from "./lib/get-single-quote";
-import QuoteTabs from "./quote-tabs";
+import QuoteWrapper from "./components/quote-wrapper";
 
 export default async function Page({
   params,
@@ -34,9 +32,7 @@ export default async function Page({
 
   return (
     <QuoteProvider initialValue={contextValue}>
-      <QuoteHeader quote={quote.result} />
-      <QuoteClientSide quoteId={id} />
-      <QuoteTabs />
+      <QuoteWrapper quote={quote.result} quoteId={id} />
     </QuoteProvider>
   );
 }

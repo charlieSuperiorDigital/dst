@@ -27,6 +27,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useParts } from "@/hooks/use-parts";
 import { ClonePartDialog } from "./clone-part.modal";
+import { paintTypes } from "@/app/entities/colors-enum";
 
 interface Props {
   initialPartsResponse: PaginatedResponse<Part, "parts">;
@@ -138,7 +139,7 @@ export default function PartsTable({ initialPartsResponse }: Props) {
             <TableRow>
               <TableHead className="w-[100px]">Part No.</TableHead>
               <TableHead>Description</TableHead>
-              {/* <TableHead>Color</TableHead> */}
+              <TableHead>Color</TableHead>
               <TableHead className="text-right">Unit Weight</TableHead>
               <TableHead className="text-right">Unit Mat/lb</TableHead>
               <TableHead className="text-right">Unit Labor</TableHead>
@@ -158,7 +159,7 @@ export default function PartsTable({ initialPartsResponse }: Props) {
               >
                 <TableCell className="font-medium">{part.partNumber}</TableCell>
                 <TableCell>{part.description}</TableCell>
-                {/* <TableCell>{part.color.name}</TableCell> */}
+                <TableCell>{paintTypes?.find((p) => p.id === part.colorId)?.description || "-"}</TableCell>
                 <TableCell className="text-right">
                   {part.unitWeight.toFixed(2)}
                 </TableCell>
