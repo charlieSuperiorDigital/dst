@@ -995,6 +995,9 @@ const MiscTable = ({ quoteId }: Props) => {
               <th className="border border-gray-300 p-2 font-bold text-left w-[350px] sticky left-0 bg-white z-20">
                 Part Number / Description
               </th>
+              <th className="border border-gray-300 p-2 font-bold text-center sticky left-[350px] bg-white z-20">
+                Total
+              </th>
               {allBays.map((bayName, colIndex) => (
                 <th
                   key={colIndex}
@@ -1014,15 +1017,11 @@ const MiscTable = ({ quoteId }: Props) => {
                   ></div>
                 </th>
               ))}
-              {/* New Total Column */}
-              <th className="border border-gray-300 p-2 font-bold text-center sticky right-0 bg-white z-20">
-                Total
-              </th>
             </tr>
           </thead>
           <tbody>
             {filteredBayWithRows.map((partWithBays, rowIndex) => {
-              const totalQuantity = calculateTotalQuantity(partWithBays); // Calculate the total for the row
+              const totalQuantity = calculateTotalQuantity(partWithBays);
               return (
                 <tr key={partWithBays.part.id}>
                   <td
@@ -1030,18 +1029,21 @@ const MiscTable = ({ quoteId }: Props) => {
                       isRowSelected(rowIndex) ? "bg-blue-100" : "bg-gray-100"
                     }`}
                     style={{
-                      height: "60px", // Fixed height
-                      overflow: "hidden", // Hide overflowing content
-                      whiteSpace: "nowrap", // Prevent text from wrapping
-                      textOverflow: "ellipsis", // Add ellipsis for overflow
+                      height: "60px",
+                      overflow: "hidden",
+                      whiteSpace: "nowrap",
+                      textOverflow: "ellipsis",
                     }}
-                    title={`${partWithBays.part.description}`} // Tooltip for full text
+                    title={`${partWithBays.part.description}`}
                     onClick={() => selectEntireRow(rowIndex)}
                   >
                     <span className="font-bold text-blue-600 text-lg">
                       {partWithBays.part.partNumber}-
                     </span>
                     <span>{partWithBays.part.description}</span>
+                  </td>
+                  <td className="border border-gray-300 p-2 text-center sticky left-[350px] bg-white z-10">
+                    {totalQuantity}
                   </td>
                   {allBays.map((bayName, colIndex) => {
                     const bay = partWithBays.rows.find(
@@ -1053,21 +1055,21 @@ const MiscTable = ({ quoteId }: Props) => {
                       <td
                         key={`${partWithBays.part.id}-${bayName}`}
                         className={`
-                border border-gray-300 p-2 text-center cursor-move relative
-                ${
-                  isSelectedCell(rowIndex, colIndex) ||
-                  isInSelectionRange(rowIndex, colIndex)
-                    ? "bg-blue-50 outline outline-2 outline-blue-500"
-                    : ""
-                }
-                ${isRowSelected(rowIndex) ? "bg-blue-50" : ""}
-                ${isColumnSelected(colIndex) ? "bg-blue-50" : ""}
-                ${
-                  isDragOver(rowIndex, colIndex)
-                    ? "bg-green-100 outline-dashed outline-2 outline-green-500"
-                    : ""
-                }
-              `}
+                          border border-gray-300 p-2 text-center cursor-move relative
+                          ${
+                            isSelectedCell(rowIndex, colIndex) ||
+                            isInSelectionRange(rowIndex, colIndex)
+                              ? "bg-blue-50 outline outline-2 outline-blue-500"
+                              : ""
+                          }
+                          ${isRowSelected(rowIndex) ? "bg-blue-50" : ""}
+                          ${isColumnSelected(colIndex) ? "bg-blue-50" : ""}
+                          ${
+                            isDragOver(rowIndex, colIndex)
+                              ? "bg-green-100 outline-dashed outline-2 outline-green-500"
+                              : ""
+                          }
+                        `}
                         style={{
                           minWidth: "100px",
                           ...getColumnStyle(colIndex),
@@ -1152,10 +1154,6 @@ const MiscTable = ({ quoteId }: Props) => {
                       </td>
                     );
                   })}
-                  {/* New Total Column Cell */}
-                  <td className="border border-gray-300 p-2 text-center sticky right-0 bg-white z-10">
-                    {totalQuantity}
-                  </td>
                 </tr>
               );
             })}

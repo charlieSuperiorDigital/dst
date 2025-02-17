@@ -568,6 +568,9 @@ const RowCountTable = ({ quoteId }: Props) => {
               <th className="border border-gray-300 p-2 font-bold text-left w-[350px] sticky left-0 bg-white z-20">
                 Part Number / Description
               </th>
+              <th className="border border-gray-300 p-2 font-bold text-center sticky left-[350px] bg-white z-20">
+                Total
+              </th>
               {allBays.map((bayName, colIndex) => {
                 const areaName =
                   sectionData?.find((section) =>
@@ -589,9 +592,6 @@ const RowCountTable = ({ quoteId }: Props) => {
                   </th>
                 );
               })}
-              <th className="border border-gray-300 p-2 font-bold text-center sticky right-0 bg-white z-20">
-                Total
-              </th>
             </tr>
           </thead>
           <tbody>
@@ -624,6 +624,9 @@ const RowCountTable = ({ quoteId }: Props) => {
                       </span>
                       <span>{partWithBays.part.description}</span>
                     </td>
+                    <td className="border border-gray-300 p-2 text-center sticky left-[350px] bg-white z-10">
+                      {totalQuantity}
+                    </td>
                     {allBays.map((bayName, colIndex) => {
                       const bay = partWithBays.rows.find(
                         (b) => b.rowName === bayName.rowName
@@ -645,9 +648,6 @@ const RowCountTable = ({ quoteId }: Props) => {
                         </td>
                       );
                     })}
-                    <td className="border border-gray-300 p-2 text-center sticky right-0 bg-white z-10">
-                      {totalQuantity}
-                    </td>
                   </tr>
                 );
               })
