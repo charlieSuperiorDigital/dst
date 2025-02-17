@@ -494,6 +494,7 @@ const FlueCountTable = ({ quoteId }: Props) => {
       const colOffset = targetCol - dragSource.col;
 
       const newPartsWithBays = [...bayWithRows];
+      const updates: { flueid: string; rowId: string; quantity: number }[] = [];
 
       for (let row = range.startRow; row <= range.endRow; row++) {
         for (let col = range.startCol; col <= range.endCol; col++) {
@@ -513,13 +514,20 @@ const FlueCountTable = ({ quoteId }: Props) => {
 
             if (sourceBay && targetBay) {
               targetBay.quantity = sourceBay.quantity;
-              sourceBay.quantity = 0;
+              updates.push({
+                flueid: targetPart.flue.id,
+                rowId: targetBay.rowId,
+                quantity: sourceBay.quantity,
+              });
             }
           }
         }
       }
 
       setbayWithRows(newPartsWithBays);
+      if (updates.length > 0) {
+        updateMultipleQuantities(updates);
+      }
     } else {
       const { row: sourceRow, col: sourceCol } = dragSource;
 
@@ -544,10 +552,14 @@ const FlueCountTable = ({ quoteId }: Props) => {
 
         if (sourceBay && targetBay) {
           const newPartsWithBays = [...bayWithRows];
-          newPartsWithBays[targetRow].rows[targetCol].quantity =
-            sourceBay.quantity;
-          newPartsWithBays[sourceRow].rows[sourceCol].quantity = 0;
+          newPartsWithBays[targetRow].rows[targetCol].quantity = sourceBay.quantity;
           setbayWithRows(newPartsWithBays);
+
+          updateSingleQuantity({
+            flueid: targetPart.flue.id,
+            rowId: targetBay.rowId,
+            quantity: sourceBay.quantity,
+          });
         }
       }
     }

@@ -504,6 +504,7 @@ const FlueTable = ({ quoteId }: Props) => {
       const colOffset = targetCol - dragSource.col;
 
       const newPartsWithBays = [...partsWithBays];
+      const updates: { partId: string; flueId: string; quantity: number }[] = [];
 
       for (let row = range.startRow; row <= range.endRow; row++) {
         for (let col = range.startCol; col <= range.endCol; col++) {
@@ -523,13 +524,20 @@ const FlueTable = ({ quoteId }: Props) => {
 
             if (sourceBay && targetBay) {
               targetBay.quantity = sourceBay.quantity;
-              sourceBay.quantity = 0;
+              updates.push({
+                partId: targetPart.part.id,
+                flueId: targetBay.flueId,
+                quantity: sourceBay.quantity,
+              });
             }
           }
         }
       }
 
       setPartsWithBays(newPartsWithBays);
+      if (updates.length > 0) {
+        updateMultipleQuantities(updates);
+      }
     } else {
       const { row: sourceRow, col: sourceCol } = dragSource;
 
@@ -554,10 +562,14 @@ const FlueTable = ({ quoteId }: Props) => {
 
         if (sourceBay && targetBay) {
           const newPartsWithBays = [...partsWithBays];
-          newPartsWithBays[targetRow].flues[targetCol].quantity =
-            sourceBay.quantity;
-          newPartsWithBays[sourceRow].flues[sourceCol].quantity = 0;
+          newPartsWithBays[targetRow].flues[targetCol].quantity = sourceBay.quantity;
           setPartsWithBays(newPartsWithBays);
+
+          updateSingleQuantity({
+            partId: targetPart.part.id,
+            flueId: targetBay.flueId,
+            quantity: sourceBay.quantity,
+          });
         }
       }
     }
@@ -749,7 +761,7 @@ const FlueTable = ({ quoteId }: Props) => {
               );
               return update ? { ...bay, quantity: update.quantity } : bay;
             });
-            return { ...partWithBays, framelines: updatedBays };
+            return { ...partWithBays, flues: updatedBays };
           })
         );
         setFluesDefinitionContext?.((prevPartsWithBays) =>
@@ -761,7 +773,7 @@ const FlueTable = ({ quoteId }: Props) => {
               );
               return update ? { ...bay, quantity: update.quantity } : bay;
             });
-            return { ...partWithBays, framelines: updatedBays };
+            return { ...partWithBays, flues: updatedBays };
           })
         );
 

@@ -506,6 +506,7 @@ const FrameLineTable = ({ quoteId }: Props) => {
       const colOffset = targetCol - dragSource.col;
 
       const newPartsWithBays = [...partsWithBays];
+      const updates: { partId: string; framelineid: string; quantity: number }[] = [];
 
       for (let row = range.startRow; row <= range.endRow; row++) {
         for (let col = range.startCol; col <= range.endCol; col++) {
@@ -525,13 +526,20 @@ const FrameLineTable = ({ quoteId }: Props) => {
 
             if (sourceBay && targetBay) {
               targetBay.quantity = sourceBay.quantity;
-              sourceBay.quantity = 0;
+              updates.push({
+                partId: targetPart.part.id,
+                framelineid: targetBay.framelineId,
+                quantity: sourceBay.quantity,
+              });
             }
           }
         }
       }
 
       setPartsWithBays(newPartsWithBays);
+      if (updates.length > 0) {
+        updateMultipleQuantities(updates);
+      }
     } else {
       const { row: sourceRow, col: sourceCol } = dragSource;
 
@@ -556,10 +564,14 @@ const FrameLineTable = ({ quoteId }: Props) => {
 
         if (sourceBay && targetBay) {
           const newPartsWithBays = [...partsWithBays];
-          newPartsWithBays[targetRow].framelines[targetCol].quantity =
-            sourceBay.quantity;
-          newPartsWithBays[sourceRow].framelines[sourceCol].quantity = 0;
+          newPartsWithBays[targetRow].framelines[targetCol].quantity = sourceBay.quantity;
           setPartsWithBays(newPartsWithBays);
+
+          updateSingleQuantity({
+            partId: targetPart.part.id,
+            framelineid: targetBay.framelineId,
+            quantity: sourceBay.quantity,
+          });
         }
       }
     }

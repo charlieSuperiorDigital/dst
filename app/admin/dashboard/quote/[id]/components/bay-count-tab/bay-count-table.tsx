@@ -501,6 +501,7 @@ const TableComponent = ({ quoteId }: Props) => {
       const colOffset = targetCol - dragSource.col;
 
       const newPartsWithBays = [...bayWithRows];
+      const updates: { bayId: string; rowId: string; quantity: number }[] = [];
 
       for (let row = range.startRow; row <= range.endRow; row++) {
         for (let col = range.startCol; col <= range.endCol; col++) {
@@ -520,13 +521,20 @@ const TableComponent = ({ quoteId }: Props) => {
 
             if (sourceBay && targetBay) {
               targetBay.quantity = sourceBay.quantity;
-              sourceBay.quantity = 0;
+              updates.push({
+                bayId: targetPart.bay.id,
+                rowId: targetBay.rowId,
+                quantity: sourceBay.quantity,
+              });
             }
           }
         }
       }
 
       setbayWithRows(newPartsWithBays);
+      if (updates.length > 0) {
+        updateMultipleQuantities(updates);
+      }
     } else {
       const { row: sourceRow, col: sourceCol } = dragSource;
 
@@ -551,10 +559,14 @@ const TableComponent = ({ quoteId }: Props) => {
 
         if (sourceBay && targetBay) {
           const newPartsWithBays = [...bayWithRows];
-          newPartsWithBays[targetRow].rows[targetCol].quantity =
-            sourceBay.quantity;
-          newPartsWithBays[sourceRow].rows[sourceCol].quantity = 0;
+          newPartsWithBays[targetRow].rows[targetCol].quantity = sourceBay.quantity;
           setbayWithRows(newPartsWithBays);
+
+          updateSingleQuantity({
+            bayId: targetPart.bay.id,
+            rowId: targetBay.rowId,
+            quantity: sourceBay.quantity,
+          });
         }
       }
     }
