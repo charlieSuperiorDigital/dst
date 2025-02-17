@@ -48,6 +48,14 @@ const InstallationTable = ({ quoteId }: Props) => {
   const [selectedDay, setSelectedDay] = useState<InstallationDay | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const sortRows = (rows: InstallationRow[]): InstallationRow[] => {
+    return [...rows].sort((a, b) => {
+      const numA = parseInt(a.rowName.replace("Row-", ""), 10);
+      const numB = parseInt(b.rowName.replace("Row-", ""), 10);
+      return numA - numB;
+    });
+  };
+
   const fetchInstallationData = async (quotationId: string) => {
     try {
       console.log('Starting fetchInstallationData with quoteId:', quotationId);
@@ -59,7 +67,7 @@ const InstallationTable = ({ quoteId }: Props) => {
       });
       
       if (response && response.length > 0) {
-        setInstallations(response);
+        setInstallations(sortRows(response));
       } else {
         console.log('No data received from API');
       }
