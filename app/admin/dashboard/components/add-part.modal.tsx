@@ -34,10 +34,26 @@ export function AddPartDialog({ isOpen, onClose, onAdd }: AddPartDialogProps) {
   };
 
   const [newPart, setNewPart] = useState<Partial<Part>>(defaultPartState);
+  const [tempValues, setTempValues] = useState({
+    laborEA: "0.00",
+    unitCost: "0.00",
+    unitLabor: "0.00",
+    unitMatLb: "0.00",
+    unitSell: "0.00",
+    unitWeight: "0.00"
+  });
 
   const handleCloseModal = (open: boolean) => {
     if (!open) {
       setNewPart(defaultPartState); // Reset form to default values
+      setTempValues({
+        laborEA: "0.00",
+        unitCost: "0.00",
+        unitLabor: "0.00",
+        unitMatLb: "0.00",
+        unitSell: "0.00",
+        unitWeight: "0.00"
+      });
     }
     onClose();
   };
@@ -56,15 +72,33 @@ export function AddPartDialog({ isOpen, onClose, onAdd }: AddPartDialogProps) {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setNewPart({
       ...newPart,
-      [name]:
-        name === "description" || name === "partNumber"
-          ? value
-          : parseFloat(value),
+      [name]: value,
     });
+  };
+
+  const handleNumericChange = (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
+    setTempValues({
+      ...tempValues,
+      [field]: e.target.value
+    });
+  };
+
+  const handleNumericBlur = (field: string) => {
+    const value = parseFloat(tempValues[field]);
+    if (!isNaN(value)) {
+      setNewPart({
+        ...newPart,
+        [field]: value
+      });
+      setTempValues({
+        ...tempValues,
+        [field]: value.toFixed(2)
+      });
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -86,7 +120,7 @@ export function AddPartDialog({ isOpen, onClose, onAdd }: AddPartDialogProps) {
               id="partNumber"
               name="partNumber"
               value={newPart.partNumber}
-              onChange={handleChange}
+              onChange={handleTextChange}
               required
             />
           </div>
@@ -96,7 +130,7 @@ export function AddPartDialog({ isOpen, onClose, onAdd }: AddPartDialogProps) {
               id="description"
               name="description"
               value={newPart.description}
-              onChange={handleChange}
+              onChange={handleTextChange}
               required
             />
           </div>
@@ -108,85 +142,103 @@ export function AddPartDialog({ isOpen, onClose, onAdd }: AddPartDialogProps) {
               onChange={handleColorChange}
             />
           </div>
-          <div>
-            <Label htmlFor="unitWeight">Unit Weight</Label>
-            <Input
-              id="unitWeight"
-              name="unitWeight"
-              type="number"
-              step="0.01"
-              value={(newPart.unitWeight ?? 0).toFixed(2)}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="unitMatLb">Unit Mat/lb</Label>
-            <Input
-              id="unitMatLb"
-              name="unitMatLb"
-              type="number"
-              step="0.01"
-              value={(newPart.unitMatLb ?? 0).toFixed(2)}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="unitLabor">Unit Labor</Label>
-            <Input
-              id="unitLabor"
-              name="unitLabor"
-              type="number"
-              step="0.01"
-              value={(newPart.unitLabor ?? 0).toFixed(2)}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="unitCost">Unit Cost</Label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2">$</span>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="unitWeight" className="text-right">Unit Weight</Label>
+            <div className="col-span-3">
               <Input
-                id="unitCost"
-                name="unitCost"
+                id="unitWeight"
+                name="unitWeight"
                 type="number"
                 step="0.01"
-                value={(newPart.unitCost ?? 0).toFixed(2)}
-                onChange={handleChange}
+                value={tempValues.unitWeight}
+                onChange={(e) => handleNumericChange(e, 'unitWeight')}
+                onBlur={() => handleNumericBlur('unitWeight')}
                 required
-                className="pl-6"
               />
             </div>
           </div>
-          <div>
-            <Label htmlFor="unitSell">Unit Sell</Label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2">$</span>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="unitMatLb" className="text-right">Unit Mat/lb</Label>
+            <div className="col-span-3">
               <Input
-                id="unitSell"
-                name="unitSell"
+                id="unitMatLb"
+                name="unitMatLb"
                 type="number"
                 step="0.01"
-                value={(newPart.unitSell ?? 0).toFixed(2)}
-                onChange={handleChange}
+                value={tempValues.unitMatLb}
+                onChange={(e) => handleNumericChange(e, 'unitMatLb')}
+                onBlur={() => handleNumericBlur('unitMatLb')}
                 required
-                className="pl-6"
               />
             </div>
           </div>
-          <div>
-            <Label htmlFor="laborEA">Labor EA</Label>
-            <Input
-              id="laborEA"
-              name="laborEA"
-              type="number"
-              step="0.01"
-              value={(newPart.laborEA ?? 0).toFixed(2)}
-              onChange={handleChange}
-              required
-            />
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="unitLabor" className="text-right">Unit Labor</Label>
+            <div className="col-span-3">
+              <Input
+                id="unitLabor"
+                name="unitLabor"
+                type="number"
+                step="0.01"
+                value={tempValues.unitLabor}
+                onChange={(e) => handleNumericChange(e, 'unitLabor')}
+                onBlur={() => handleNumericBlur('unitLabor')}
+                required
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="unitCost" className="text-right">Unit Cost</Label>
+            <div className="col-span-3">
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 transform -translate-y-1/2">$</span>
+                <Input
+                  id="unitCost"
+                  name="unitCost"
+                  type="number"
+                  step="0.01"
+                  value={tempValues.unitCost}
+                  onChange={(e) => handleNumericChange(e, 'unitCost')}
+                  onBlur={() => handleNumericBlur('unitCost')}
+                  required
+                  className="pl-6"
+                />
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="unitSell" className="text-right">Unit Sell</Label>
+            <div className="col-span-3">
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 transform -translate-y-1/2">$</span>
+                <Input
+                  id="unitSell"
+                  name="unitSell"
+                  type="number"
+                  step="0.01"
+                  value={tempValues.unitSell}
+                  onChange={(e) => handleNumericChange(e, 'unitSell')}
+                  onBlur={() => handleNumericBlur('unitSell')}
+                  required
+                  className="pl-6"
+                />
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="laborEA" className="text-right">Labor EA</Label>
+            <div className="col-span-3">
+              <Input
+                id="laborEA"
+                name="laborEA"
+                type="number"
+                step="0.01"
+                value={tempValues.laborEA}
+                onChange={(e) => handleNumericChange(e, 'laborEA')}
+                onBlur={() => handleNumericBlur('laborEA')}
+                required
+              />
+            </div>
           </div>
           <div className="flex justify-between gap-4 pt-4">
             <Button type="button" variant="outline" onClick={onClose}>

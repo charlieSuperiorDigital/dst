@@ -29,6 +29,12 @@ import { Part } from "@/app/entities/Part";
 const formSchema = z.object({
   partId: z.string().min(1, "Please select a part"),
   partNumber: z.string().min(1, "Please enter a part number"),
+  laborEA: z.string(),
+  unitCost: z.string(),
+  unitLabor: z.string(),
+  unitMatLb: z.string(),
+  unitSell: z.string(),
+  unitWeight: z.string()
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -49,6 +55,12 @@ export function PartsDialog({ onAdd }: Props) {
     defaultValues: {
       partId: "",
       partNumber: "",
+      laborEA: "0.00",
+      unitCost: "0.00",
+      unitLabor: "0.00",
+      unitMatLb: "0.00",
+      unitSell: "0.00",
+      unitWeight: "0.00"
     },
   });
 
@@ -85,12 +97,28 @@ export function PartsDialog({ onAdd }: Props) {
     setSelectedPart(part);
     form.setValue("partId", part.id);
     form.setValue("partNumber", part.partNumber);
+    form.setValue("laborEA", part.laborEA != null ? Number(part.laborEA).toFixed(2) : "0.00");
+    form.setValue("unitCost", part.unitCost != null ? Number(part.unitCost).toFixed(2) : "0.00");
+    form.setValue("unitLabor", part.unitLabor != null ? Number(part.unitLabor).toFixed(2) : "0.00");
+    form.setValue("unitMatLb", part.unitMatLb != null ? Number(part.unitMatLb).toFixed(2) : "0.00");
+    form.setValue("unitSell", part.unitSell != null ? Number(part.unitSell).toFixed(2) : "0.00");
+    form.setValue("unitWeight", part.unitWeight != null ? Number(part.unitWeight).toFixed(2) : "0.00");
     setFilteredParts([]);
   };
 
   const handleAdd = (values: FormValues) => {
     if (selectedPart) {
-      onAdd(selectedPart, values.partNumber);
+      const newPart: Part = {
+        ...selectedPart,
+        partNumber: values.partNumber,
+        laborEA: parseFloat(values.laborEA),
+        unitCost: parseFloat(values.unitCost),
+        unitLabor: parseFloat(values.unitLabor),
+        unitMatLb: parseFloat(values.unitMatLb),
+        unitSell: parseFloat(values.unitSell),
+        unitWeight: parseFloat(values.unitWeight)
+      };
+      onAdd(newPart, values.partNumber);
     }
     setOpen(false);
   };
@@ -169,6 +197,185 @@ export function PartsDialog({ onAdd }: Props) {
                 </FormItem>
               )}
             />
+
+            <div className="space-y-4">
+              <FormField
+                control={form.control}
+                name="laborEA"
+                render={({ field }) => (
+                  <FormItem className="grid grid-cols-4 items-center gap-4">
+                    <FormLabel className="text-right">Labor EA</FormLabel>
+                    <div className="col-span-3">
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.value)}
+                          onBlur={(e) => {
+                            const value = parseFloat(e.target.value);
+                            if (!isNaN(value)) {
+                              field.onChange(value.toFixed(2));
+                            }
+                            field.onBlur();
+                          }}
+                        />
+                      </FormControl>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="unitCost"
+                render={({ field }) => (
+                  <FormItem className="grid grid-cols-4 items-center gap-4">
+                    <FormLabel className="text-right">Unit Cost</FormLabel>
+                    <div className="col-span-3">
+                      <FormControl>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 transform -translate-y-1/2">$</span>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            {...field}
+                            onChange={(e) => field.onChange(e.target.value)}
+                            onBlur={(e) => {
+                              const value = parseFloat(e.target.value);
+                              if (!isNaN(value)) {
+                                field.onChange(value.toFixed(2));
+                              }
+                              field.onBlur();
+                            }}
+                            className="pl-6"
+                          />
+                        </div>
+                      </FormControl>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="unitLabor"
+                render={({ field }) => (
+                  <FormItem className="grid grid-cols-4 items-center gap-4">
+                    <FormLabel className="text-right">Unit Labor</FormLabel>
+                    <div className="col-span-3">
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.value)}
+                          onBlur={(e) => {
+                            const value = parseFloat(e.target.value);
+                            if (!isNaN(value)) {
+                              field.onChange(value.toFixed(2));
+                            }
+                            field.onBlur();
+                          }}
+                        />
+                      </FormControl>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="unitMatLb"
+                render={({ field }) => (
+                  <FormItem className="grid grid-cols-4 items-center gap-4">
+                    <FormLabel className="text-right">Unit Mat/lb</FormLabel>
+                    <div className="col-span-3">
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.value)}
+                          onBlur={(e) => {
+                            const value = parseFloat(e.target.value);
+                            if (!isNaN(value)) {
+                              field.onChange(value.toFixed(2));
+                            }
+                            field.onBlur();
+                          }}
+                        />
+                      </FormControl>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="unitSell"
+                render={({ field }) => (
+                  <FormItem className="grid grid-cols-4 items-center gap-4">
+                    <FormLabel className="text-right">Unit Sell</FormLabel>
+                    <div className="col-span-3">
+                      <FormControl>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 transform -translate-y-1/2">$</span>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            {...field}
+                            onChange={(e) => field.onChange(e.target.value)}
+                            onBlur={(e) => {
+                              const value = parseFloat(e.target.value);
+                              if (!isNaN(value)) {
+                                field.onChange(value.toFixed(2));
+                              }
+                              field.onBlur();
+                            }}
+                            className="pl-6"
+                          />
+                        </div>
+                      </FormControl>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="unitWeight"
+                render={({ field }) => (
+                  <FormItem className="grid grid-cols-4 items-center gap-4">
+                    <FormLabel className="text-right">Unit Weight</FormLabel>
+                    <div className="col-span-3">
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.value)}
+                          onBlur={(e) => {
+                            const value = parseFloat(e.target.value);
+                            if (!isNaN(value)) {
+                              field.onChange(value.toFixed(2));
+                            }
+                            field.onBlur();
+                          }}
+                        />
+                      </FormControl>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <Button type="submit">Add</Button>
           </form>
         </Form>

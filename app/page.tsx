@@ -38,7 +38,7 @@ export default function LoginForm() {
       if (result?.error) {
         setError(result.error);
       } else {
-        router.push("admin/dashboard");
+        router.push("/admin/dashboard/quotes");
       }
     } catch (error) {
       console.log(error);

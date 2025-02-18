@@ -32,6 +32,14 @@ export function EditPartDialog({
   onDelete,
 }: EditPartDialogProps) {
   const [editedPart, setEditedPart] = useState<PartList | null>(null);
+  const [tempValues, setTempValues] = useState({
+    laborEA: "",
+    unitCost: "",
+    unitLabor: "",
+    unitMatLb: "",
+    unitSell: "",
+    unitWeight: ""
+  });
 
   useEffect(() => {
     if (part) {
@@ -50,6 +58,14 @@ export function EditPartDialog({
         laborEA: part.laborEA ?? 0
       };
       setEditedPart(sanitizedPart as PartList);
+      setTempValues({
+        laborEA: Number(sanitizedPart.laborEA).toFixed(2),
+        unitCost: Number(sanitizedPart.unitCost).toFixed(2),
+        unitLabor: Number(sanitizedPart.unitLabor).toFixed(2),
+        unitMatLb: Number(sanitizedPart.unitMatLb).toFixed(2),
+        unitSell: Number(sanitizedPart.unitSell).toFixed(2),
+        unitWeight: Number(sanitizedPart.unitWeight).toFixed(2)
+      });
     }
   }, [part]);
 
@@ -125,13 +141,15 @@ export function EditPartDialog({
               id="laborEA"
               type="number"
               step="0.01"
-              value={editedPart.laborEA.toFixed(2)}
-              onChange={(e) =>
-                setEditedPart({
-                  ...editedPart,
-                  laborEA: parseFloat(e.target.value),
-                })
-              }
+              value={tempValues.laborEA}
+              onChange={(e) => setTempValues({ ...tempValues, laborEA: e.target.value })}
+              onBlur={() => {
+                const newVal = parseFloat(tempValues.laborEA);
+                if (!isNaN(newVal) && editedPart) {
+                  setEditedPart({ ...editedPart, laborEA: newVal });
+                  setTempValues({ ...tempValues, laborEA: newVal.toFixed(2) });
+                }
+              }}
               className="col-span-3"
             />
           </div>
@@ -145,13 +163,15 @@ export function EditPartDialog({
                 id="unitCost"
                 type="number"
                 step="0.01"
-                value={editedPart.unitCost.toFixed(2)}
-                onChange={(e) =>
-                  setEditedPart({
-                    ...editedPart,
-                    unitCost: parseFloat(e.target.value),
-                  })
-                }
+                value={tempValues.unitCost}
+                onChange={(e) => setTempValues({ ...tempValues, unitCost: e.target.value })}
+                onBlur={() => {
+                  const newVal = parseFloat(tempValues.unitCost);
+                  if (!isNaN(newVal) && editedPart) {
+                    setEditedPart({ ...editedPart, unitCost: newVal });
+                    setTempValues({ ...tempValues, unitCost: newVal.toFixed(2) });
+                  }
+                }}
                 className="pl-6"
               />
             </div>
@@ -164,13 +184,15 @@ export function EditPartDialog({
               id="unitLabor"
               type="number"
               step="0.01"
-              value={editedPart.unitLabor.toFixed(2)}
-              onChange={(e) =>
-                setEditedPart({
-                  ...editedPart,
-                  unitLabor: parseFloat(e.target.value),
-                })
-              }
+              value={tempValues.unitLabor}
+              onChange={(e) => setTempValues({ ...tempValues, unitLabor: e.target.value })}
+              onBlur={() => {
+                const newVal = parseFloat(tempValues.unitLabor);
+                if (!isNaN(newVal) && editedPart) {
+                  setEditedPart({ ...editedPart, unitLabor: newVal });
+                  setTempValues({ ...tempValues, unitLabor: newVal.toFixed(2) });
+                }
+              }}
               className="col-span-3"
             />
           </div>
@@ -182,13 +204,15 @@ export function EditPartDialog({
               id="unitMatLb"
               type="number"
               step="0.01"
-              value={editedPart.unitMatLb.toFixed(2)}
-              onChange={(e) =>
-                setEditedPart({
-                  ...editedPart,
-                  unitMatLb: parseFloat(e.target.value),
-                })
-              }
+              value={tempValues.unitMatLb}
+              onChange={(e) => setTempValues({ ...tempValues, unitMatLb: e.target.value })}
+              onBlur={() => {
+                const newVal = parseFloat(tempValues.unitMatLb);
+                if (!isNaN(newVal) && editedPart) {
+                  setEditedPart({ ...editedPart, unitMatLb: newVal });
+                  setTempValues({ ...tempValues, unitMatLb: newVal.toFixed(2) });
+                }
+              }}
               className="col-span-3"
             />
           </div>
@@ -202,13 +226,15 @@ export function EditPartDialog({
                 id="unitSell"
                 type="number"
                 step="0.01"
-                value={editedPart.unitSell.toFixed(2)}
-                onChange={(e) =>
-                  setEditedPart({
-                    ...editedPart,
-                    unitSell: parseFloat(e.target.value),
-                  })
-                }
+                value={tempValues.unitSell}
+                onChange={(e) => setTempValues({ ...tempValues, unitSell: e.target.value })}
+                onBlur={() => {
+                  const newVal = parseFloat(tempValues.unitSell);
+                  if (!isNaN(newVal) && editedPart) {
+                    setEditedPart({ ...editedPart, unitSell: newVal });
+                    setTempValues({ ...tempValues, unitSell: newVal.toFixed(2) });
+                  }
+                }}
                 className="pl-6"
               />
             </div>
@@ -221,13 +247,15 @@ export function EditPartDialog({
               id="unitWeight"
               type="number"
               step="0.01"
-              value={editedPart.unitWeight.toFixed(2)}
-              onChange={(e) =>
-                setEditedPart({
-                  ...editedPart,
-                  unitWeight: parseFloat(e.target.value),
-                })
-              }
+              value={tempValues.unitWeight}
+              onChange={(e) => setTempValues({ ...tempValues, unitWeight: e.target.value })}
+              onBlur={() => {
+                const newVal = parseFloat(tempValues.unitWeight);
+                if (!isNaN(newVal) && editedPart) {
+                  setEditedPart({ ...editedPart, unitWeight: newVal });
+                  setTempValues({ ...tempValues, unitWeight: newVal.toFixed(2) });
+                }
+              }}
               className="col-span-3"
             />
           </div>
