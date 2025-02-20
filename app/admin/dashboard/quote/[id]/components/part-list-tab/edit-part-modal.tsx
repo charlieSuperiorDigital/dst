@@ -259,20 +259,6 @@ export function EditPartDialog({
               className="col-span-3"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="qty" className="text-right">
-              Quantity
-            </Label>
-            <Input
-              id="qty"
-              type="number"
-              value={editedPart.qty}
-              onChange={(e) =>
-                setEditedPart({ ...editedPart, qty: parseInt(e.target.value) })
-              }
-              className="col-span-3"
-            />
-          </div>
         </div>
         <DialogFooter>
           <div className="flex justify-between w-full">
