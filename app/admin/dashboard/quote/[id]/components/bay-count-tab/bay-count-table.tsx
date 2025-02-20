@@ -1017,6 +1017,9 @@ const TableComponent = ({ quoteId }: Props) => {
               <th className="border border-gray-300 p-2 font-bold text-left w-[350px] sticky left-0 bg-white z-20">
                 Bay
               </th>
+              <th className="border border-gray-300 p-2 font-bold text-center sticky left-[350px] bg-white z-20">
+                Total
+              </th>
               {allBays.map((bayName, colIndex) => (
                 <th
                   key={colIndex}

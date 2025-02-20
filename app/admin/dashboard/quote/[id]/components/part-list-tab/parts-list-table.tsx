@@ -112,6 +112,13 @@ export default function PartsListTable({ quoteId, refresh }: Props) {
     setFilteredParts(filteredParts);
   };
 
+  const calculateTotalSellValue = () => {
+    return filteredParts.reduce((total, part) => {
+      const partTotal = (part.unitCost / (1 - materialMargin)) * (part.qty ?? 0);
+      return total + partTotal;
+    }, 0);
+  };
+
   useEffect(() => {
     const fetchParts = async () => {
       try {
@@ -153,6 +160,15 @@ export default function PartsListTable({ quoteId, refresh }: Props) {
       </div>
       <Table>
         <TableHeader className="border">
+          <TableRow className="bg-gray-100">
+            <TableHead colSpan={10} className="border" />
+            <TableHead colSpan={1} className="text-right border font-bold">
+              Total Value:
+            </TableHead>
+            <TableHead className="text-right border font-bold">
+              {formatCurrency(calculateTotalSellValue())}
+            </TableHead>
+          </TableRow>
           <TableRow>
             <TableHead className="w-[100px] border ">Part No.</TableHead>
             <TableHead className="border">Qty</TableHead>
@@ -160,7 +176,6 @@ export default function PartsListTable({ quoteId, refresh }: Props) {
             <TableHead className="border">Color</TableHead>
             <TableHead className="text-right border">Unit Weight</TableHead>
             <TableHead className=" border text-right">Total Weight</TableHead>
-
             <TableHead className="text-right border">Unit Labor</TableHead>
             <TableHead className="text-right border">Unit Cost</TableHead>
             <TableHead className="text-right border">Total Cost</TableHead>
@@ -178,15 +193,6 @@ export default function PartsListTable({ quoteId, refresh }: Props) {
             </TableRow>
           ) : (
             <>
-              {/* <TableRow className="bg-blue-200">
-                <TableCell colSpan={9} className="font-medium border">
-                  <div className="flex">
-                    <p>Total:</p>
-                    {formatCurrency(totalSell)}
-                  </div>
-                </TableCell>
-                <TableCell colSpan={3} className="border" />
-              </TableRow> */}
               {filteredParts.map((part) => (
                 <TableRow
                   key={part.id}
