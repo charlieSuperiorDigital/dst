@@ -49,6 +49,7 @@ type Props = {
 const FramilineCountTable = ({ quoteId }: Props) => {
   const { setFrameLinesDefinitionContext, isLocked } = useQuote();
   const [bayWithRows, setbayWithRows] = useState<FrameWithRows[]>([]);
+  const [bays, setBays] = useState<any[]>([]);
   const [selectedCell, setSelectedCell] = useState({ row: -1, col: -1 });
   const [editingCell, setEditingCell] = useState({ row: -1, col: -1 });
   const [selectedRow, setSelectedRow] = useState(-1);
@@ -78,17 +79,24 @@ const FramilineCountTable = ({ quoteId }: Props) => {
 
   const fetchData = async () => {
     try {
-      const response: FrameWithRows[] = await apiRequest({
-        url: `/api/count/frameline/${quoteId}`,
-        method: "get",
-      });
+      const [framelineResponse, bayResponse] = await Promise.all([
+        apiRequest({
+          url: `/api/count/frameline/${quoteId}`,
+          method: "get",
+        }),
+        apiRequest({
+          url: `/api/count/bay/${quoteId}`,
+          method: "get",
+        })
+      ]);
 
-      const sortedResponse = response.map((part) => ({
+      const sortedResponse = framelineResponse.map((part) => ({
         ...part,
         rows: sortRows(part.rows),
       }));
 
       setbayWithRows(sortedResponse);
+      setBays(bayResponse);
       setLoading(false);
     } catch (err) {
       setError("Error Loading data");
@@ -1089,6 +1097,16 @@ const FramilineCountTable = ({ quoteId }: Props) => {
 
         <table className="border-collapse border border-gray-300 bg-white min-w-full user-select-none">
           <thead>
+            <tr>
+              <th colSpan={allBays.length + 2} className="border border-gray-300 p-2 font-bold text-left bg-white z-20">
+                Total Framelines: {bayWithRows.length}
+              </th>
+            </tr>
+            <tr>
+              <th colSpan={allBays.length + 2} className="border border-gray-300 p-2 font-bold text-left bg-white z-20">
+                Total Bays: {bays.length}
+              </th>
+            </tr>
             <tr>
               <th className="border border-gray-300 p-2 font-bold text-left w-[350px] sticky left-0 bg-white z-20">
                 Frameline

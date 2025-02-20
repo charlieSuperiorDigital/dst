@@ -26,6 +26,18 @@ type Bay = {
   name: string;
   quotationId: string;
 };
+
+type FrameLine = {
+  id: string;
+  name: string;
+  quotationId: string;
+};
+
+type FrameWithRows = {
+  frameline: FrameLine;
+  rows: Row[];
+};
+
 type BayWithRows = {
   bay: Bay;
   rows: Row[];
@@ -48,6 +60,7 @@ type Props = {
 const TableComponent = ({ quoteId }: Props) => {
   const { setBayDefinitionContext, isLocked } = useQuote();
   const [bayWithRows, setbayWithRows] = useState<BayWithRows[]>([]);
+  const [framelines, setFramelines] = useState<FrameWithRows[]>([]);
   const [selectedCell, setSelectedCell] = useState({ row: -1, col: -1 });
   const [editingCell, setEditingCell] = useState({ row: -1, col: -1 });
   const [selectedRow, setSelectedRow] = useState(-1);
@@ -77,17 +90,24 @@ const TableComponent = ({ quoteId }: Props) => {
 
   const fetchData = async () => {
     try {
-      const response: BayWithRows[] = await apiRequest({
-        url: `/api/count/bay/${quoteId}`,
-        method: "get",
-      });
+      const [bayResponse, framelineResponse] = await Promise.all([
+        apiRequest({
+          url: `/api/count/bay/${quoteId}`,
+          method: "get",
+        }),
+        apiRequest({
+          url: `/api/count/frameline/${quoteId}`,
+          method: "get",
+        })
+      ]);
 
-      const sortedResponse = response.map((part) => ({
+      const sortedBayResponse = bayResponse.map((part) => ({
         ...part,
         rows: sortRows(part.rows),
       }));
 
-      setbayWithRows(sortedResponse);
+      setbayWithRows(sortedBayResponse);
+      setFramelines(framelineResponse);
       setLoading(false);
     } catch (err) {
       setError("Error Loading data");
@@ -984,11 +1004,18 @@ const TableComponent = ({ quoteId }: Props) => {
         <table className="border-collapse border border-gray-300 bg-white min-w-full user-select-none">
           <thead>
             <tr>
+              <th colSpan={allBays.length + 2} className="border border-gray-300 p-2 font-bold text-left bg-white z-20">
+                Total Framelines: {framelines.length}
+              </th>
+            </tr>
+            <tr>
+              <th colSpan={allBays.length + 2} className="border border-gray-300 p-2 font-bold text-left bg-white z-20">
+                Total Bays: {bayWithRows.length}
+              </th>
+            </tr>
+            <tr>
               <th className="border border-gray-300 p-2 font-bold text-left w-[350px] sticky left-0 bg-white z-20">
                 Bay
-              </th>
-              <th className="border border-gray-300 p-2 font-bold text-center sticky left-[350px] bg-white z-20">
-                Total
               </th>
               {allBays.map((bayName, colIndex) => (
                 <th
