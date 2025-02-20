@@ -6,7 +6,7 @@ import ReceivingTable from "./receiving-tab/receiving-table";
 import InstallationTable from "./installation-tab/installation-table";
 import RownCountSummary from "./row-count-summary-tab/row-count-summary";
 import RowCounts from "./row-count-tab/row-counts-table";
-import TableComponent from "./bay-definition-tab/table-test2";
+import TableComponent from "./bay-definition-tab/bay-definition-table";
 import BayCountTable from "./bay-count-tab/bay-count-table";
 import FrameLineTable from "./frameline-definition-tab/frame-definition-table";
 import FlueTable from "./flue-dinition-tab/flue-definition-table";

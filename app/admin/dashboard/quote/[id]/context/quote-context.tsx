@@ -9,7 +9,7 @@ import {
   type ReactNode,
   useEffect,
 } from "react";
-import type { PartWithBays } from "../components/bay-definition-tab/table-test2";
+import type { PartWithBays } from "../components/bay-definition-tab/bay-definition-table";
 import { PartWithFrames } from "../components/frameline-definition-tab/frame-definition-table";
 import { PartWithFlues } from "../components/flue-dinition-tab/flue-definition-table";
 
