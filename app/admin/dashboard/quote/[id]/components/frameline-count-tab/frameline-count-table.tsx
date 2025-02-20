@@ -27,10 +27,23 @@ type FrameLine = {
   name: string;
   quotationId: string;
 };
+
+type Bay = {
+  id: string;
+  name: string;
+  quotationId: string;
+};
+
+type BayWithRows = {
+  bay: Bay;
+  rows: Row[];
+};
+
 type FrameWithRows = {
   frameline: FrameLine;
   rows: Row[];
 };
+
 type SelectionRange = {
   startRow: number;
   endRow: number;
@@ -49,7 +62,7 @@ type Props = {
 const FramilineCountTable = ({ quoteId }: Props) => {
   const { setFrameLinesDefinitionContext, isLocked } = useQuote();
   const [bayWithRows, setbayWithRows] = useState<FrameWithRows[]>([]);
-  const [bays, setBays] = useState<any[]>([]);
+  const [bays, setBays] = useState<BayWithRows[]>([]);
   const [selectedCell, setSelectedCell] = useState({ row: -1, col: -1 });
   const [editingCell, setEditingCell] = useState({ row: -1, col: -1 });
   const [selectedRow, setSelectedRow] = useState(-1);

@@ -18,10 +18,34 @@ type Flue = {
   name: string;
   quotationId: string;
 };
+
+type Bay = {
+  id: string;
+  name: string;
+  quotationId: string;
+};
+
+type FrameLine = {
+  id: string;
+  name: string;
+  quotationId: string;
+};
+
+type BayWithRows = {
+  bay: Bay;
+  rows: Row[];
+};
+
+type FrameWithRows = {
+  frameline: FrameLine;
+  rows: Row[];
+};
+
 type FlueWithRows = {
   flue: Flue;
   rows: Row[];
 };
+
 type SelectionRange = {
   startRow: number;
   endRow: number;
@@ -40,7 +64,8 @@ type Props = {
 const FlueCountTable = ({ quoteId }: Props) => {
   const { setFluesDefinitionContext, isLocked } = useQuote();
   const [bayWithRows, setbayWithRows] = useState<FlueWithRows[]>([]);
-  const [framelines, setFramelines] = useState<any[]>([]);
+  const [bays, setBays] = useState<BayWithRows[]>([]);
+  const [framelines, setFramelines] = useState<FrameWithRows[]>([]);
   const [selectedCell, setSelectedCell] = useState({ row: -1, col: -1 });
   const [editingCell, setEditingCell] = useState({ row: -1, col: -1 });
   const [selectedRow, setSelectedRow] = useState(-1);
