@@ -1401,7 +1401,7 @@ const FramilineCountTable = ({ quoteId }: Props) => {
           <DialogHeader>
             <DialogTitle>Delete Row</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete row "{deleteConfirmation.rowName}"? This action cannot be undone.
+              Are you sure you want to delete row {deleteConfirmation.rowName}? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
