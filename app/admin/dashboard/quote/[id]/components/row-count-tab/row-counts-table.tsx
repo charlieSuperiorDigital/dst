@@ -9,8 +9,16 @@ import { SectionCreationModal } from "./section-creation-modal";
 import { Button } from "@/components/ui/button";
 import { RowInfoModal } from "./row-info-modal";
 import { formatCurrency } from "@/utils/format-currency";
-import { Scan } from "lucide-react";
+import { Scan, Trash2 } from "lucide-react";
 import { useQuote } from "../../context/quote-context";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 import {
   Select,
@@ -19,6 +27,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export type Row = {
   rowName: string;
@@ -62,6 +77,16 @@ const RowCountTable = ({ quoteId }: Props) => {
   const [sectionData, setSectionData] = useState<SectionArea[] | null>(null);
   const [selectionAreaId, setSelectedAreaId] = useState<string | null>(null);
   const [totalCost, setTotalCost] = useState<number>(0);
+  const [forceDelete, setForceDelete] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    isOpen: boolean;
+    rowId: string;
+    rowName: string;
+  }>({
+    isOpen: false,
+    rowId: "",
+    rowName: "",
+  });
 
   const getBayColor = useCallback(
     (rowId: string): string | null => {
@@ -495,6 +520,36 @@ const RowCountTable = ({ quoteId }: Props) => {
     setSelectedRow(row);
   };
 
+  const handleDeleteRow = async (rowId: string) => {
+    try {
+      await apiRequest({
+        url: `/api/row/del/${rowId}`,
+        method: "delete",
+      });
+      
+      setbayWithRows((prev) =>
+        prev.map((part) => {
+          const updatedPart = { ...part };
+          updatedPart.rows = part.rows.filter((r) => r.rowId !== rowId);
+          return updatedPart;
+        })
+      );
+      
+      toast({
+        title: "Success",
+        description: "Row Deleted",
+      });
+      setDeleteConfirmation({ isOpen: false, rowId: "", rowName: "" });
+    } catch (err) {
+      console.error(err);
+      toast({
+        title: "Error",
+        description: "Something went wrong",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="mt-6">
       <SectionCreationModal
@@ -524,6 +579,25 @@ const RowCountTable = ({ quoteId }: Props) => {
               onCheckedChange={setHideZeroQuantity}
             />
             <Label htmlFor="hide-zero">Hide zero quantity</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="force-delete"
+                      checked={forceDelete}
+                      onCheckedChange={setForceDelete}
+                    />
+                    <Label htmlFor="force-delete">Force delete</Label>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>When this field is checked the delete confirmation is not going show, the deletion is going to happen immediately</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
           {!isLocked && <AddRowsTab onAdd={handleAddRow} />}
           <div className="flex items-center space-x-2">
@@ -579,7 +653,7 @@ const RowCountTable = ({ quoteId }: Props) => {
                 return (
                   <th
                     key={colIndex + bayName.rowId}
-                    className={`border border-gray-300 p-2 font-bold text-center cursor-pointer`}
+                    className="border border-gray-300 p-2 font-bold text-center cursor-pointer"
                     style={{
                       minWidth: "100px",
                       backgroundColor:
@@ -588,7 +662,30 @@ const RowCountTable = ({ quoteId }: Props) => {
                     onDoubleClick={() => handleHeaderClick(bayName)}
                     title={`Area: ${areaName}`}
                   >
-                    {bayName.rowName}
+                    <div className="flex items-center justify-between">
+                      <span className="flex-1">{bayName.rowName}</span>
+                      {!isLocked && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (forceDelete) {
+                              handleDeleteRow(bayName.rowId);
+                            } else {
+                              setDeleteConfirmation({
+                                isOpen: true,
+                                rowId: bayName.rowId,
+                                rowName: bayName.rowName,
+                              });
+                            }
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      )}
+                    </div>
                   </th>
                 );
               })}
@@ -661,6 +758,37 @@ const RowCountTable = ({ quoteId }: Props) => {
         row={selectedRow}
         setbayWithRows={setbayWithRows}
       />
+      <Dialog 
+        open={deleteConfirmation.isOpen} 
+        onOpenChange={(open) => 
+          setDeleteConfirmation({ isOpen: open, rowId: "", rowName: "" })
+        }
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Row</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete row "{deleteConfirmation.rowName}"? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => 
+                setDeleteConfirmation({ isOpen: false, rowId: "", rowName: "" })
+              }
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => handleDeleteRow(deleteConfirmation.rowId)}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

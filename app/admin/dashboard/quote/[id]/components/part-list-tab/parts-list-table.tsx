@@ -27,7 +27,7 @@ interface Props {
 
 export default function PartsListTable({ quoteId, refresh }: Props) {
   const { isLocked } = useQuote();
-  const [parts, setParts] = useState<PartList[]>([]);
+  const [parts, setParts] = useState<PartList[]>([]); 
   const [filteredParts, setFilteredParts] = useState<PartList[]>([]);
   const [selectedPart, setSelectedPart] = useState<PartList | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);

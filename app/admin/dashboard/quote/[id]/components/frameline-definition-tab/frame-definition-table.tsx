@@ -1092,12 +1092,21 @@ const FrameLineTable = ({ quoteId }: Props) => {
                     isColumnSelected(colIndex) ? "bg-blue-100" : "bg-gray-100"
                   }`}
                   style={{ minWidth: "100px", ...getColumnStyle(colIndex) }}
-                  onClick={() => handleOpenDeleteModal(bayName)}
                 >
-                  <p className="flex items-center justify-center gap-1">
-                    {bayName}
-                    {!isLocked && <Trash2 size={18} />}
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <span className="flex-grow text-center">{bayName}</span>
+                    {!isLocked && (
+                      <button
+                        className="hover:bg-destructive/10 rounded-sm p-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenDeleteModal(bayName);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </button>
+                    )}
+                  </div>
                   <div
                     className="col-resize-handle absolute top-0 right-0 w-1 h-full cursor-col-resize opacity-0 hover:opacity-100 hover:bg-blue-300"
                     onMouseDown={(e) => startColumnResize(e, colIndex)}

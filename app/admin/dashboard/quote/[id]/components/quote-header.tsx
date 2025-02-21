@@ -10,6 +10,8 @@ import { AddPartDialog } from "@/app/admin/dashboard/components/add-part.modal";
 import { Part } from "@/app/entities/Part";
 import { apiRequest } from "@/utils/client-side-api";
 import { toast } from "@/hooks/use-toast";
+import { AddRowsTab } from "../components/row-count-tab/add-row";
+import { useSearchParams } from "next/navigation";
 
 type Props = {
   quote: Quotes;
@@ -19,6 +21,8 @@ type Props = {
 
 const QuoteHeader = ({ quote, onPartAdded, showAddPartButtons }: Props) => {
   const [isCustomPartModalOpen, setIsCustomPartModalOpen] = useState(false);
+  const searchParams = useSearchParams();
+  const currentTab = searchParams.get("tab");
 
   const handleAdd = async (part: Part, partNumber: string) => {
     try {
@@ -73,6 +77,65 @@ const QuoteHeader = ({ quote, onPartAdded, showAddPartButtons }: Props) => {
       toast({
         title: "Error",
         description: "Error adding part",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAddRow = async (quantityStr: string) => {
+    const quantity = parseInt(quantityStr, 10);
+    
+    if (isNaN(quantity) || quantity <= 0) {
+      toast({
+        title: "Error",
+        description: "Quantity must be a positive number.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // First, get the existing rows to determine the next row number
+      const existingRows = await apiRequest({
+        url: `/api/count/row/${quote.id}`,
+        method: "get",
+      });
+
+      // Find the highest row number
+      const highestRowNumber = existingRows.reduce((max, part) => {
+        const rowNumbers = part.rows.map(row => {
+          const match = row.rowName.match(/Row-(\d+)/);
+          return match ? parseInt(match[1], 10) : 0;
+        });
+        return Math.max(max, ...rowNumbers);
+      }, 0);
+
+      // Create new rows starting from the next number
+      const requests = Array.from({ length: quantity }, (_, index) => {
+        const newRowNumber = highestRowNumber + index + 1;
+        return apiRequest({
+          url: `/api/Row/Add`,
+          method: "post",
+          data: {
+            quotationId: quote.id,
+            rowName: `Row-${newRowNumber}`,
+          },
+        });
+      });
+
+      await Promise.all(requests);
+      toast({
+        title: "Success",
+        description: `${quantity} row${quantity > 1 ? 's' : ''} added successfully.`,
+      });
+      
+      // Refresh the page after successful addition
+      window.location.reload();
+    } catch (error) {
+      console.error("Error adding rows:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add rows. Please try again.",
         variant: "destructive",
       });
     }
@@ -151,6 +214,7 @@ const QuoteHeader = ({ quote, onPartAdded, showAddPartButtons }: Props) => {
         {/* Third Row - Add Part Buttons */}
         {showAddPartButtons && (
           <div className="flex justify-end gap-3">
+            {currentTab !== "row-count" && <AddRowsTab onAdd={handleAddRow} />}
             <PartsDialog onAdd={handleAdd} />
             <Button
               variant="success"

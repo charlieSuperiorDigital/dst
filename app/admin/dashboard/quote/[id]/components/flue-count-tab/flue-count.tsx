@@ -6,6 +6,22 @@ import { AddFlueDefinitonTab } from "../flue-dinition-tab/add-flue-definition";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Trash2 } from "lucide-react";
 
 type Row = {
   rowName: string;
@@ -92,6 +108,16 @@ const FlueCountTable = ({ quoteId }: Props) => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [hideZeroQuantity, setHideZeroQuantity] = useState(false);
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
+  const [forceDelete, setForceDelete] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    isOpen: boolean;
+    rowId: string;
+    rowName: string;
+  }>({
+    isOpen: false,
+    rowId: "",
+    rowName: "",
+  });
 
   const fetchData = async () => {
     try {
@@ -1056,6 +1082,36 @@ const FlueCountTable = ({ quoteId }: Props) => {
     stopEditing();
   };
 
+  const handleDeleteRow = async (rowId: string) => {
+    try {
+      await apiRequest({
+        url: `/api/row/del/${rowId}`,
+        method: "delete",
+      });
+      
+      // Update all flues to remove this row
+      setbayWithRows((prev) =>
+        prev.map((flue) => ({
+          ...flue,
+          rows: flue.rows.filter((r) => r.rowId !== rowId)
+        }))
+      );
+      
+      toast({
+        title: "Success",
+        description: "Row Deleted",
+      });
+      setDeleteConfirmation({ isOpen: false, rowId: "", rowName: "" });
+    } catch (err) {
+      console.error(err);
+      toast({
+        title: "Error",
+        description: "Something went wrong",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="mt-6">
       <div className="flex items-center space-x-4  mb-4">
@@ -1068,13 +1124,32 @@ const FlueCountTable = ({ quoteId }: Props) => {
             className="p-2 border border-gray-300 rounded"
           />
         </div>
-        <div className="flex items-center space-x-2 ">
-          <Switch
-            id="hide-zero"
-            checked={hideZeroQuantity}
-            onCheckedChange={setHideZeroQuantity}
-          />
-          <Label htmlFor="hide-zero">Hide zero quantity</Label>
+        <div className="flex flex-col space-y-2">
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="hide-zero"
+              checked={hideZeroQuantity}
+              onCheckedChange={setHideZeroQuantity}
+            />
+            <Label htmlFor="hide-zero">Hide zero quantity</Label>
+          </div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="force-delete"
+                    checked={forceDelete}
+                    onCheckedChange={setForceDelete}
+                  />
+                  <Label htmlFor="force-delete">Force delete</Label>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>When this field is checked the delete confirmation is not going show, the deletion is going to happen immediately</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
         {!isLocked && <AddFlueDefinitonTab onAdd={handleAddFlue} />}
       </div>
@@ -1127,7 +1202,33 @@ const FlueCountTable = ({ quoteId }: Props) => {
                   }`}
                   style={{ minWidth: "100px", ...getColumnStyle(colIndex) }}
                 >
-                  {bayName}
+                  <div className="flex items-center justify-between">
+                    <span className="flex-1">{bayName}</span>
+                    {!isLocked && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const row = bayWithRows[0]?.rows.find(r => r.rowName === bayName);
+                          if (!row) return;
+                          
+                          if (forceDelete) {
+                            handleDeleteRow(row.rowId);
+                          } else {
+                            setDeleteConfirmation({
+                              isOpen: true,
+                              rowId: row.rowId,
+                              rowName: row.rowName,
+                            });
+                          }
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
+                    )}
+                  </div>
                   <div
                     className="col-resize-handle absolute top-0 right-0 w-1 h-full cursor-col-resize opacity-0 hover:opacity-100 hover:bg-blue-300"
                     onMouseDown={(e) => startColumnResize(e, colIndex)}
@@ -1280,6 +1381,38 @@ const FlueCountTable = ({ quoteId }: Props) => {
           </tbody>
         </table>
       </div>
+
+      <Dialog 
+        open={deleteConfirmation.isOpen} 
+        onOpenChange={(open) => 
+          setDeleteConfirmation({ isOpen: open, rowId: "", rowName: "" })
+        }
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Row</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete row "{deleteConfirmation.rowName}"? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => 
+                setDeleteConfirmation({ isOpen: false, rowId: "", rowName: "" })
+              }
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => handleDeleteRow(deleteConfirmation.rowId)}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

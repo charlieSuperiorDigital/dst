@@ -25,6 +25,7 @@ export default function QuoteWrapper({ quote, quoteId }: Props) {
   const shouldShowAddPartButtons = tab !== "receiving" && 
     tab !== "installation" && 
     tab !== "summary" &&
+    tab !== "row-count" &&
     quote.status !== 2; // 2 represents Completed status
 
   return (
