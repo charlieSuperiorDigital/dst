@@ -41,6 +41,7 @@ const QuoteHeader = ({ quote, onPartAdded, showAddPartButtons }: Props) => {
         description: "Part has been added successfully",
       });
       onPartAdded();
+      window.location.reload();
     } catch (error) {
       console.error("Error adding part:", error);
       toast({
@@ -72,6 +73,7 @@ const QuoteHeader = ({ quote, onPartAdded, showAddPartButtons }: Props) => {
         description: "Part has been added successfully",
       });
       onPartAdded();
+      window.location.reload();
     } catch (error) {
       console.error("Error adding part:", error);
       toast({
