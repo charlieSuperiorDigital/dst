@@ -223,10 +223,10 @@ export default function PartsListTable({ quoteId, refresh }: Props) {
                     {paintTypes?.find((p) => p.id === part.colorId)?.description}
                   </TableCell>
                   <TableCell className="text-right border">
-                    {part.unitWeight.toFixed(2)}
+                    {part.unitWeight.toFixed(3)}
                   </TableCell>
                   <TableCell className="text-right border">
-                    {part.unitWeight * (part.qty ?? 0)}
+                    {(part.unitWeight * (part.qty ?? 0)).toFixed(3)}
                   </TableCell>
                   <TableCell className="text-right border">
                     {part.unitLabor}

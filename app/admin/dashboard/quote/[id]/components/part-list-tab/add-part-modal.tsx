@@ -60,7 +60,7 @@ export function PartsDialog({ onAdd }: Props) {
       unitLabor: "0.00",
       unitMatLb: "0.00",
       unitSell: "0.00",
-      unitWeight: "0.00"
+      unitWeight: "0.000"
     },
   });
 
@@ -102,7 +102,7 @@ export function PartsDialog({ onAdd }: Props) {
     form.setValue("unitLabor", part.unitLabor != null ? Number(part.unitLabor).toFixed(2) : "0.00");
     form.setValue("unitMatLb", part.unitMatLb != null ? Number(part.unitMatLb).toFixed(2) : "0.00");
     form.setValue("unitSell", part.unitSell != null ? Number(part.unitSell).toFixed(2) : "0.00");
-    form.setValue("unitWeight", part.unitWeight != null ? Number(part.unitWeight).toFixed(2) : "0.00");
+    form.setValue("unitWeight", part.unitWeight != null ? Number(part.unitWeight).toFixed(3) : "0.000");
     setFilteredParts([]);
   };
 
@@ -291,7 +291,7 @@ export function PartsDialog({ onAdd }: Props) {
                 control={form.control}
                 name="unitMatLb"
                 render={({ field }) => (
-                  <FormItem className="grid grid-cols-4 items-center gap-4">
+                  <FormItem className="grid grid-cols-4 items-center gap-4" style={{ display: "none" }}>
                     <FormLabel className="text-right">Unit Mat/lb</FormLabel>
                     <div className="col-span-3">
                       <FormControl>
@@ -357,13 +357,13 @@ export function PartsDialog({ onAdd }: Props) {
                       <FormControl>
                         <Input
                           type="number"
-                          step="0.01"
+                          step="0.001"
                           {...field}
                           onChange={(e) => field.onChange(e.target.value)}
                           onBlur={(e) => {
                             const value = parseFloat(e.target.value);
                             if (!isNaN(value)) {
-                              field.onChange(value.toFixed(2));
+                              field.onChange(value.toFixed(3));
                             }
                             field.onBlur();
                           }}

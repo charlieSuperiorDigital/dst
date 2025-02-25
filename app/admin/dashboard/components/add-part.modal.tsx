@@ -40,7 +40,7 @@ export function AddPartDialog({ isOpen, onClose, onAdd }: AddPartDialogProps) {
     unitLabor: "0.00",
     unitMatLb: "0.00",
     unitSell: "0.00",
-    unitWeight: "0.00"
+    unitWeight: "0.000"
   });
 
   const handleCloseModal = (open: boolean) => {
@@ -52,7 +52,7 @@ export function AddPartDialog({ isOpen, onClose, onAdd }: AddPartDialogProps) {
         unitLabor: "0.00",
         unitMatLb: "0.00",
         unitSell: "0.00",
-        unitWeight: "0.00"
+        unitWeight: "0.000"
       });
     }
     onClose();
@@ -96,7 +96,7 @@ export function AddPartDialog({ isOpen, onClose, onAdd }: AddPartDialogProps) {
       });
       setTempValues({
         ...tempValues,
-        [field]: value.toFixed(2)
+        [field]: field === 'unitWeight' ? value.toFixed(3) : value.toFixed(2)
       });
     }
   };
@@ -149,7 +149,7 @@ export function AddPartDialog({ isOpen, onClose, onAdd }: AddPartDialogProps) {
                 id="unitWeight"
                 name="unitWeight"
                 type="number"
-                step="0.01"
+                step="0.001"
                 value={tempValues.unitWeight}
                 onChange={(e) => handleNumericChange(e, 'unitWeight')}
                 onBlur={() => handleNumericBlur('unitWeight')}
@@ -157,7 +157,7 @@ export function AddPartDialog({ isOpen, onClose, onAdd }: AddPartDialogProps) {
               />
             </div>
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
+          <div className="grid grid-cols-4 items-center gap-4" style={{ display: "none" }}>
             <Label htmlFor="unitMatLb" className="text-right">Unit Mat/lb</Label>
             <div className="col-span-3">
               <Input

@@ -64,7 +64,7 @@ export function EditPartDialog({
         unitLabor: Number(sanitizedPart.unitLabor).toFixed(2),
         unitMatLb: Number(sanitizedPart.unitMatLb).toFixed(2),
         unitSell: Number(sanitizedPart.unitSell).toFixed(2),
-        unitWeight: Number(sanitizedPart.unitWeight).toFixed(2)
+        unitWeight: Number(sanitizedPart.unitWeight).toFixed(3)
       });
     }
   }, [part]);
@@ -196,7 +196,7 @@ export function EditPartDialog({
               className="col-span-3"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
+          <div className="grid grid-cols-4 items-center gap-4" style={{ display: "none" }}>
             <Label htmlFor="unitMatLb" className="text-right">
               Unit Mat/lb
             </Label>
@@ -246,14 +246,14 @@ export function EditPartDialog({
             <Input
               id="unitWeight"
               type="number"
-              step="0.01"
+              step="0.001"
               value={tempValues.unitWeight}
               onChange={(e) => setTempValues({ ...tempValues, unitWeight: e.target.value })}
               onBlur={() => {
                 const newVal = parseFloat(tempValues.unitWeight);
                 if (!isNaN(newVal) && editedPart) {
                   setEditedPart({ ...editedPart, unitWeight: newVal });
-                  setTempValues({ ...tempValues, unitWeight: newVal.toFixed(2) });
+                  setTempValues({ ...tempValues, unitWeight: newVal.toFixed(3) });
                 }
               }}
               className="col-span-3"
