@@ -18,8 +18,6 @@ import { toast } from "@/hooks/use-toast";
 import { apiRequest } from "@/utils/client-side-api";
 import { useQuote } from "../../context/quote-context";
 
-const materialMargin = 0.2;
-
 interface Props {
   quoteId: string;
   refresh: number;
@@ -33,6 +31,7 @@ export default function PartsListTable({ quoteId, refresh }: Props) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const [materialMargin, setMaterialMargin] = useState(0.2); // Default value until we fetch from quotation
 
   const fetchParts = async () => {
     const response = await apiRequest({
@@ -120,6 +119,23 @@ export default function PartsListTable({ quoteId, refresh }: Props) {
   };
 
   useEffect(() => {
+    const fetchQuotation = async () => {
+      try {
+        const response = await apiRequest({
+          method: "get",
+          url: `/api/quotation/${quoteId}`,
+        });
+        setMaterialMargin(response.materialMargin / 100);
+      } catch (error) {
+        console.error("Error fetching quotation:", error);
+        toast({
+          title: "Error",
+          description: "Error fetching quotation details",
+          variant: "destructive",
+        });
+      }
+    };
+
     const fetchParts = async () => {
       try {
         setLoading(true);
@@ -127,7 +143,6 @@ export default function PartsListTable({ quoteId, refresh }: Props) {
           method: "get",
           url: `/api/Part/PartsFromQuotation/${quoteId}`,
         });
-        console.log(response);
         setParts(response.parts);
         setFilteredParts(response.parts);
       } catch (error) {
@@ -142,7 +157,7 @@ export default function PartsListTable({ quoteId, refresh }: Props) {
       }
     };
 
-    fetchParts();
+    Promise.all([fetchQuotation(), fetchParts()]);
   }, [quoteId, refresh]);
 
   return (
@@ -163,7 +178,7 @@ export default function PartsListTable({ quoteId, refresh }: Props) {
           <TableRow className="bg-gray-100">
             <TableHead colSpan={10} className="border" />
             <TableHead colSpan={1} className="text-right border font-bold">
-              Total Value:
+              {filteredParts.reduce((total, part) => total + ((part.qty || 0 * part.laborEA)), 0).toFixed(2)}
             </TableHead>
             <TableHead className="text-right border font-bold">
               {formatCurrency(calculateTotalSellValue())}

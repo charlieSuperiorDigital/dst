@@ -60,7 +60,7 @@ export default function CostBreakdownTable({
   const calculateTotalWithMargin = useCallback(
     (cost: number | undefined, margin: number | undefined): number => {
       if (cost === undefined || margin === undefined) return 0;
-      return cost + (cost * margin) / 100;
+      return cost / (1 - margin / 100);
     },
     []
   );

@@ -18,6 +18,7 @@ export const updatePaintTypes = async () => {
     return colors;
   } catch (error) {
     console.error('Error updating paint types:', error);
+    console.log(error as Error);
     return paintTypes; // Return default colors if API call fails
   }
 };
