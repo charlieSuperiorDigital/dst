@@ -86,7 +86,7 @@ const QuoteHeader = ({ quote, onPartAdded, showAddPartButtons }: Props) => {
 
   const handleAddRow = async (quantityStr: string) => {
     const quantity = parseInt(quantityStr, 10);
-    
+
     if (isNaN(quantity) || quantity <= 0) {
       toast({
         title: "Error",
@@ -105,7 +105,7 @@ const QuoteHeader = ({ quote, onPartAdded, showAddPartButtons }: Props) => {
 
       // Find the highest row number
       const highestRowNumber = existingRows.reduce((max, part) => {
-        const rowNumbers = part.rows.map(row => {
+        const rowNumbers = part.rows.map((row) => {
           const match = row.rowName.match(/Row-(\d+)/);
           return match ? parseInt(match[1], 10) : 0;
         });
@@ -128,9 +128,11 @@ const QuoteHeader = ({ quote, onPartAdded, showAddPartButtons }: Props) => {
       await Promise.all(requests);
       toast({
         title: "Success",
-        description: `${quantity} row${quantity > 1 ? 's' : ''} added successfully.`,
+        description: `${quantity} row${
+          quantity > 1 ? "s" : ""
+        } added successfully.`,
       });
-      
+
       // Refresh the page after successful addition
       window.location.reload();
     } catch (error) {
@@ -140,6 +142,32 @@ const QuoteHeader = ({ quote, onPartAdded, showAddPartButtons }: Props) => {
         description: "Failed to add rows. Please try again.",
         variant: "destructive",
       });
+    }
+  };
+  const handleDownloadQuote = async (quoteId: number) => {
+    try {
+      const response = await apiRequest({
+        method: "get",
+        url: `/Export/quotation/${quoteId}`,
+        responseType: "blob",
+      });
+      const blob = new Blob([response], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // MIME type for .xlsx files
+      });
+      const link = document.createElement("a");
+      link.href = window.URL.createObjectURL(blob);
+      link.download = `quotation_${quoteId}.xlsx`;
+      link.click();
+
+      link.remove();
+
+      console.log("Response", response);
+    } catch (error) {
+      // toast({
+      //   title: 'Error',
+      //   description: 'Error downloading quote',
+      //   variant: 'destructive',
+      // })
     }
   };
 
@@ -153,7 +181,6 @@ const QuoteHeader = ({ quote, onPartAdded, showAddPartButtons }: Props) => {
             <h1 className="text-xl font-semibold text-gray-800">
               {quote.name}
             </h1>
-            {/* <p className="text-sm text-gray-500">Quotes Number: {quote.id}</p> */}
           </div>
           <div className="text-center sm:text-left">
             <p className="text-sm font-medium text-gray-600">Author:</p>
@@ -213,24 +240,35 @@ const QuoteHeader = ({ quote, onPartAdded, showAddPartButtons }: Props) => {
           </div>
         </div>
 
-        {/* Third Row - Add Part Buttons */}
-        {showAddPartButtons && (
-          <div className="flex justify-end gap-3">
-            {currentTab !== "row-count" && <AddRowsTab onAdd={handleAddRow} />}
-            <PartsDialog onAdd={handleAdd} />
-            <Button
-              variant="success"
-              onClick={() => setIsCustomPartModalOpen(true)}
-            >
-              <Plus className="mr-2 h-4 w-4" /> Add Custom Part
-            </Button>
-            <AddPartDialog
-              isOpen={isCustomPartModalOpen}
-              onClose={() => setIsCustomPartModalOpen(false)}
-              onAdd={handleAddCustomPart}
-            />
-          </div>
-        )}
+        {/* Third Row - Print Quote Button and Add Part Buttons */}
+        <div className="flex justify-between items-center">
+          <Button
+            variant="success"
+            onClick={() => handleDownloadQuote(quote.id)}
+          >
+            Print Quote
+          </Button>
+
+          {showAddPartButtons && (
+            <div className="flex gap-3">
+              {currentTab !== "row-count" && (
+                <AddRowsTab onAdd={handleAddRow} />
+              )}
+              <PartsDialog onAdd={handleAdd} />
+              <Button
+                variant="success"
+                onClick={() => setIsCustomPartModalOpen(true)}
+              >
+                <Plus className="mr-2 h-4 w-4" /> Add Custom Part
+              </Button>
+              <AddPartDialog
+                isOpen={isCustomPartModalOpen}
+                onClose={() => setIsCustomPartModalOpen(false)}
+                onAdd={handleAddCustomPart}
+              />
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );
