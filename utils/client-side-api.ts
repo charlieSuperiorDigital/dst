@@ -6,6 +6,7 @@ interface ApiRequestOptions {
   url: string;
   data?: any;
   headers?: Record<string, string>;
+  responseType?: "json" | "blob" | "arraybuffer" | "text" | "stream";
 }
 
 export interface User {
@@ -37,6 +38,7 @@ export const apiRequest = async <T = any>({
   url,
   data = null,
   headers = {},
+  responseType = "json",
 }: ApiRequestOptions): Promise<T> => {
   const session = await getSession();
 
@@ -50,6 +52,7 @@ export const apiRequest = async <T = any>({
       url: `${process.env.NEXT_PUBLIC_API_URL}${url}`,
       data,
       headers: updatedHeaders,
+      responseType,
     };
 
     const response: AxiosResponse<T> = await axios(config);
@@ -67,7 +70,9 @@ export const apiRequest = async <T = any>({
   }
 };
 
-export const getUserList = async (queryParams: string): Promise<PaginatedUsers> => {
+export const getUserList = async (
+  queryParams: string
+): Promise<PaginatedUsers> => {
   return apiRequest({
     method: "get",
     url: `/User/UserList?${queryParams}`,
