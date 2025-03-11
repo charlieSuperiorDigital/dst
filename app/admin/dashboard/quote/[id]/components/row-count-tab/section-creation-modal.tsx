@@ -85,7 +85,8 @@ export function SectionCreationModal({
   const [sectionName, setSectionName] = useState("");
   const [selectedBays, setSelectedBays] = useState<RowData[]>([]);
   const [selectedColor, setSelectedColor] = useState("#3b82f6");
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [selectedFrom, setSelectedFrom] = useState<string | null>(null);
+  const [selectedTo, setSelectedTo] = useState<string | null>(null);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(
     null
   );
@@ -96,6 +97,19 @@ export function SectionCreationModal({
     );
     return allRows.filter((row) => !assignedRowIds.has(row.rowId));
   };
+
+  useEffect(() => {
+    if (selectedFrom && selectedTo) {
+      const fromIndex = allRows.findIndex((row) => row.rowId === selectedFrom);
+      const toIndex = allRows.findIndex((row) => row.rowId === selectedTo);
+      if (fromIndex !== -1 && toIndex !== -1) {
+        const start = Math.min(fromIndex, toIndex);
+        const end = Math.max(fromIndex, toIndex);
+        const selectedRows = allRows.slice(start, end + 1);
+        setSelectedBays(selectedRows);
+      }
+    }
+  }, [selectedFrom, selectedTo, allRows]);
 
   useEffect(() => {
     if (isEditMode && selectedSectionId) {
@@ -119,8 +133,9 @@ export function SectionCreationModal({
     setSectionName("");
     setSelectedBays([]);
     setSelectedColor("#3b82f6");
+    setSelectedFrom(null);
+    setSelectedTo(null);
     setSelectedSectionId(null);
-    setIsDropdownOpen(false);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -141,24 +156,10 @@ export function SectionCreationModal({
     resetForm();
   };
 
-  const toggleBay = (bay: RowData) => {
-    setSelectedBays((prev) => {
-      const isSelected = prev.some((b) => b.rowId === bay.rowId);
-      if (isSelected) {
-        return prev.filter((b) => b.rowId !== bay.rowId);
-      } else {
-        return [...prev, bay];
-      }
-    });
-  };
-
   const handleBayRemove = (bay: RowData) => {
     setSelectedBays((prev) => prev.filter((b) => b.rowId !== bay.rowId));
   };
 
-  const closeDropdown = () => {
-    setIsDropdownOpen(false);
-  };
   const handleDelete = () => {
     if (selectedSectionId) {
       onRemove(selectedSectionId);
@@ -166,6 +167,7 @@ export function SectionCreationModal({
       resetForm();
     }
   };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
@@ -185,7 +187,7 @@ export function SectionCreationModal({
         {isEditMode && (
           <Select onValueChange={(value) => setSelectedSectionId(value)}>
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select section to edit" />
+              <SelectValue placeholder="Select section to edit " />
             </SelectTrigger>
             <SelectContent>
               {existingSections.map((section) => (
@@ -210,46 +212,38 @@ export function SectionCreationModal({
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="bays" className="text-right">
-                Rows
+              <Label htmlFor="from" className="text-right">
+                From
               </Label>
-              <div className="col-span-3 relative">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full justify-between"
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                >
-                  Select Rows
-                  <span className="ml-2">▼</span>
-                </Button>
-                {isDropdownOpen && (
-                  <div className="absolute z-10 w-full mt-1 bg-popover border rounded-md shadow-lg">
-                    <div className="max-h-60 overflow-auto">
-                      {getAvailableRows().map((bay) => (
-                        <div
-                          key={bay.rowId}
-                          className="flex items-center px-3 py-2 hover:bg-accent cursor-pointer"
-                          onClick={() => {
-                            toggleBay(bay);
-                            closeDropdown();
-                          }}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedBays.some(
-                              (b) => b.rowId === bay.rowId
-                            )}
-                            onChange={() => {}}
-                            className="mr-2"
-                          />
-                          {bay.rowName}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
+              <Select onValueChange={(value) => setSelectedFrom(value)}>
+                <SelectTrigger className=" w-[150px]">
+                  <SelectValue placeholder="Select start row" />
+                </SelectTrigger>
+                <SelectContent>
+                  {getAvailableRows().map((row) => (
+                    <SelectItem key={row.rowId} value={row.rowId}>
+                      {row.rowName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="to" className="text-right">
+                To
+              </Label>
+              <Select onValueChange={(value) => setSelectedTo(value)}>
+                <SelectTrigger className=" w-[150px]">
+                  <SelectValue placeholder="Select end row" />
+                </SelectTrigger>
+                <SelectContent>
+                  {getAvailableRows().map((row) => (
+                    <SelectItem key={row.rowId} value={row.rowId}>
+                      {row.rowName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="color" className="text-right">
