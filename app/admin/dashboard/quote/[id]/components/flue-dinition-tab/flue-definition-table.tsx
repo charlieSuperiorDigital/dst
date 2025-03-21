@@ -504,7 +504,8 @@ const FlueTable = ({ quoteId }: Props) => {
       const colOffset = targetCol - dragSource.col;
 
       const newPartsWithBays = [...partsWithBays];
-      const updates: { partId: string; flueId: string; quantity: number }[] = [];
+      const updates: { partId: string; flueId: string; quantity: number }[] =
+        [];
 
       for (let row = range.startRow; row <= range.endRow; row++) {
         for (let col = range.startCol; col <= range.endCol; col++) {
@@ -562,7 +563,8 @@ const FlueTable = ({ quoteId }: Props) => {
 
         if (sourceBay && targetBay) {
           const newPartsWithBays = [...partsWithBays];
-          newPartsWithBays[targetRow].flues[targetCol].quantity = sourceBay.quantity;
+          newPartsWithBays[targetRow].flues[targetCol].quantity =
+            sourceBay.quantity;
           setPartsWithBays(newPartsWithBays);
 
           updateSingleQuantity({

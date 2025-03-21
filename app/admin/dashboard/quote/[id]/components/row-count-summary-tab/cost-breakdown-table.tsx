@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuote } from "../../context/quote-context";
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "@/hooks/use-toast";
@@ -48,9 +49,44 @@ export default function CostBreakdownTable({
   setCostItems,
   materialCost,
 }: Props) {
-  const { isLocked, quoteContext, setQuoteContext } = useQuote();
+  const { isLocked, quoteContext, setQuoteContext, areaMaterialcost } =
+    useQuote();
   const [totalBeforeTaxes, setTotalBeforeTaxes] = useState(0);
   const [grandTotal, setGrandTotal] = useState(0);
+  const [selectedAreaId, setSelectedAreaId] = useState<string>("");
+  const [currentMaterialCost, setCurrentMaterialCost] = useState(materialCost);
+
+  const TOTAL_TAB_ID = "total";
+
+  // Set default selected area when component mounts
+  useEffect(() => {
+    if (areaMaterialcost && areaMaterialcost.length > 0 && !selectedAreaId) {
+      setSelectedAreaId(areaMaterialcost[0].areaId);
+      setCurrentMaterialCost(areaMaterialcost[0].totalMaterialCost);
+    }
+  }, [areaMaterialcost, selectedAreaId]);
+
+  const handleTabChange = (areaId: string) => {
+    setSelectedAreaId(areaId);
+    if (areaId === TOTAL_TAB_ID) {
+      setCurrentMaterialCost(calculateTotalMaterialCost());
+    } else {
+      const selectedArea = areaMaterialcost?.find(
+        (area) => area.areaId === areaId
+      );
+      if (selectedArea) {
+        setCurrentMaterialCost(selectedArea.totalMaterialCost);
+      }
+    }
+  };
+
+  const calculateTotalMaterialCost = useCallback(() => {
+    if (!areaMaterialcost || areaMaterialcost.length === 0) return materialCost;
+    return areaMaterialcost.reduce(
+      (sum, area) => sum + area.totalMaterialCost,
+      0
+    );
+  }, [areaMaterialcost, materialCost]);
 
   const handleCostChange = (key: keyof CostItem, value: string) => {
     const newCostItems = { ...costItems, [key]: Number(value) || 0 };
@@ -67,7 +103,7 @@ export default function CostBreakdownTable({
 
   useEffect(() => {
     let total = calculateTotalWithMargin(
-      materialCost,
+      currentMaterialCost,
       marginTaxes.materialMargin
     );
     total += calculateTotalWithMargin(
@@ -93,7 +129,7 @@ export default function CostBreakdownTable({
 
     setTotalBeforeTaxes(total);
     setGrandTotal(total + (costItems.salesTax || 0));
-  }, [costItems, marginTaxes, materialCost, calculateTotalWithMargin]);
+  }, [costItems, marginTaxes, currentMaterialCost, calculateTotalWithMargin]);
 
   const costItemsArray: { key: keyof CostItem; label: string }[] = [
     { key: "freight", label: "Freight" },
@@ -104,7 +140,7 @@ export default function CostBreakdownTable({
   ];
 
   const handleBlur = async (field: keyof CostItem, value: string) => {
-    const updatedValue = parseFloat(value) || 0;
+    const updatedValue = Number.parseFloat(value) || 0;
     const updatedCostItems = { ...costItems, [field]: updatedValue };
 
     try {
@@ -137,82 +173,279 @@ export default function CostBreakdownTable({
   return (
     <Card className="w-full">
       <div className="p-6">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Item</TableHead>
-              <TableHead className="text-right">Cost</TableHead>
-              <TableHead className="text-right">Total w/ Margin</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <TableRow>
-              <TableCell className="font-medium">Material Cost</TableCell>
-              <TableCell className="text-right">
-                {formatCurrency(materialCost)}
-              </TableCell>
-              <TableCell className="text-right">
-                {formatCurrency(
-                  calculateTotalWithMargin(
-                    materialCost,
-                    marginTaxes.materialMargin
-                  )
-                )}
-              </TableCell>
-            </TableRow>
-            {costItemsArray.map(({ key, label }) => (
-              <TableRow key={key}>
-                <TableCell className="font-medium">{label}</TableCell>
+        {areaMaterialcost && areaMaterialcost.length > 0 ? (
+          <Tabs
+            defaultValue={areaMaterialcost[0].areaId}
+            onValueChange={handleTabChange}
+            className="mb-6"
+          >
+            <TabsList className="w-full grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+              {areaMaterialcost.map((area) => (
+                <TabsTrigger key={area.areaId} value={area.areaId}>
+                  {area.areaName}
+                </TabsTrigger>
+              ))}
+              <TabsTrigger value={TOTAL_TAB_ID} className="font-bold">
+                Total
+              </TabsTrigger>
+            </TabsList>
+
+            {areaMaterialcost.map((area) => (
+              <TabsContent key={area.areaId} value={area.areaId}>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Item</TableHead>
+                      <TableHead className="text-right">Cost</TableHead>
+                      <TableHead className="text-right">
+                        Total w/ Margin
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell className="font-medium">
+                        Material Cost ({area.areaName})
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(area.totalMaterialCost)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(
+                          calculateTotalWithMargin(
+                            area.totalMaterialCost,
+                            marginTaxes.materialMargin
+                          )
+                        )}
+                      </TableCell>
+                    </TableRow>
+                    {costItemsArray.map(({ key, label }) => (
+                      <TableRow key={key}>
+                        <TableCell className="font-medium">{label}</TableCell>
+                        <TableCell className="text-right">
+                          <Input
+                            type="number"
+                            value={costItems[key] || 0}
+                            onChange={(e) =>
+                              handleCostChange(key, e.target.value)
+                            }
+                            onBlur={(e) => handleBlur(key, e.target.value)}
+                            className="w-32 ml-auto"
+                            disabled={isLocked}
+                          />
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {formatCurrency(
+                            calculateTotalWithMargin(
+                              costItems[key],
+                              marginTaxes[`${key}Margin` as keyof MarginTax]
+                            )
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    <TableRow className="font-bold">
+                      <TableCell>Total Before Taxes</TableCell>
+                      <TableCell></TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(totalBeforeTaxes)}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>Sales Tax</TableCell>
+                      <TableCell></TableCell>
+                      <TableCell className="text-right">
+                        <Input
+                          type="number"
+                          value={costItems.salesTax || 0}
+                          onChange={(e) =>
+                            handleCostChange("salesTax", e.target.value)
+                          }
+                          onBlur={(e) => handleBlur("salesTax", e.target.value)}
+                          className="w-32 ml-auto"
+                          disabled={isLocked}
+                        />
+                      </TableCell>
+                    </TableRow>
+                    <TableRow className="font-bold">
+                      <TableCell>Grand Total</TableCell>
+                      <TableCell></TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(grandTotal)}
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </TabsContent>
+            ))}
+
+            <TabsContent value={TOTAL_TAB_ID}>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Item</TableHead>
+                    <TableHead className="text-right">Cost</TableHead>
+                    <TableHead className="text-right">
+                      Total w/ Margin
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
+                    <TableCell className="font-medium">
+                      Total Material Cost (All Areas)
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {formatCurrency(calculateTotalMaterialCost())}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {formatCurrency(
+                        calculateTotalWithMargin(
+                          calculateTotalMaterialCost(),
+                          marginTaxes.materialMargin
+                        )
+                      )}
+                    </TableCell>
+                  </TableRow>
+                  {costItemsArray.map(({ key, label }) => (
+                    <TableRow key={key}>
+                      <TableCell className="font-medium">{label}</TableCell>
+                      <TableCell className="text-right">
+                        <Input
+                          type="number"
+                          value={costItems[key] || 0}
+                          onChange={(e) =>
+                            handleCostChange(key, e.target.value)
+                          }
+                          onBlur={(e) => handleBlur(key, e.target.value)}
+                          className="w-32 ml-auto"
+                          disabled={isLocked}
+                        />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(
+                          calculateTotalWithMargin(
+                            costItems[key],
+                            marginTaxes[`${key}Margin` as keyof MarginTax]
+                          )
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  <TableRow className="font-bold">
+                    <TableCell>Total Before Taxes</TableCell>
+                    <TableCell></TableCell>
+                    <TableCell className="text-right">
+                      {formatCurrency(totalBeforeTaxes)}
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>Sales Tax</TableCell>
+                    <TableCell></TableCell>
+                    <TableCell className="text-right">
+                      <Input
+                        type="number"
+                        value={costItems.salesTax || 0}
+                        onChange={(e) =>
+                          handleCostChange("salesTax", e.target.value)
+                        }
+                        onBlur={(e) => handleBlur("salesTax", e.target.value)}
+                        className="w-32 ml-auto"
+                        disabled={isLocked}
+                      />
+                    </TableCell>
+                  </TableRow>
+                  <TableRow className="font-bold">
+                    <TableCell>Grand Total</TableCell>
+                    <TableCell></TableCell>
+                    <TableCell className="text-right">
+                      {formatCurrency(grandTotal)}
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </TabsContent>
+          </Tabs>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Item</TableHead>
+                <TableHead className="text-right">Cost</TableHead>
+                <TableHead className="text-right">Total w/ Margin</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow>
+                <TableCell className="font-medium">Material Cost</TableCell>
                 <TableCell className="text-right">
-                  <Input
-                    type="number"
-                    value={costItems[key] || 0}
-                    onChange={(e) => handleCostChange(key, e.target.value)}
-                    onBlur={(e) => handleBlur(key, e.target.value)}
-                    className="w-32 ml-auto"
-                    disabled={isLocked}
-                  />
+                  {formatCurrency(materialCost)}
                 </TableCell>
                 <TableCell className="text-right">
                   {formatCurrency(
                     calculateTotalWithMargin(
-                      costItems[key],
-                      marginTaxes[`${key}Margin` as keyof MarginTax]
+                      materialCost,
+                      marginTaxes.materialMargin
                     )
                   )}
                 </TableCell>
               </TableRow>
-            ))}
-            <TableRow className="font-bold">
-              <TableCell>Total Before Taxes</TableCell>
-              <TableCell></TableCell>
-              <TableCell className="text-right">
-                {formatCurrency(totalBeforeTaxes)}
-              </TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>Sales Tax</TableCell>
-              <TableCell></TableCell>
-              <TableCell className="text-right">
-                <Input
-                  type="number"
-                  value={costItems.salesTax || 0}
-                  onChange={(e) => handleCostChange("salesTax", e.target.value)}
-                  onBlur={(e) => handleBlur("salesTax", e.target.value)}
-                  className="w-32 ml-auto"
-                  disabled={isLocked}
-                />
-              </TableCell>
-            </TableRow>
-            <TableRow className="font-bold">
-              <TableCell>Grand Total</TableCell>
-              <TableCell></TableCell>
-              <TableCell className="text-right">
-                {formatCurrency(grandTotal)}
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
+              {costItemsArray.map(({ key, label }) => (
+                <TableRow key={key}>
+                  <TableCell className="font-medium">{label}</TableCell>
+                  <TableCell className="text-right">
+                    <Input
+                      type="number"
+                      value={costItems[key] || 0}
+                      onChange={(e) => handleCostChange(key, e.target.value)}
+                      onBlur={(e) => handleBlur(key, e.target.value)}
+                      className="w-32 ml-auto"
+                      disabled={isLocked}
+                    />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {formatCurrency(
+                      calculateTotalWithMargin(
+                        costItems[key],
+                        marginTaxes[`${key}Margin` as keyof MarginTax]
+                      )
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+              <TableRow className="font-bold">
+                <TableCell>Total Before Taxes</TableCell>
+                <TableCell></TableCell>
+                <TableCell className="text-right">
+                  {formatCurrency(totalBeforeTaxes)}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>Sales Tax</TableCell>
+                <TableCell></TableCell>
+                <TableCell className="text-right">
+                  <Input
+                    type="number"
+                    value={costItems.salesTax || 0}
+                    onChange={(e) =>
+                      handleCostChange("salesTax", e.target.value)
+                    }
+                    onBlur={(e) => handleBlur("salesTax", e.target.value)}
+                    className="w-32 ml-auto"
+                    disabled={isLocked}
+                  />
+                </TableCell>
+              </TableRow>
+              <TableRow className="font-bold">
+                <TableCell>Grand Total</TableCell>
+                <TableCell></TableCell>
+                <TableCell className="text-right">
+                  {formatCurrency(grandTotal)}
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        )}
       </div>
     </Card>
   );
