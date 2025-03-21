@@ -32,7 +32,7 @@ interface Props {
 }
 
 export default function RownCountSummary({ quoteId }: Props) {
-  const { quote } = useQuote();
+  const { quote, areaMaterialcost } = useQuote();
   const [materialCost, setMaterialCost] = useState<number>(0);
   const [marginTaxes, setMarginTaxes] = useState<MarginTax>({
     materialMargin: quote.materialMargin,
@@ -50,7 +50,7 @@ export default function RownCountSummary({ quoteId }: Props) {
     engCals: quote.engCals,
     salesTax: quote.salesTax,
   });
-  const [showMarginTaxes, setShowMarginTaxes] = useState(true); // Estado para controlar la visibilidad
+  const [showMarginTaxes, setShowMarginTaxes] = useState(true);
 
   useEffect(() => {
     const fetchMaterialCost = async () => {
@@ -67,7 +67,6 @@ export default function RownCountSummary({ quoteId }: Props) {
     <div className="flex flex-col p-6 gap-6 w-full">
       <ScopeItemsAndNotes />
 
-      {/* Toggle para mostrar/ocultar MarginTaxes */}
       <div className="flex items-center space-x-2">
         <Switch
           id="show-margin-taxes"

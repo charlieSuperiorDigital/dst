@@ -13,6 +13,12 @@ import type { PartWithBays } from "../components/bay-definition-tab/bay-definiti
 import { PartWithFrames } from "../components/frameline-definition-tab/frame-definition-table";
 import { PartWithFlues } from "../components/flue-dinition-tab/flue-definition-table";
 
+type areaMaterialcost = {
+  areaId: string;
+  areaName: string;
+  totalMaterialCost: number;
+};
+
 interface ErrorState {
   bays: string[];
   framelines: string[];
@@ -25,6 +31,7 @@ interface QuoteContextType {
   bayDefinition?: PartWithBays[];
   framelineDefinition?: PartWithFrames[];
   flueDefinition?: PartWithFlues[];
+  areaMaterialcost?: areaMaterialcost[];
   setBayDefinitionContext: React.Dispatch<React.SetStateAction<PartWithBays[]>>;
   setFrameLinesDefinitionContext: React.Dispatch<
     React.SetStateAction<PartWithFrames[]>
@@ -187,6 +194,7 @@ export function QuoteProvider({
     <QuoteContext.Provider
       value={{
         quote: initialValue?.quote || ({} as Quotes),
+        areaMaterialcost: initialValue?.areaMaterialcost || [],
         isLocked: initialValue?.isLocked || false,
         bayDefinitionContext: bayDefinitionContext,
         frameLinesDefinitionContext,

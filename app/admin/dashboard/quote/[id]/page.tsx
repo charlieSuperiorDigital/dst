@@ -5,6 +5,7 @@ import { getFlueDefinitions } from "./lib/get-flue-definitions";
 import { getFramelineDefinitions } from "./lib/get-frameline-definition";
 import { getSingleQuote } from "./lib/get-single-quote";
 import QuoteWrapper from "./components/quote-wrapper";
+import { getAreaMaterialCost } from "./lib/get-area-material-cost";
 
 export default async function Page({
   params,
@@ -16,6 +17,7 @@ export default async function Page({
   const bayDefinition = await getBayDefinitions(id);
   const framelineDefinition = await getFramelineDefinitions(id);
   const flueDefinition = await getFlueDefinitions(id);
+  const areaMaterialcost = await getAreaMaterialCost(id);
 
   if (!quote) {
     return <div>Quote not found</div>;
@@ -28,6 +30,7 @@ export default async function Page({
     framelineDefinition: framelineDefinition.result,
     flueDefinition: flueDefinition.result,
     isLocked: isLocked,
+    areaMaterialcost: areaMaterialcost.result,
   };
 
   return (
