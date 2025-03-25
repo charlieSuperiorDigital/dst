@@ -45,11 +45,13 @@ interface SectionCreationModalProps {
   existingSections: SectionArea[];
 }
 
-type SectionData = {
+export type SectionData = {
   id?: string;
   name: string;
   rows: RowData[];
   color: string;
+  removedRows?: string[];
+  rowsToAdd?: string[];
 };
 
 const colors = [
@@ -90,6 +92,7 @@ export function SectionCreationModal({
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(
     null
   );
+  const [removedRows, setRemovedRows] = useState<string[]>([]);
 
   const getAvailableRows = () => {
     const assignedRowIds = new Set(
@@ -119,6 +122,8 @@ export function SectionCreationModal({
       if (sectionToEdit) {
         setSectionName(sectionToEdit.area.name);
         setSelectedColor(sectionToEdit.area.color);
+
+        // Incluimos todos los rows existentes en la selección inicial
         const rowsForSection = allRows.filter((row) =>
           sectionToEdit.rows.includes(row.rowId)
         );
@@ -140,14 +145,30 @@ export function SectionCreationModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const rowsToAdd =
+      isEditMode && selectedSectionId
+        ? selectedBays
+            .filter((bay) => {
+              const section = existingSections.find(
+                (s) => s.area.id === selectedSectionId
+              );
+              return section && !section.rows.includes(bay.rowId);
+            })
+            .map((bay) => bay.rowId)
+        : undefined;
+
     const sectionData: SectionData = {
       id: selectedSectionId || undefined,
       name: sectionName,
       rows: selectedBays,
       color: selectedColor,
+      removedRows: isEditMode ? removedRows : undefined,
+      rowsToAdd: rowsToAdd,
     };
 
     if (isEditMode) {
+      console.log("Editing section with data:", sectionData);
       onEdit(sectionData);
     } else {
       onSubmit(sectionData);
@@ -155,11 +176,20 @@ export function SectionCreationModal({
     onClose();
     resetForm();
   };
-
   const handleBayRemove = (bay: RowData) => {
-    setSelectedBays((prev) => prev.filter((b) => b.rowId !== bay.rowId));
-  };
+    if (isEditMode && selectedSectionId) {
+      const section = existingSections.find(
+        (s) => s.area.id === selectedSectionId
+      );
+      // Si el row pertenece al área original, lo marcamos para eliminación
+      if (section?.rows.includes(bay.rowId)) {
+        setRemovedRows((prev) => [...prev, bay.rowId]);
+      }
+    }
 
+    setSelectedBays((prev) => prev.filter((b) => b.rowId !== bay.rowId));
+    // setRemovedRows([]);
+  };
   const handleDelete = () => {
     if (selectedSectionId) {
       onRemove(selectedSectionId);
@@ -268,22 +298,38 @@ export function SectionCreationModal({
             </div>
           </div>
           <div className="flex flex-wrap gap-2 mt-2">
-            {selectedBays.map((bay) => (
-              <div
-                key={bay.rowId}
-                className="flex items-center bg-accent text-accent-foreground text-xs font-medium px-2.5 py-0.5 rounded"
-              >
-                {bay.rowName}
-                <button
-                  type="button"
-                  onClick={() => handleBayRemove(bay)}
-                  className="ml-1 text-accent-foreground hover:text-destructive"
-                  aria-label={`Remove ${bay.rowName}`}
+            {selectedBays.map((bay) => {
+              const isExisting =
+                isEditMode &&
+                selectedSectionId &&
+                existingSections
+                  .find((s) => s.area.id === selectedSectionId)
+                  ?.rows.includes(bay.rowId);
+              const isRemoved = removedRows.includes(bay.rowId);
+
+              return (
+                <div
+                  key={bay.rowId}
+                  className={`flex items-center text-xs font-medium px-2.5 py-0.5 rounded ${
+                    isRemoved
+                      ? "bg-red-100 text-red-800 line-through"
+                      : isExisting
+                      ? "bg-green-100 text-green-800"
+                      : "bg-accent text-accent-foreground"
+                  }`}
                 >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-            ))}
+                  {bay.rowName}
+                  <button
+                    type="button"
+                    onClick={() => handleBayRemove(bay)}
+                    className="ml-1 hover:text-destructive"
+                    aria-label={`Remove ${bay.rowName}`}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              );
+            })}
           </div>
           <DialogFooter>
             {isEditMode && (
