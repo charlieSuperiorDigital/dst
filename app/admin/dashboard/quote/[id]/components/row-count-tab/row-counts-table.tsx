@@ -313,10 +313,6 @@ const RowCountTable = ({ quoteId }: Props) => {
       );
 
       await Promise.all(requests);
-      toast({
-        title: "Success",
-        description: "Rows added successfully.",
-      });
       window.location.reload();
     } catch (error) {
       console.error("Error adding rows:", error);
@@ -392,11 +388,12 @@ const RowCountTable = ({ quoteId }: Props) => {
       findSection.area.name !== value.name
     ) {
       try {
+        console.log("aca");
         await apiRequest({
           url: `/api/Area/`,
           method: "put",
           data: {
-            id: value.id,
+            areaId: value.id,
             color: value.color,
             name: value.name,
           },
