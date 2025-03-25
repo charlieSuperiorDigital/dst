@@ -34,6 +34,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useRouter } from "next/navigation";
 
 export type Row = {
   rowName: string;
@@ -87,6 +88,8 @@ const RowCountTable = ({ quoteId }: Props) => {
     rowId: "",
     rowName: "",
   });
+
+  const router = useRouter();
 
   const getBayColor = useCallback(
     (rowId: string): string | null => {
@@ -314,6 +317,7 @@ const RowCountTable = ({ quoteId }: Props) => {
         title: "Success",
         description: "Rows added successfully.",
       });
+      window.location.reload();
     } catch (error) {
       console.error("Error adding rows:", error);
       toast({
@@ -374,42 +378,46 @@ const RowCountTable = ({ quoteId }: Props) => {
     const findSection = sectionData?.find(
       (section) => section.area.id === value.id
     );
+
+    if (!findSection) return;
+
+    const currentRowIds = findSection.rows || [];
+    const newRowIds = value.rows.map((row) => row.rowId);
+
+    const rowsToAdd = newRowIds.filter((id) => !currentRowIds.includes(id));
+    // const rowsToRemove = currentRowIds.filter((id) => !newRowIds.includes(id));
+
     if (
-      findSection?.area.color !== value.color ||
-      findSection?.area.name !== value.name
+      findSection.area.color !== value.color ||
+      findSection.area.name !== value.name
     ) {
       try {
         await apiRequest({
           url: `/api/Area/`,
           method: "put",
           data: {
-            areaId: value.id,
+            id: value.id,
             color: value.color,
             name: value.name,
           },
         });
 
-        toast({
-          title: "Success",
-          description: "Section updated successfully.",
+        setSectionData((prev) => {
+          if (!prev) return null;
+          return prev.map((section) => {
+            if (section.area.id === value.id) {
+              return {
+                ...section,
+                area: {
+                  ...section.area,
+                  color: value.color,
+                  name: value.name,
+                },
+              };
+            }
+            return section;
+          });
         });
-        if (sectionData) {
-          setSectionData(
-            sectionData.map((section) => {
-              if (section.area.id === value.id) {
-                return {
-                  ...section,
-                  area: {
-                    ...section.area,
-                    color: value.color,
-                    name: value.name,
-                  },
-                };
-              }
-              return section;
-            })
-          );
-        }
       } catch (e) {
         console.log(e);
         toast({
@@ -417,42 +425,31 @@ const RowCountTable = ({ quoteId }: Props) => {
           description: "Failed to update section. Please try again.",
           variant: "destructive",
         });
+        return;
       }
     }
 
-    const findRows = findSection?.rows || [];
-    const rowsToAdd = value.rows.filter((row) => !findRows.includes(row.rowId));
-
-    const rowsToRemove = findRows.filter(
-      (row) => !value.rows.map((r) => r.rowId).includes(row)
-    );
-
     if (rowsToAdd.length > 0) {
       try {
-        const addRows = rowsToAdd.map((row) => {
-          return apiRequest({
-            url: `/api/area/row/${value.id}/${row.rowId}`,
+        const addPromises = rowsToAdd.map((rowId) =>
+          apiRequest({
+            url: `/api/area/row/${value.id}/${rowId}`,
             method: "post",
-          });
-        });
-        await Promise.all(addRows);
+          })
+        );
+        await Promise.all(addPromises);
 
-        if (sectionData) {
-          setSectionData(
-            sectionData.map((section) => {
-              if (section.area.id === value.id) {
-                return {
-                  ...section,
-                  rows: [...section.rows, ...rowsToAdd.map((row) => row.rowId)],
-                };
-              }
-              return section;
-            })
-          );
-        }
-        toast({
-          title: "Success",
-          description: "Rows added successfully.",
+        setSectionData((prev) => {
+          if (!prev) return null;
+          return prev.map((section) => {
+            if (section.area.id === value.id) {
+              return {
+                ...section,
+                rows: [...section.rows, ...rowsToAdd],
+              };
+            }
+            return section;
+          });
         });
       } catch (e) {
         console.log(e);
@@ -461,35 +458,33 @@ const RowCountTable = ({ quoteId }: Props) => {
           description: "Failed to add rows. Please try again.",
           variant: "destructive",
         });
+        return;
       }
     }
-    if (rowsToRemove.length > 0) {
+
+    if (value.removedRows?.length > 0) {
       try {
-        const removeRows = rowsToRemove.map((row) => {
-          return apiRequest({
-            url: `/api/area/row/${value.id}/${row}`,
+        const removePromises = value.removedRows.map((rowId) =>
+          apiRequest({
+            url: `/api/area/row/${value.id}/${rowId}`,
             method: "delete",
+          })
+        );
+        await Promise.all(removePromises);
+
+        setSectionData((prev) => {
+          if (!prev) return null;
+          return prev.map((section) => {
+            if (section.area.id === value.id) {
+              return {
+                ...section,
+                rows: section.rows.filter(
+                  (rowId) => !value.removedRows.includes(rowId)
+                ),
+              };
+            }
+            return section;
           });
-        });
-        await Promise.all(removeRows);
-        if (sectionData) {
-          setSectionData(
-            sectionData.map((section) => {
-              if (section.area.id === value.id) {
-                return {
-                  ...section,
-                  rows: section.rows.filter(
-                    (row) => !rowsToRemove.includes(row)
-                  ),
-                };
-              }
-              return section;
-            })
-          );
-        }
-        toast({
-          title: "Success",
-          description: "Rows removed successfully.",
         });
       } catch (e) {
         console.log(e);
@@ -498,8 +493,14 @@ const RowCountTable = ({ quoteId }: Props) => {
           description: "Failed to remove rows. Please try again.",
           variant: "destructive",
         });
+        return;
       }
     }
+
+    toast({
+      title: "Success",
+      description: "Section updated successfully.",
+    });
   };
   const handleRemoveArea = async (areaId) => {
     try {
@@ -526,7 +527,7 @@ const RowCountTable = ({ quoteId }: Props) => {
         url: `/api/row/del/${rowId}`,
         method: "delete",
       });
-      
+
       setbayWithRows((prev) =>
         prev.map((part) => {
           const updatedPart = { ...part };
@@ -534,7 +535,7 @@ const RowCountTable = ({ quoteId }: Props) => {
           return updatedPart;
         })
       );
-      
+
       toast({
         title: "Success",
         description: "Row Deleted",
@@ -594,7 +595,10 @@ const RowCountTable = ({ quoteId }: Props) => {
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>When this field is checked the delete confirmation is not going show, the deletion is going to happen immediately</p>
+                  <p>
+                    When this field is checked the delete confirmation is not
+                    going show, the deletion is going to happen immediately
+                  </p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -758,9 +762,9 @@ const RowCountTable = ({ quoteId }: Props) => {
         row={selectedRow}
         setbayWithRows={setbayWithRows}
       />
-      <Dialog 
-        open={deleteConfirmation.isOpen} 
-        onOpenChange={(open) => 
+      <Dialog
+        open={deleteConfirmation.isOpen}
+        onOpenChange={(open) =>
           setDeleteConfirmation({ isOpen: open, rowId: "", rowName: "" })
         }
       >
@@ -768,13 +772,14 @@ const RowCountTable = ({ quoteId }: Props) => {
           <DialogHeader>
             <DialogTitle>Delete Row</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete row {deleteConfirmation.rowName}? This action cannot be undone.
+              Are you sure you want to delete row {deleteConfirmation.rowName}?
+              This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => 
+              onClick={() =>
                 setDeleteConfirmation({ isOpen: false, rowId: "", rowName: "" })
               }
             >
