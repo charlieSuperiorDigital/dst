@@ -13,7 +13,7 @@ import FlueTable from "./flue-dinition-tab/flue-definition-table";
 import FramilineCountTable from "./frameline-count-tab/frameline-count-table";
 import FlueCountTable from "./flue-count-tab/flue-count";
 import MiscTable from "./misc-count-tab/misc-count";
-import { useQuote } from "../../[id]/context/quote-context";
+import Summary from "./summary-tab/summary";
 
 type Props = {
   quoteId: string;
@@ -23,13 +23,14 @@ type Props = {
 const QuoteClientSide = ({ quoteId, refresh }: Props) => {
   const searchParams = useSearchParams();
   const tab = searchParams.get("tab");
-  const { quote } = useQuote();
 
   return (
     <div>
       {tab === "summary" && <RownCountSummary quoteId={quoteId} />}
       {tab === "row-count" && <RowCounts quoteId={quoteId} />}
-      {tab === "part-list" && <PartsListTable quoteId={quoteId} refresh={refresh} />}
+      {tab === "part-list" && (
+        <PartsListTable quoteId={quoteId} refresh={refresh} />
+      )}
       {tab === "receiving" && <ReceivingTable quoteId={quoteId} />}
       {tab === "installation" && <InstallationTable quoteId={quoteId} />}
       {tab === "bay-definitions" && <TableComponent quoteId={quoteId} />}
@@ -39,6 +40,7 @@ const QuoteClientSide = ({ quoteId, refresh }: Props) => {
       {tab === "frameline-count" && <FramilineCountTable quoteId={quoteId} />}
       {tab === "flue-counts" && <FlueCountTable quoteId={quoteId} />}
       {tab === "misc-counts" && <MiscTable quoteId={quoteId} />}
+      {tab === "summary-area" && <Summary quoteId={quoteId} />}
     </div>
   );
 };

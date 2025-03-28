@@ -25,6 +25,7 @@ const tabItems = [
   { value: "flue-counts", label: "Flue Counts" },
   { value: "flue-definition", label: "Flue Definition" },
   { value: "misc-counts", label: "Misc Counts" },
+  { value: "summary-area", label: "Summary-area" },
 ];
 
 const QuoteTabs = () => {
