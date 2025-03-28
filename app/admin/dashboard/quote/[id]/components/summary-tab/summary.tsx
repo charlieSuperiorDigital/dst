@@ -105,11 +105,16 @@ export default function Summary({ quoteId }: Props) {
   const calculateTotal = (area: AreaData) => {
     return (
       area.totalMaterialCost +
-      area.freight +
-      area.installation +
-      (area.rentals || 0) +
-      area.permits +
-      area.engCalcs +
+      area.freightWithMargin +
+      area.freightSalesTaxCost +
+      area.installationWithMargin +
+      area.installationSalesTaxCost +
+      (area.rentalsWithMargin || 0) +
+      area.rentalsWithMargin +
+      area.permitsWithMargin +
+      area.permitsWithMargin +
+      area.engCalcsWithMargin +
+      area.engCalcsWithMargin +
       (area.miscellaneous || 0)
     );
   };
@@ -343,9 +348,7 @@ export default function Summary({ quoteId }: Props) {
                   />
                   <DetailRow
                     label="With Tax"
-                    value={`$${(
-                      calculateTotal(selectedArea) + selectedArea.totalSalesTax
-                    ).toFixed(2)}`}
+                    value={`$${calculateTotal(selectedArea).toFixed(2)}`}
                   />
                 </div>
               </div>
