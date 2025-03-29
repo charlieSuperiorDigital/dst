@@ -103,20 +103,37 @@ export default function Summary({ quoteId }: Props) {
   }, [token, quoteId]);
 
   const calculateTotal = (area: AreaData) => {
-    return (
-      area.totalMaterialCost +
+    // Base costs
+    let total =
+      area.totalMaterialCostWithMargin +
       area.freightWithMargin +
-      area.freightSalesTaxCost +
       area.installationWithMargin +
-      area.installationSalesTaxCost +
       (area.rentalsWithMargin || 0) +
-      area.rentalsWithMargin +
-      area.permitsWithMargin +
       area.permitsWithMargin +
       area.engCalcsWithMargin +
-      area.engCalcsWithMargin +
-      (area.miscellaneous || 0)
-    );
+      (area.miscellaneous || 0);
+
+    // Add tax costs only if applicable
+    if (area.materialSalesTaxApplicable) {
+      total += area.materialSalesTaxCost || 0;
+    }
+    if (area.freightSalesTaxApplicable) {
+      total += area.freightSalesTaxCost || 0;
+    }
+    if (area.installationSalesTaxApplicable) {
+      total += area.installationSalesTaxCost || 0;
+    }
+    if (area.rentalsSalesTaxApplicable) {
+      total += area.rentalsSalesTaxCost || 0;
+    }
+    if (area.permitsSalesTaxApplicable) {
+      total += area.permitsSalesTaxCost || 0;
+    }
+    if (area.engCalcsSalesTaxApplicable) {
+      total += area.engCalcsSalesTaxCost || 0;
+    }
+
+    return total;
   };
 
   const handleRowClick = (area: AreaData) => {
