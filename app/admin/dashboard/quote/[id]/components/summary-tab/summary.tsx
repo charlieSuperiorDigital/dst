@@ -103,7 +103,6 @@ export default function Summary({ quoteId }: Props) {
   }, [token, quoteId]);
 
   const calculateTotal = (area: AreaData) => {
-    // Base costs
     let total =
       area.totalMaterialCostWithMargin +
       area.freightWithMargin +
@@ -113,7 +112,6 @@ export default function Summary({ quoteId }: Props) {
       area.engCalcsWithMargin +
       (area.miscellaneous || 0);
 
-    // Add tax costs only if applicable
     if (area.materialSalesTaxApplicable) {
       total += area.materialSalesTaxCost || 0;
     }
@@ -132,6 +130,18 @@ export default function Summary({ quoteId }: Props) {
     if (area.engCalcsSalesTaxApplicable) {
       total += area.engCalcsSalesTaxCost || 0;
     }
+
+    return total;
+  };
+  const calculateTotalWithoutTaxes = (area: AreaData) => {
+    const total =
+      area.totalMaterialCostWithMargin +
+      area.freightWithMargin +
+      area.installationWithMargin +
+      (area.rentalsWithMargin || 0) +
+      area.permitsWithMargin +
+      area.engCalcsWithMargin +
+      (area.miscellaneous || 0);
 
     return total;
   };
@@ -276,7 +286,7 @@ export default function Summary({ quoteId }: Props) {
                 >
                   <td title={area.areaName}>{area.areaName}</td>
                   <td className="border border-gray-300 p-2 text-center">
-                    {area.totalMaterialWeight} kg
+                    {area.totalMaterialWeight.toFixed(3)} kg
                   </td>
                   <td className="border border-gray-300 p-2 text-center">
                     ${area.totalMaterialCost.toFixed(2)}
@@ -357,17 +367,19 @@ export default function Summary({ quoteId }: Props) {
                   />
                 </div>
 
-                <div className="border rounded-lg p-4">
+                {/* <div className="border rounded-lg p-4">
                   <h3 className="font-semibold mb-3">Total Calculations</h3>
                   <DetailRow
                     label="Subtotal"
-                    value={`$${calculateTotal(selectedArea).toFixed(2)}`}
+                    value={`$${calculateTotalWithoutTaxes(selectedArea).toFixed(
+                      2
+                    )}`}
                   />
                   <DetailRow
                     label="With Tax"
                     value={`$${calculateTotal(selectedArea).toFixed(2)}`}
                   />
-                </div>
+                </div> */}
               </div>
 
               {/* Editable Tax Sections */}
