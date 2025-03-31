@@ -345,7 +345,7 @@ export default function Summary({ quoteId }: Props) {
                   <DetailRow label="Area Name" value={selectedArea.areaName} />
                   <DetailRow
                     label="Total Weight"
-                    value={`${selectedArea.totalMaterialWeight} kg`}
+                    value={`${selectedArea.totalMaterialWeight.toFixed(3)} kg`}
                   />
                 </div>
 
