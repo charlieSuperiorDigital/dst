@@ -8,7 +8,6 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Trash2 } from "lucide-react";
 import { ConfirmationModal } from "../../../../../../../components/ui/confirmation-modal";
-import { set } from "react-hook-form";
 
 type Part = {
   id: string;
@@ -561,7 +560,8 @@ const TableComponent = ({ quoteId }: Props) => {
 
         if (sourceBay && targetBay) {
           const newPartsWithBays = [...partsWithBays];
-          newPartsWithBays[targetRow].bays[targetCol].quantity = sourceBay.quantity;
+          newPartsWithBays[targetRow].bays[targetCol].quantity =
+            sourceBay.quantity;
           setPartsWithBays(newPartsWithBays);
 
           updateSingleQuantity({

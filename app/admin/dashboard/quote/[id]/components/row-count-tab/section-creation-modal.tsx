@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 
 type RowData = {
   rowName: string;
@@ -83,6 +84,7 @@ export function SectionCreationModal({
   existingSections,
   onRemove,
 }: SectionCreationModalProps) {
+  const { toast } = useToast();
   const [isEditMode, setIsEditMode] = useState(false);
   const [sectionName, setSectionName] = useState("");
   const [selectedBays, setSelectedBays] = useState<RowData[]>([]);
@@ -93,6 +95,16 @@ export function SectionCreationModal({
     null
   );
   const [removedRows, setRemovedRows] = useState<string[]>([]);
+  const [nameError, setNameError] = useState<string | null>(null);
+
+  const validateName = (name: string): boolean => {
+    if (!name || !name.trim()) {
+      setNameError("Section name cannot be empty");
+      return false;
+    }
+    setNameError(null);
+    return true;
+  };
 
   const getAvailableRows = () => {
     const assignedRowIds = new Set(
@@ -123,7 +135,6 @@ export function SectionCreationModal({
         setSectionName(sectionToEdit.area.name);
         setSelectedColor(sectionToEdit.area.color);
 
-        // Incluimos todos los rows existentes en la selección inicial
         const rowsForSection = allRows.filter((row) =>
           sectionToEdit.rows.includes(row.rowId)
         );
@@ -141,10 +152,32 @@ export function SectionCreationModal({
     setSelectedFrom(null);
     setSelectedTo(null);
     setSelectedSectionId(null);
+    setRemovedRows([]);
+    setNameError(null);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate name
+    if (!validateName(sectionName)) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a valid section name",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate at least one row is selected
+    if (selectedBays.length === 0) {
+      toast({
+        title: "Validation Error",
+        description: "Please select at least one row",
+        variant: "destructive",
+      });
+      return;
+    }
 
     const rowsToAdd =
       isEditMode && selectedSectionId
@@ -160,7 +193,7 @@ export function SectionCreationModal({
 
     const sectionData: SectionData = {
       id: selectedSectionId || undefined,
-      name: sectionName,
+      name: sectionName.trim(),
       rows: selectedBays,
       color: selectedColor,
       removedRows: isEditMode ? removedRows : undefined,
@@ -168,7 +201,6 @@ export function SectionCreationModal({
     };
 
     if (isEditMode) {
-      console.log("Editing section with data:", sectionData);
       onEdit(sectionData);
     } else {
       onSubmit(sectionData);
@@ -176,22 +208,24 @@ export function SectionCreationModal({
     onClose();
     resetForm();
   };
+
   const handleBayRemove = (bay: RowData) => {
     if (isEditMode && selectedSectionId) {
       const section = existingSections.find(
         (s) => s.area.id === selectedSectionId
       );
-      // Si el row pertenece al área original, lo marcamos para eliminación
+
       if (section?.rows.includes(bay.rowId)) {
         setRemovedRows((prev) => [...prev, bay.rowId]);
       }
     }
 
     setSelectedBays((prev) => prev.filter((b) => b.rowId !== bay.rowId));
-    // setRemovedRows([]);
   };
+
   const handleDelete = () => {
     if (selectedSectionId) {
+      console.log("Deleting section with ID:", selectedSectionId);
       onRemove(selectedSectionId);
       onClose();
       resetForm();
@@ -234,19 +268,27 @@ export function SectionCreationModal({
               <Label htmlFor="name" className="text-right">
                 Name
               </Label>
-              <Input
-                id="name"
-                value={sectionName}
-                onChange={(e) => setSectionName(e.target.value)}
-                className="col-span-3"
-              />
+              <div className="col-span-3">
+                <Input
+                  id="name"
+                  value={sectionName}
+                  onChange={(e) => {
+                    setSectionName(e.target.value);
+                    validateName(e.target.value);
+                  }}
+                  className={nameError ? "border-red-500" : ""}
+                />
+                {nameError && (
+                  <p className="text-red-500 text-xs mt-1">{nameError}</p>
+                )}
+              </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="from" className="text-right">
                 From
               </Label>
               <Select onValueChange={(value) => setSelectedFrom(value)}>
-                <SelectTrigger className=" w-[150px]">
+                <SelectTrigger className="w-[150px]">
                   <SelectValue placeholder="Select start row" />
                 </SelectTrigger>
                 <SelectContent>
@@ -263,7 +305,7 @@ export function SectionCreationModal({
                 To
               </Label>
               <Select onValueChange={(value) => setSelectedTo(value)}>
-                <SelectTrigger className=" w-[150px]">
+                <SelectTrigger className="w-[150px]">
                   <SelectValue placeholder="Select end row" />
                 </SelectTrigger>
                 <SelectContent>
@@ -299,24 +341,13 @@ export function SectionCreationModal({
           </div>
           <div className="flex flex-wrap gap-2 mt-2">
             {selectedBays.map((bay) => {
-              const isExisting =
-                isEditMode &&
-                selectedSectionId &&
-                existingSections
-                  .find((s) => s.area.id === selectedSectionId)
-                  ?.rows.includes(bay.rowId);
-              const isRemoved = removedRows.includes(bay.rowId);
-
               return (
                 <div
                   key={bay.rowId}
-                  className={`flex items-center text-xs font-medium px-2.5 py-0.5 rounded ${
-                    isRemoved
-                      ? "bg-red-100 text-red-800 line-through"
-                      : isExisting
-                      ? "bg-green-100 text-green-800"
-                      : "bg-accent text-accent-foreground"
-                  }`}
+                  className={`flex items-center text-xs font-medium px-2.5 py-0.5 rounded
+                     "bg-green-100 text-green-800"
+                    "bg-accent text-accent-foreground"
+                 `}
                 >
                   {bay.rowName}
                   <button
@@ -333,11 +364,18 @@ export function SectionCreationModal({
           </div>
           <DialogFooter>
             {isEditMode && (
-              <Button variant="outline" onClick={handleDelete}>
-                Delete
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={handleDelete}
+                className="mr-2"
+              >
+                Delete Section
               </Button>
             )}
-            <Button>{isEditMode ? "Update Section" : "Create Section"}</Button>
+            <Button type="submit">
+              {isEditMode ? "Update Section" : "Create Section"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

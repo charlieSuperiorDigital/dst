@@ -34,7 +34,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useRouter } from "next/navigation";
 
 export type Row = {
   rowName: string;
@@ -88,8 +87,6 @@ const RowCountTable = ({ quoteId }: Props) => {
     rowId: "",
     rowName: "",
   });
-
-  const router = useRouter();
 
   const getBayColor = useCallback(
     (rowId: string): string | null => {
@@ -154,11 +151,11 @@ const RowCountTable = ({ quoteId }: Props) => {
       part.rows.map((row) => ({ rowName: row.rowName, rowId: row.rowId }))
     )
     .filter((row) => {
-      if (!selectionAreaId || selectionAreaId === "clear") return true; // Si no hay filtro, incluir todas
+      if (!selectionAreaId || selectionAreaId === "clear") return true;
       const section = sectionData?.find(
         (section) => section.area.id === selectionAreaId
       );
-      return section?.rows.includes(row.rowId); // Incluir solo si está en la sección
+      return section?.rows.includes(row.rowId);
     });
 
   const allBays = Array.from(
@@ -313,7 +310,9 @@ const RowCountTable = ({ quoteId }: Props) => {
       );
 
       await Promise.all(requests);
-      window.location.reload();
+
+      fetchData();
+      fetchSectionData();
     } catch (error) {
       console.error("Error adding rows:", error);
       toast({
@@ -500,18 +499,25 @@ const RowCountTable = ({ quoteId }: Props) => {
     });
   };
   const handleRemoveArea = async (areaId) => {
+    console.log("remove");
     try {
       await apiRequest({
         url: `/api/Area?AreaId=${areaId}`,
         method: "delete",
       });
-      if (sectionData) {
-        setSectionData(
-          sectionData.filter((section) => section.area.id !== areaId)
-        );
-      }
+      fetchData();
+      fetchSectionData();
+      toast({
+        title: "Success",
+        description: "Section removed successfully.",
+      });
     } catch (e) {
       console.log(e);
+      toast({
+        title: "Error",
+        description: "Failed to remove section. Please try again.",
+        variant: "destructive",
+      });
     }
   };
   const handleHeaderClick = (row) => {
@@ -546,6 +552,208 @@ const RowCountTable = ({ quoteId }: Props) => {
         variant: "destructive",
       });
     }
+  };
+  const handleAddRowAtEnd = async (quantity: number) => {
+    // Mantén tu función original para agregar al final
+    if (quantity <= 0) return;
+
+    const existingRows = bayWithRows.flatMap((part) => part.rows);
+    const highestRowNumber = getHighestRowNumber(existingRows);
+
+    const newRows = Array.from({ length: quantity }, (_, index) => ({
+      rowName: `Row-${highestRowNumber + index + 1}`,
+      rowId: `Row-${highestRowNumber + index + 1}`,
+      quantity: 0,
+    }));
+
+    await createNewRows(newRows);
+  };
+
+  const handleInsertRowBetween = async (position: number) => {
+    try {
+      const existingRows = bayWithRows.flatMap((part) => part.rows);
+      if (position < 0 || position >= existingRows.length) {
+        throw new Error("Invalid position");
+      }
+
+      const currentRow = existingRows[position];
+      const nextRow = existingRows[position + 1];
+
+      const currentNumber = extractRowNumber(currentRow.rowName);
+      const nextNumber = nextRow
+        ? extractRowNumber(nextRow.rowName)
+        : currentNumber + 2;
+
+      let newRowNumber: number;
+
+      if (nextNumber - currentNumber > 1) {
+        newRowNumber = Math.floor((currentNumber + nextNumber) / 2);
+        // Si el número resultante es igual al actual, sumamos 1
+        if (newRowNumber === currentNumber) newRowNumber++;
+      } else {
+        newRowNumber = currentNumber + 1;
+        await renumberFollowingRows(position + 1, newRowNumber + 1);
+      }
+
+      const newRow = {
+        rowName: `Row-${newRowNumber}`,
+        rowId: `Row-${newRowNumber}`,
+        quantity: 0,
+      };
+
+      // Crear la nueva fila
+      await apiRequest({
+        url: `/api/Row/Add`,
+        method: "post",
+        data: {
+          quotationId: quoteId,
+          rowName: newRow.rowName,
+        },
+      });
+
+      // Actualizar estado local
+      setbayWithRows((prev) =>
+        prev.map((part) => ({
+          ...part,
+          rows: [
+            ...part.rows.slice(0, position + 1),
+            newRow,
+            ...part.rows.slice(position + 1),
+          ],
+        }))
+      );
+
+      toast({
+        title: "Success",
+        description: `Row ${newRow.rowName} inserted successfully`,
+      });
+
+      // Recargar para sincronizar
+      window.location.reload();
+    } catch (error) {
+      console.error("Error inserting row:", error);
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error ? error.message : "Failed to insert row",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Funciones auxiliares
+  const getHighestRowNumber = (rows: Row[]): number => {
+    return rows.reduce((max, row) => {
+      const match = row.rowName.match(/Row-(\d+)/);
+      return match ? Math.max(max, parseInt(match[1], 10)) : max;
+    }, 0);
+  };
+
+  const createNewRows = async (newRows: Row[], insertAfter?: number) => {
+    try {
+      // Actualizar estado local
+      setbayWithRows((prev) =>
+        prev.map((part) => ({
+          ...part,
+          rows:
+            insertAfter !== undefined
+              ? [
+                  ...part.rows.slice(0, insertAfter + 1),
+                  ...newRows,
+                  ...part.rows.slice(insertAfter + 1),
+                ]
+              : [...part.rows, ...newRows],
+        }))
+      );
+
+      // Crear filas en la API
+      await Promise.all(
+        newRows.map((row) =>
+          apiRequest({
+            url: `/api/Row/Add`,
+            method: "post",
+            data: {
+              quotationId: quoteId,
+              rowName: row.rowName,
+            },
+          })
+        )
+      );
+
+      toast({
+        title: "Success",
+        description: `Row${newRows.length > 1 ? "s" : ""} added successfully`,
+      });
+
+      // Recargar para sincronizar cambios
+      window.location.reload();
+    } catch (error) {
+      console.error("Error creating rows:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add rows",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const renumberFollowingRows = async (
+    startIndex: number,
+    newStartNumber: number
+  ) => {
+    const allRows = bayWithRows.flatMap((part) => part.rows);
+    const rowsToRenumber = allRows.slice(startIndex);
+
+    // Renumerar en el estado local primero
+    const updatedRows = rowsToRenumber.map((row, index) => ({
+      ...row,
+      rowName: `Row-${newStartNumber + index}`,
+      rowId: row.rowId, // Mantenemos el mismo ID, solo cambiamos el nombre
+    }));
+
+    // Actualizar estado local
+    setbayWithRows((prev) =>
+      prev.map((part) => ({
+        ...part,
+        rows: part.rows.map((row) => {
+          const index = allRows.findIndex((r) => r.rowId === row.rowId);
+          return index >= startIndex ? updatedRows[index - startIndex] : row;
+        }),
+      }))
+    );
+
+    // Actualizar en la API usando el endpoint correcto
+    try {
+      await Promise.all(
+        rowsToRenumber.map((row, index) => {
+          const newName = `Row-${newStartNumber + index}`;
+          return apiRequest({
+            url: `/api/Row/Update/${row.rowId}/${newName}`,
+            method: "put",
+          });
+        })
+      );
+      toast({
+        title: "Success",
+        description: "Rows renumbered successfully",
+      });
+
+      window.location.reload();
+    } catch (error) {
+      console.error("Error renumbering rows:", error);
+      // Revertir cambios locales si falla la API
+      setbayWithRows((prev) => prev);
+      throw error;
+    }
+  };
+  const extractRowNumber = (rowName: string): number => {
+    const match = rowName.match(/Row-(\d+)/);
+    if (!match) {
+      // Manejar casos donde el formato no es "Row-XX"
+      const alternativeMatch = rowName.match(/\d+/);
+      return alternativeMatch ? parseInt(alternativeMatch[0], 10) : 0;
+    }
+    return parseInt(match[1], 10);
   };
 
   return (
