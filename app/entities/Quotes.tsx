@@ -39,6 +39,7 @@ export type Quotes = {
   permitsSalesTaxApplicable?: boolean;
   permitsSalesTax?: number;
   rentalsSalesTaxApplicable?: boolean;
+  rentalsSalesTax?: number; 
 };
 
 export enum QuotesStatus {

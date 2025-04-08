@@ -2,6 +2,7 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import { useQuote } from "../../context/quote-context";
 
 type Props = {
   quoteId: string;
@@ -56,7 +57,7 @@ interface AreaWithStatus extends AreaData {
   active: boolean;
 }
 
-// Helper function to format currency values
+
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -66,7 +67,7 @@ const formatCurrency = (value: number) => {
   }).format(value);
 };
 
-// Helper function to format weight values
+
 const formatWeight = (value: number) => {
   return `${value.toLocaleString("en-US", {
     minimumFractionDigits: 3,
@@ -77,6 +78,7 @@ const formatWeight = (value: number) => {
 export default function Summary({ quoteId }: Props) {
   const { data: session, status } = useSession();
   const token = session?.user?.token;
+  const { quoteContext } = useQuote();
   const [areas, setAreas] = useState<AreaWithStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -116,7 +118,14 @@ export default function Summary({ quoteId }: Props) {
     fetchAreaSummary();
   }, [token, quoteId]);
 
+
+  const calculateSalesTax = (value: number, applicable: boolean, taxRate: number) => {
+    if (!applicable || !value) return 0;
+    return (value * taxRate) / 100;
+  };
+
   const calculateTotal = (area: AreaData) => {
+
     let total =
       area.totalMaterialCostWithMargin +
       area.freightWithMargin +
@@ -126,24 +135,75 @@ export default function Summary({ quoteId }: Props) {
       area.engCalcsWithMargin +
       (area.miscellaneous || 0);
 
-    if (area.materialSalesTaxApplicable) {
-      total += area.materialSalesTaxCost || 0;
+   
+    if (quoteContext) {
+     
+      // Material sales tax
+      if (quoteContext.materialSalesTaxApplicable) {
+        const materialTax = calculateSalesTax(
+          area.totalMaterialCostWithMargin,
+          quoteContext.materialSalesTaxApplicable,
+          quoteContext.materialSalesTax || 0
+        );
+        total += materialTax;
+      }
+
+ 
+      // Freight sales tax
+      if (quoteContext.freightSalesTaxApplicable) {
+        const freightTax = calculateSalesTax(
+          area.freightWithMargin,
+          quoteContext.freightSalesTaxApplicable,
+          quoteContext.freightSalesTax || 0
+        );
+        total += freightTax;
+      }
+
+      
+      // Installation sales tax
+      if (quoteContext.installationSalesTaxApplicable) {
+        const installationTax = calculateSalesTax(
+          area.installationWithMargin,
+          quoteContext.installationSalesTaxApplicable,
+          quoteContext.installationSalesTax || 0
+        );
+        total += installationTax;
+      }
+
+   
+      // Rentals sales tax
+      if (quoteContext.rentalsSalesTaxApplicable) {
+        const rentalsTax = calculateSalesTax(
+          area.rentalsWithMargin || 0,
+          quoteContext.rentalsSalesTaxApplicable,
+          quoteContext.rentalsSalesTax || 0
+        );
+        total += rentalsTax;
+      }
+
+  
+      // Permits sales tax
+      if (quoteContext.permitsSalesTaxApplicable) {
+        const permitsTax = calculateSalesTax(
+          area.permitsWithMargin,
+          quoteContext.permitsSalesTaxApplicable,
+          quoteContext.permitsSalesTax || 0
+        );
+        total += permitsTax;
+      }
+
+    
+      // Eng Calcs sales tax
+      if (quoteContext.engCalcsSalesTaxApplicable) {
+        const engCalcsTax = calculateSalesTax(
+          area.engCalcsWithMargin,
+          quoteContext.engCalcsSalesTaxApplicable,
+          quoteContext.engCalcsSalesTax || 0
+        );
+        total += engCalcsTax;
+      }
     }
-    if (area.freightSalesTaxApplicable) {
-      total += area.freightSalesTaxCost || 0;
-    }
-    if (area.installationSalesTaxApplicable) {
-      total += area.installationSalesTaxCost || 0;
-    }
-    if (area.rentalsSalesTaxApplicable) {
-      total += area.rentalsSalesTaxCost || 0;
-    }
-    if (area.permitsSalesTaxApplicable) {
-      total += area.permitsSalesTaxCost || 0;
-    }
-    if (area.engCalcsSalesTaxApplicable) {
-      total += area.engCalcsSalesTaxCost || 0;
-    }
+    // No usamos los valores de la API para los impuestos, solo los del contexto
 
     return total;
   };
@@ -164,15 +224,51 @@ export default function Summary({ quoteId }: Props) {
     areas.forEach((area) => {
       if (!area.active) return;
 
+      // Calcular los impuestos para cada categoría usando el contexto
+      const materialTax = quoteContext ? calculateSalesTax(
+        area.totalMaterialCostWithMargin,
+        quoteContext.materialSalesTaxApplicable || false,
+        quoteContext.materialSalesTax || 0
+      ) : 0;
+
+      const freightTax = quoteContext ? calculateSalesTax(
+        area.freightWithMargin,
+        quoteContext.freightSalesTaxApplicable || false,
+        quoteContext.freightSalesTax || 0
+      ) : 0;
+
+      const installationTax = quoteContext ? calculateSalesTax(
+        area.installationWithMargin,
+        quoteContext.installationSalesTaxApplicable || false,
+        quoteContext.installationSalesTax || 0
+      ) : 0;
+
+      const rentalsTax = quoteContext ? calculateSalesTax(
+        area.rentalsWithMargin || 0,
+        quoteContext.rentalsSalesTaxApplicable || false,
+        quoteContext.rentalsSalesTax || 0
+      ) : 0;
+
+      const permitsTax = quoteContext ? calculateSalesTax(
+        area.permitsWithMargin,
+        quoteContext.permitsSalesTaxApplicable || false,
+        quoteContext.permitsSalesTax || 0
+      ) : 0;
+
+      const engCalcsTax = quoteContext ? calculateSalesTax(
+        area.engCalcsWithMargin,
+        quoteContext.engCalcsSalesTaxApplicable || false,
+        quoteContext.engCalcsSalesTax || 0
+      ) : 0;
+
       totals.weight += area.totalMaterialWeight;
       totals.material += area.totalMaterialCost;
-      totals.freight += area.freightWithMargin + area.freightSalesTaxCost;
-      totals.installation += area.installation + area.installationSalesTaxCost;
-      totals.rentals += area.rentals + area.rentalsSalesTaxCost || 0;
-      totals.permits += area.permits + area.permitsSalesTaxCost;
-      totals.engCalcs += area.engCalcs + area.engCalcsSalesTaxCost;
-      totals.miscellaneous +=
-        (area.miscellaneous || 0) + (area.materialSalesTaxCost || 0);
+      totals.freight += area.freightWithMargin + freightTax;
+      totals.installation += area.installationWithMargin + installationTax;
+      totals.rentals += (area.rentalsWithMargin || 0) + rentalsTax;
+      totals.permits += area.permitsWithMargin + permitsTax;
+      totals.engCalcs += area.engCalcsWithMargin + engCalcsTax;
+      totals.miscellaneous += (area.miscellaneous || 0) + materialTax;
       totals.grandTotal += calculateTotal(area);
     });
 
@@ -277,29 +373,62 @@ export default function Summary({ quoteId }: Props) {
                   </td>
                   <td className="border border-gray-300 p-2 text-right">
                     {formatCurrency(
-                      area.freightWithMargin + area.freightSalesTaxCost
+                      area.freightWithMargin + 
+                      (quoteContext ? calculateSalesTax(
+                        area.freightWithMargin,
+                        quoteContext.freightSalesTaxApplicable || false,
+                        quoteContext.freightSalesTax || 0
+                      ) : 0)
                     )}
                   </td>
                   <td className="border border-gray-300 p-2 text-right">
                     {formatCurrency(
-                      area.installation + area.installationSalesTaxCost
+                      area.installationWithMargin + 
+                      (quoteContext ? calculateSalesTax(
+                        area.installationWithMargin,
+                        quoteContext.installationSalesTaxApplicable || false,
+                        quoteContext.installationSalesTax || 0
+                      ) : 0)
                     )}
                   </td>
                   <td className="border border-gray-300 p-2 text-right">
                     {formatCurrency(
-                      (area.rentals || 0) + (area.rentalsSalesTaxCost || 0)
+                      (area.rentalsWithMargin || 0) + 
+                      (quoteContext ? calculateSalesTax(
+                        area.rentalsWithMargin || 0,
+                        quoteContext.rentalsSalesTaxApplicable || false,
+                        quoteContext.rentalsSalesTax || 0
+                      ) : 0)
                     )}
                   </td>
                   <td className="border border-gray-300 p-2 text-right">
-                    {formatCurrency(area.permits + area.permitsSalesTaxCost)}
+                    {formatCurrency(
+                      area.permitsWithMargin + 
+                      (quoteContext ? calculateSalesTax(
+                        area.permitsWithMargin,
+                        quoteContext.permitsSalesTaxApplicable || false,
+                        quoteContext.permitsSalesTax || 0
+                      ) : 0)
+                    )}
                   </td>
                   <td className="border border-gray-300 p-2 text-right">
-                    {formatCurrency(area.engCalcs + area.engCalcsSalesTaxCost)}
+                    {formatCurrency(
+                      area.engCalcsWithMargin + 
+                      (quoteContext ? calculateSalesTax(
+                        area.engCalcsWithMargin,
+                        quoteContext.engCalcsSalesTaxApplicable || false,
+                        quoteContext.engCalcsSalesTax || 0
+                      ) : 0)
+                    )}
                   </td>
                   <td className="border border-gray-300 p-2 text-right">
                     {formatCurrency(
                       (area.miscellaneous || 0) +
-                        (area.materialSalesTaxCost || 0)
+                      (quoteContext ? calculateSalesTax(
+                        area.totalMaterialCostWithMargin,
+                        quoteContext.materialSalesTaxApplicable || false,
+                        quoteContext.materialSalesTax || 0
+                      ) : 0)
                     )}
                   </td>
                   <td className="border border-gray-300 p-2 text-right font-bold">

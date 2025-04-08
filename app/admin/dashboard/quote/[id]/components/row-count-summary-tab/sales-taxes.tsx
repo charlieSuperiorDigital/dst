@@ -52,29 +52,56 @@ type Props = {
 
 export default function SalesTaxes({ salesTaxes, setSalesTaxes }: Props) {
   const { isLocked, quoteContext, setQuoteContext } = useQuote();
+  console.log("quote context full structure:", quoteContext);
+  console.log("rentals fields:", {
+    rentalsSalesTaxApplicable: quoteContext?.rentalsSalesTaxApplicable,
+    rentalsSalesTax: quoteContext?.rentalsSalesTax,
+  });
 
-  console.log("sales", quoteContext);
+  // Map UI field names to API field names
+  const uiToApiFieldMap = {
+    materialSalesTax: "materialSalesTaxApplicable",
+    materialSalesTaxRate: "materialSalesTax",
+    freightSalesTax: "freightSalesTaxApplicable",
+    freightSalesTaxRate: "freightSalesTax",
+    installationSalesTax: "installationSalesTaxApplicable",
+    installationSalesTaxRate: "installationSalesTax",
+    rentalsSalesTax: "rentalsSalesTaxApplicable",
+    rentalsSalesTaxRate: "rentalsSalesTax",
+    permitsSalesTax: "permitsSalesTaxApplicable",
+    permitsSalesTaxRate: "permitsSalesTax",
+    engCalsSalesTax: "engCalcsSalesTaxApplicable",
+    engCalsSalesTaxRate: "engCalcsSalesTax",
+  };
 
   const handleToggleChange = (field: TaxToggleKey, checked: boolean) => {
     const updatedSalesTaxes = { ...salesTaxes };
     updatedSalesTaxes[field] = checked;
     setSalesTaxes(updatedSalesTaxes);
+
+    // Immediately update the API for a more fluid experience
+    handleToggleBlur(field, checked);
   };
 
   const handleRateChange = (field: TaxRateKey, value: string) => {
     const updatedSalesTaxes = { ...salesTaxes };
     updatedSalesTaxes[field] = parseFloat(value) || 0;
     setSalesTaxes(updatedSalesTaxes);
+    
+    // Immediately update the API for a more fluid experience
+    handleRateBlur(field, value);
   };
 
   const handleToggleBlur = async (field: TaxToggleKey, value: boolean) => {
     try {
+      const apiField = uiToApiFieldMap[field];
+
       const response = await apiRequest({
         method: "put",
         url: `/api/Quotation`,
         data: {
           ...quoteContext,
-          [field]: value,
+          [apiField]: value,
         },
       });
 
@@ -82,6 +109,7 @@ export default function SalesTaxes({ salesTaxes, setSalesTaxes }: Props) {
       toast({
         title: "Success",
         description: "Sales tax toggle updated",
+        duration: 2000,
       });
     } catch (e) {
       console.log(e);
@@ -96,13 +124,14 @@ export default function SalesTaxes({ salesTaxes, setSalesTaxes }: Props) {
   const handleRateBlur = async (field: TaxRateKey, value: string) => {
     try {
       const numValue = parseFloat(value) || 0;
+      const apiField = uiToApiFieldMap[field];
 
       const response = await apiRequest({
         method: "put",
         url: `/api/Quotation`,
         data: {
           ...quoteContext,
-          [field]: numValue,
+          [apiField]: numValue,
         },
       });
 
@@ -110,6 +139,7 @@ export default function SalesTaxes({ salesTaxes, setSalesTaxes }: Props) {
       toast({
         title: "Success",
         description: "Sales tax rate updated",
+        duration: 2000,
       });
     } catch (e) {
       console.log(e);
@@ -180,9 +210,6 @@ export default function SalesTaxes({ salesTaxes, setSalesTaxes }: Props) {
                       onCheckedChange={(checked) =>
                         handleToggleChange(group.toggle, checked)
                       }
-                      onBlur={() =>
-                        handleToggleBlur(group.toggle, salesTaxes[group.toggle])
-                      }
                       disabled={isLocked}
                     />
                   </div>
@@ -194,7 +221,6 @@ export default function SalesTaxes({ salesTaxes, setSalesTaxes }: Props) {
                     onChange={(e) =>
                       handleRateChange(group.rate, e.target.value)
                     }
-                    onBlur={(e) => handleRateBlur(group.rate, e.target.value)}
                     className="w-24 ml-auto"
                     step="0.01"
                     min="0"
