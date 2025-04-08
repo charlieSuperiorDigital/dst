@@ -19,15 +19,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
   TooltipContent,
@@ -75,7 +73,7 @@ const RowCountTable = ({ quoteId }: Props) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState(null);
   const [sectionData, setSectionData] = useState<SectionArea[] | null>(null);
-  const [selectionAreaId, setSelectedAreaId] = useState<string | null>(null);
+  const [selectedAreaIds, setSelectedAreaIds] = useState<string[]>([]);
   const [totalCost, setTotalCost] = useState<number>(0);
   const [forceDelete, setForceDelete] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState<{
@@ -128,13 +126,13 @@ const RowCountTable = ({ quoteId }: Props) => {
       console.error(err);
     }
   };
+
   const fetchSectionData = async () => {
     try {
       const areaResponse = await apiRequest({
         url: `/api/Area/${quoteId}`,
         method: "get",
       });
-      console.log(areaResponse);
       setSectionData(areaResponse);
     } catch (err) {
       console.error(err);
@@ -151,11 +149,11 @@ const RowCountTable = ({ quoteId }: Props) => {
       part.rows.map((row) => ({ rowName: row.rowName, rowId: row.rowId }))
     )
     .filter((row) => {
-      if (!selectionAreaId || selectionAreaId === "clear") return true;
-      const section = sectionData?.find(
-        (section) => section.area.id === selectionAreaId
-      );
-      return section?.rows.includes(row.rowId);
+      if (selectedAreaIds.length === 0) return true;
+      return selectedAreaIds.some((areaId) => {
+        const section = sectionData?.find((s) => s.area.id === areaId);
+        return section?.rows.includes(row.rowId);
+      });
     });
 
   const allBays = Array.from(
@@ -178,6 +176,7 @@ const RowCountTable = ({ quoteId }: Props) => {
       return aNumber - bNumber;
     }
   });
+
   const filteredBayWithRows = bayWithRows.filter((partWithBays) => {
     const partNumber = partWithBays?.part?.partNumber ?? "";
     const matchesSearch = partNumber
@@ -188,14 +187,15 @@ const RowCountTable = ({ quoteId }: Props) => {
       partWithBays?.rows?.some((row) => row.quantity !== 0) ?? false;
 
     const matchesArea =
-      selectionAreaId && selectionAreaId !== "clear"
+      selectedAreaIds.length > 0
         ? partWithBays.rows.some((row) => {
-            const section = sectionData?.find(
-              (section) => section.area.id === selectionAreaId
-            );
-            return section?.rows.includes(row.rowId);
+            return selectedAreaIds.some((areaId) => {
+              const section = sectionData?.find((s) => s.area.id === areaId);
+              return section?.rows.includes(row.rowId);
+            });
           })
         : true;
+
     return hideZeroQuantity
       ? matchesSearch && hasNonZeroQuantity && matchesArea
       : matchesSearch && matchesArea;
@@ -203,18 +203,18 @@ const RowCountTable = ({ quoteId }: Props) => {
 
   const calculateTotalCostForAllParts = (
     parts: PartWithRows[],
-    areaId: string | null
+    areaIds: string[]
   ): number => {
     return parts.reduce((total, partWithBays) => {
       const filteredRows =
-        areaId && areaId !== "clear"
+        areaIds.length > 0
           ? partWithBays.rows.filter((row) => {
-              const section = sectionData?.find(
-                (section) => section.area.id === areaId
-              );
-              return section?.rows.includes(row.rowId);
+              return areaIds.some((areaId) => {
+                const section = sectionData?.find((s) => s.area.id === areaId);
+                return section?.rows.includes(row.rowId);
+              });
             })
-          : partWithBays.rows; // Si no hay filtro, usar todas las filas
+          : partWithBays.rows;
 
       return (
         total +
@@ -230,10 +230,10 @@ const RowCountTable = ({ quoteId }: Props) => {
   useEffect(() => {
     const newTotalCost = calculateTotalCostForAllParts(
       filteredBayWithRows,
-      selectionAreaId
+      selectedAreaIds
     );
     setTotalCost(newTotalCost);
-  }, [filteredBayWithRows, selectionAreaId]);
+  }, [filteredBayWithRows, selectedAreaIds]);
 
   if (loading) {
     return <div>Loading ...</div>;
@@ -244,17 +244,17 @@ const RowCountTable = ({ quoteId }: Props) => {
 
   const calculateTotalQuantity = (
     partWithBays: PartWithRows,
-    areaId: string | null
+    areaIds: string[]
   ): number => {
     const filteredRows =
-      areaId && areaId !== "clear"
+      areaIds.length > 0
         ? partWithBays.rows.filter((row) => {
-            const section = sectionData?.find(
-              (section) => section.area.id === areaId
-            );
-            return section?.rows.includes(row.rowId);
+            return areaIds.some((areaId) => {
+              const section = sectionData?.find((s) => s.area.id === areaId);
+              return section?.rows.includes(row.rowId);
+            });
           })
-        : partWithBays.rows; // Si no hay filtro, usar todas las filas
+        : partWithBays.rows;
 
     return filteredRows.reduce((total, row) => total + row.quantity, 0);
   };
@@ -285,8 +285,8 @@ const RowCountTable = ({ quoteId }: Props) => {
       const newRowNumber = highestRowNumber + index + 1;
       return {
         rowName: `Row-${newRowNumber}`,
-        rowId: `Row-${newRowNumber}`, // You can generate a unique ID if needed
-        quantity: 0, // Default quantity for new rows
+        rowId: `Row-${newRowNumber}`,
+        quantity: 0,
       };
     });
 
@@ -322,6 +322,7 @@ const RowCountTable = ({ quoteId }: Props) => {
       });
     }
   };
+
   const handleCloseModal = () => {
     setIsModalOpen(false);
   };
@@ -349,7 +350,7 @@ const RowCountTable = ({ quoteId }: Props) => {
         {
           area: {
             id: response,
-            quotationId: quote.id.toString(), // Ensure quotationId is a string
+            quotationId: quote.id.toString(),
             color: sectionData1.color,
             name: sectionData1.name,
           },
@@ -369,6 +370,7 @@ const RowCountTable = ({ quoteId }: Props) => {
       });
     }
   };
+
   const handleOnEdit = async (value) => {
     const findSection = sectionData?.find(
       (section) => section.area.id === value.id
@@ -380,14 +382,12 @@ const RowCountTable = ({ quoteId }: Props) => {
     const newRowIds = value.rows.map((row) => row.rowId);
 
     const rowsToAdd = newRowIds.filter((id) => !currentRowIds.includes(id));
-    // const rowsToRemove = currentRowIds.filter((id) => !newRowIds.includes(id));
 
     if (
       findSection.area.color !== value.color ||
       findSection.area.name !== value.name
     ) {
       try {
-        console.log("aca");
         await apiRequest({
           url: `/api/Area/`,
           method: "put",
@@ -498,13 +498,14 @@ const RowCountTable = ({ quoteId }: Props) => {
       description: "Section updated successfully.",
     });
   };
+
   const handleRemoveArea = async (areaId) => {
-    console.log("remove");
     try {
       await apiRequest({
         url: `/api/Area?AreaId=${areaId}`,
         method: "delete",
       });
+      setSelectedAreaIds((prev) => prev.filter((id) => id !== areaId));
       fetchData();
       fetchSectionData();
       toast({
@@ -520,6 +521,7 @@ const RowCountTable = ({ quoteId }: Props) => {
       });
     }
   };
+
   const handleHeaderClick = (row) => {
     setSelectedRow(row);
   };
@@ -553,208 +555,6 @@ const RowCountTable = ({ quoteId }: Props) => {
       });
     }
   };
-  const handleAddRowAtEnd = async (quantity: number) => {
-    // Mantén tu función original para agregar al final
-    if (quantity <= 0) return;
-
-    const existingRows = bayWithRows.flatMap((part) => part.rows);
-    const highestRowNumber = getHighestRowNumber(existingRows);
-
-    const newRows = Array.from({ length: quantity }, (_, index) => ({
-      rowName: `Row-${highestRowNumber + index + 1}`,
-      rowId: `Row-${highestRowNumber + index + 1}`,
-      quantity: 0,
-    }));
-
-    await createNewRows(newRows);
-  };
-
-  const handleInsertRowBetween = async (position: number) => {
-    try {
-      const existingRows = bayWithRows.flatMap((part) => part.rows);
-      if (position < 0 || position >= existingRows.length) {
-        throw new Error("Invalid position");
-      }
-
-      const currentRow = existingRows[position];
-      const nextRow = existingRows[position + 1];
-
-      const currentNumber = extractRowNumber(currentRow.rowName);
-      const nextNumber = nextRow
-        ? extractRowNumber(nextRow.rowName)
-        : currentNumber + 2;
-
-      let newRowNumber: number;
-
-      if (nextNumber - currentNumber > 1) {
-        newRowNumber = Math.floor((currentNumber + nextNumber) / 2);
-        // Si el número resultante es igual al actual, sumamos 1
-        if (newRowNumber === currentNumber) newRowNumber++;
-      } else {
-        newRowNumber = currentNumber + 1;
-        await renumberFollowingRows(position + 1, newRowNumber + 1);
-      }
-
-      const newRow = {
-        rowName: `Row-${newRowNumber}`,
-        rowId: `Row-${newRowNumber}`,
-        quantity: 0,
-      };
-
-      // Crear la nueva fila
-      await apiRequest({
-        url: `/api/Row/Add`,
-        method: "post",
-        data: {
-          quotationId: quoteId,
-          rowName: newRow.rowName,
-        },
-      });
-
-      // Actualizar estado local
-      setbayWithRows((prev) =>
-        prev.map((part) => ({
-          ...part,
-          rows: [
-            ...part.rows.slice(0, position + 1),
-            newRow,
-            ...part.rows.slice(position + 1),
-          ],
-        }))
-      );
-
-      toast({
-        title: "Success",
-        description: `Row ${newRow.rowName} inserted successfully`,
-      });
-
-      // Recargar para sincronizar
-      window.location.reload();
-    } catch (error) {
-      console.error("Error inserting row:", error);
-      toast({
-        title: "Error",
-        description:
-          error instanceof Error ? error.message : "Failed to insert row",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Funciones auxiliares
-  const getHighestRowNumber = (rows: Row[]): number => {
-    return rows.reduce((max, row) => {
-      const match = row.rowName.match(/Row-(\d+)/);
-      return match ? Math.max(max, parseInt(match[1], 10)) : max;
-    }, 0);
-  };
-
-  const createNewRows = async (newRows: Row[], insertAfter?: number) => {
-    try {
-      // Actualizar estado local
-      setbayWithRows((prev) =>
-        prev.map((part) => ({
-          ...part,
-          rows:
-            insertAfter !== undefined
-              ? [
-                  ...part.rows.slice(0, insertAfter + 1),
-                  ...newRows,
-                  ...part.rows.slice(insertAfter + 1),
-                ]
-              : [...part.rows, ...newRows],
-        }))
-      );
-
-      // Crear filas en la API
-      await Promise.all(
-        newRows.map((row) =>
-          apiRequest({
-            url: `/api/Row/Add`,
-            method: "post",
-            data: {
-              quotationId: quoteId,
-              rowName: row.rowName,
-            },
-          })
-        )
-      );
-
-      toast({
-        title: "Success",
-        description: `Row${newRows.length > 1 ? "s" : ""} added successfully`,
-      });
-
-      // Recargar para sincronizar cambios
-      window.location.reload();
-    } catch (error) {
-      console.error("Error creating rows:", error);
-      toast({
-        title: "Error",
-        description: "Failed to add rows",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const renumberFollowingRows = async (
-    startIndex: number,
-    newStartNumber: number
-  ) => {
-    const allRows = bayWithRows.flatMap((part) => part.rows);
-    const rowsToRenumber = allRows.slice(startIndex);
-
-    // Renumerar en el estado local primero
-    const updatedRows = rowsToRenumber.map((row, index) => ({
-      ...row,
-      rowName: `Row-${newStartNumber + index}`,
-      rowId: row.rowId, // Mantenemos el mismo ID, solo cambiamos el nombre
-    }));
-
-    // Actualizar estado local
-    setbayWithRows((prev) =>
-      prev.map((part) => ({
-        ...part,
-        rows: part.rows.map((row) => {
-          const index = allRows.findIndex((r) => r.rowId === row.rowId);
-          return index >= startIndex ? updatedRows[index - startIndex] : row;
-        }),
-      }))
-    );
-
-    // Actualizar en la API usando el endpoint correcto
-    try {
-      await Promise.all(
-        rowsToRenumber.map((row, index) => {
-          const newName = `Row-${newStartNumber + index}`;
-          return apiRequest({
-            url: `/api/Row/Update/${row.rowId}/${newName}`,
-            method: "put",
-          });
-        })
-      );
-      toast({
-        title: "Success",
-        description: "Rows renumbered successfully",
-      });
-
-      window.location.reload();
-    } catch (error) {
-      console.error("Error renumbering rows:", error);
-      // Revertir cambios locales si falla la API
-      setbayWithRows((prev) => prev);
-      throw error;
-    }
-  };
-  const extractRowNumber = (rowName: string): number => {
-    const match = rowName.match(/Row-(\d+)/);
-    if (!match) {
-      // Manejar casos donde el formato no es "Row-XX"
-      const alternativeMatch = rowName.match(/\d+/);
-      return alternativeMatch ? parseInt(alternativeMatch[0], 10) : 0;
-    }
-    return parseInt(match[1], 10);
-  };
 
   return (
     <div className="mt-6">
@@ -768,7 +568,7 @@ const RowCountTable = ({ quoteId }: Props) => {
         existingSections={sectionData || []}
       />
       <div className="flex justify-between mb-4">
-        <div className=" flex items-center space-x-4">
+        <div className="flex items-center space-x-4">
           <div>
             <Input
               type="text"
@@ -817,24 +617,71 @@ const RowCountTable = ({ quoteId }: Props) => {
           </div>
         </div>
         <div className="flex items-center space-x-2">
-          <div className="w-44">
-            <Select
-              onValueChange={(value) =>
-                setSelectedAreaId(value === "clear" ? null : value)
-              }
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select section to edit" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="clear">Clear Filter</SelectItem>
-                {sectionData?.map((section) => (
-                  <SelectItem key={section.area.id} value={section.area.id}>
-                    {section.area.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="w-64">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full justify-start">
+                  {selectedAreaIds.length > 0 ? (
+                    <div className="flex flex-wrap gap-1">
+                      {selectedAreaIds.map((id) => {
+                        const section = sectionData?.find(
+                          (s) => s.area.id === id
+                        );
+                        return section ? (
+                          <Badge
+                            key={id}
+                            className="inline-flex items-center px-2 py-1 rounded text-xs"
+                            style={{
+                              backgroundColor: `${section.area.color}20`,
+                              border: `1px solid ${section.area.color}`,
+                              color: "inherit",
+                            }}
+                          >
+                            {section.area.name}
+                          </Badge>
+                        ) : null;
+                      })}
+                    </div>
+                  ) : (
+                    "Filter by section..."
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64 p-2">
+                <div className="space-y-2">
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start"
+                    onClick={() => setSelectedAreaIds([])}
+                  >
+                    Clear all
+                  </Button>
+                  {sectionData?.map((section) => (
+                    <div
+                      key={section.area.id}
+                      className="flex items-center space-x-2 p-2 hover:bg-accent rounded cursor-pointer"
+                      onClick={() => {
+                        setSelectedAreaIds((prev) =>
+                          prev.includes(section.area.id)
+                            ? prev.filter((id) => id !== section.area.id)
+                            : [...prev, section.area.id]
+                        );
+                      }}
+                    >
+                      <Checkbox
+                        checked={selectedAreaIds.includes(section.area.id)}
+                        onCheckedChange={() => {}} // Handled by parent div click
+                      />
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: section.area.color }}
+                      />
+                      <Label>{section.area.name}</Label>
+                    </div>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
           {!isLocked && (
             <Button onClick={() => setIsModalOpen(true)}>
@@ -911,7 +758,7 @@ const RowCountTable = ({ quoteId }: Props) => {
               filteredBayWithRows.map((partWithBays, rowIndex) => {
                 const totalQuantity = calculateTotalQuantity(
                   partWithBays,
-                  selectionAreaId
+                  selectedAreaIds
                 );
                 return (
                   <tr key={`${partWithBays.part.id}-${rowIndex}`}>

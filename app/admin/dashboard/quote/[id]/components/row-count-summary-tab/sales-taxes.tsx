@@ -30,10 +30,20 @@ export interface SalesTaxes {
   engCalsSalesTaxRate: number;
 }
 
-type TaxToggleKey = 'materialSalesTax' | 'freightSalesTax' | 'installationSalesTax' | 
-                    'rentalsSalesTax' | 'permitsSalesTax' | 'engCalsSalesTax';
-type TaxRateKey = 'materialSalesTaxRate' | 'freightSalesTaxRate' | 'installationSalesTaxRate' | 
-                  'rentalsSalesTaxRate' | 'permitsSalesTaxRate' | 'engCalsSalesTaxRate';
+type TaxToggleKey =
+  | "materialSalesTax"
+  | "freightSalesTax"
+  | "installationSalesTax"
+  | "rentalsSalesTax"
+  | "permitsSalesTax"
+  | "engCalsSalesTax";
+type TaxRateKey =
+  | "materialSalesTaxRate"
+  | "freightSalesTaxRate"
+  | "installationSalesTaxRate"
+  | "rentalsSalesTaxRate"
+  | "permitsSalesTaxRate"
+  | "engCalsSalesTaxRate";
 
 type Props = {
   salesTaxes: SalesTaxes;
@@ -42,6 +52,8 @@ type Props = {
 
 export default function SalesTaxes({ salesTaxes, setSalesTaxes }: Props) {
   const { isLocked, quoteContext, setQuoteContext } = useQuote();
+
+  console.log("sales", quoteContext);
 
   const handleToggleChange = (field: TaxToggleKey, checked: boolean) => {
     const updatedSalesTaxes = { ...salesTaxes };
@@ -65,7 +77,7 @@ export default function SalesTaxes({ salesTaxes, setSalesTaxes }: Props) {
           [field]: value,
         },
       });
-      
+
       setQuoteContext(response);
       toast({
         title: "Success",
@@ -84,7 +96,7 @@ export default function SalesTaxes({ salesTaxes, setSalesTaxes }: Props) {
   const handleRateBlur = async (field: TaxRateKey, value: string) => {
     try {
       const numValue = parseFloat(value) || 0;
-      
+
       const response = await apiRequest({
         method: "put",
         url: `/api/Quotation`,
@@ -93,7 +105,7 @@ export default function SalesTaxes({ salesTaxes, setSalesTaxes }: Props) {
           [field]: numValue,
         },
       });
-      
+
       setQuoteContext(response);
       toast({
         title: "Success",
@@ -111,13 +123,37 @@ export default function SalesTaxes({ salesTaxes, setSalesTaxes }: Props) {
 
   // Group related fields (toggle and rate) for each item
   const getItemGroups = () => {
-    const groups: { name: string, toggle: TaxToggleKey, rate: TaxRateKey }[] = [
-      { name: "Material", toggle: "materialSalesTax", rate: "materialSalesTaxRate" },
-      { name: "Freight", toggle: "freightSalesTax", rate: "freightSalesTaxRate" },
-      { name: "Installation", toggle: "installationSalesTax", rate: "installationSalesTaxRate" },
-      { name: "Rentals", toggle: "rentalsSalesTax", rate: "rentalsSalesTaxRate" },
-      { name: "Permits", toggle: "permitsSalesTax", rate: "permitsSalesTaxRate" },
-      { name: "Eng Calcs", toggle: "engCalsSalesTax", rate: "engCalsSalesTaxRate" },
+    const groups: { name: string; toggle: TaxToggleKey; rate: TaxRateKey }[] = [
+      {
+        name: "Material",
+        toggle: "materialSalesTax",
+        rate: "materialSalesTaxRate",
+      },
+      {
+        name: "Freight",
+        toggle: "freightSalesTax",
+        rate: "freightSalesTaxRate",
+      },
+      {
+        name: "Installation",
+        toggle: "installationSalesTax",
+        rate: "installationSalesTaxRate",
+      },
+      {
+        name: "Rentals",
+        toggle: "rentalsSalesTax",
+        rate: "rentalsSalesTaxRate",
+      },
+      {
+        name: "Permits",
+        toggle: "permitsSalesTax",
+        rate: "permitsSalesTaxRate",
+      },
+      {
+        name: "Eng Calcs",
+        toggle: "engCalsSalesTax",
+        rate: "engCalsSalesTaxRate",
+      },
     ];
     return groups;
   };
@@ -136,9 +172,7 @@ export default function SalesTaxes({ salesTaxes, setSalesTaxes }: Props) {
           <TableBody>
             {getItemGroups().map((group) => (
               <TableRow key={group.name}>
-                <TableCell className="font-medium">
-                  {group.name}
-                </TableCell>
+                <TableCell className="font-medium">{group.name}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end">
                     <Switch
@@ -158,14 +192,9 @@ export default function SalesTaxes({ salesTaxes, setSalesTaxes }: Props) {
                     type="number"
                     value={salesTaxes[group.rate]}
                     onChange={(e) =>
-                      handleRateChange(
-                        group.rate,
-                        e.target.value
-                      )
+                      handleRateChange(group.rate, e.target.value)
                     }
-                    onBlur={(e) =>
-                      handleRateBlur(group.rate, e.target.value)
-                    }
+                    onBlur={(e) => handleRateBlur(group.rate, e.target.value)}
                     className="w-24 ml-auto"
                     step="0.01"
                     min="0"

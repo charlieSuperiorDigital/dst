@@ -43,7 +43,7 @@ export default function RownCountSummary({ quoteId }: Props) {
     permitsMargin: quote.permitsMargin,
     engCalsMargin: quote.engCalsMargin,
   });
-  
+
   // Initialize sales taxes with default values
   const [salesTaxes, setSalesTaxes] = useState<SalesTaxesType>({
     materialSalesTax: false,
@@ -59,7 +59,7 @@ export default function RownCountSummary({ quoteId }: Props) {
     engCalsSalesTax: false,
     engCalsSalesTaxRate: 0,
   });
-  
+
   const [costItems, setCostItems] = useState<CostItem>({
     freight: quote.freight,
     installation: quote.installation,
@@ -96,7 +96,7 @@ export default function RownCountSummary({ quoteId }: Props) {
           />
           <Label htmlFor="show-margin-taxes">Show Margin Taxes</Label>
         </div>
-        
+
         <div className="flex items-center space-x-2">
           <Switch
             id="show-sales-taxes"
@@ -134,10 +134,7 @@ export default function RownCountSummary({ quoteId }: Props) {
         )}
         {showSalesTaxes && (
           <div className="w-full">
-            <SalesTaxes
-              salesTaxes={salesTaxes}
-              setSalesTaxes={setSalesTaxes}
-            />
+            <SalesTaxes salesTaxes={salesTaxes} setSalesTaxes={setSalesTaxes} />
           </div>
         )}
       </div>

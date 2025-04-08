@@ -28,6 +28,17 @@ export type Quotes = {
   engCalsMargin?: number;
   salesTax?: number;
   materialMargin?: number;
+  engCalcsSalesTaxApplicable?: boolean;
+  engCalcsSalesTax?: number;
+  freightSalesTaxApplicable?: boolean;
+  freightSalesTax?: number;
+  installationSalesTaxApplicable?: boolean;
+  installationSalesTax?: number;
+  materialSalesTaxApplicable?: boolean;
+  materialSalesTax?: number;
+  permitsSalesTaxApplicable?: boolean;
+  permitsSalesTax?: number;
+  rentalsSalesTaxApplicable?: boolean;
 };
 
 export enum QuotesStatus {
