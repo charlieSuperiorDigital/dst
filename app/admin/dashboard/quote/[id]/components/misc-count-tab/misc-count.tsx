@@ -380,8 +380,16 @@ const MiscTable = ({ quoteId }: Props) => {
     const table = tableRef.current?.querySelector("table");
     if (!table) return {};
 
-    const startCell = table.rows[range.startRow + 1].cells[range.startCol + 1];
-    const endCell = table.rows[range.endRow + 1].cells[range.endCol + 1];
+    // Check if rows exist
+    if (!table.rows[range.startRow + 1] || !table.rows[range.endRow + 1])
+      return {};
+
+    const startCell = table.rows[range.startRow + 1]?.cells[range.startCol + 1];
+    const endCell = table.rows[range.endRow + 1]?.cells[range.endCol + 1];
+
+    // Check if cells exist
+    if (!startCell || !endCell) return {};
+
     const tableRect = table.getBoundingClientRect();
     const startRect = startCell.getBoundingClientRect();
     const endRect = endCell.getBoundingClientRect();
@@ -581,7 +589,8 @@ const MiscTable = ({ quoteId }: Props) => {
 
         if (sourceBay && targetBay) {
           const newPartsWithBays = [...bayWithRows];
-          newPartsWithBays[targetRow].rows[targetCol].quantity = sourceBay.quantity;
+          newPartsWithBays[targetRow].rows[targetCol].quantity =
+            sourceBay.quantity;
           setbayWithRows(newPartsWithBays);
 
           updateSingleQuantity({
@@ -991,15 +1000,15 @@ const MiscTable = ({ quoteId }: Props) => {
         url: `/api/row/del/${rowId}`,
         method: "delete",
       });
-      
+
       // Update all parts to remove this row
       setbayWithRows((prev) =>
         prev.map((part) => ({
           ...part,
-          rows: part.rows.filter((r) => r.rowId !== rowId)
+          rows: part.rows.filter((r) => r.rowId !== rowId),
         }))
       );
-      
+
       toast({
         title: "Success",
         description: "Row Deleted",
@@ -1049,7 +1058,10 @@ const MiscTable = ({ quoteId }: Props) => {
                 </div>
               </TooltipTrigger>
               <TooltipContent>
-                <p>When this field is checked the delete confirmation is not going show, the deletion is going to happen immediately</p>
+                <p>
+                  When this field is checked the delete confirmation is not
+                  going show, the deletion is going to happen immediately
+                </p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -1103,9 +1115,11 @@ const MiscTable = ({ quoteId }: Props) => {
                       className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
                       onClick={(e) => {
                         e.stopPropagation();
-                        const row = bayWithRows[0]?.rows.find(r => r.rowName === bayName);
+                        const row = bayWithRows[0]?.rows.find(
+                          (r) => r.rowName === bayName
+                        );
                         if (!row) return;
-                        
+
                         if (forceDelete) {
                           handleDeleteRow(row.rowId);
                         } else {
@@ -1274,9 +1288,9 @@ const MiscTable = ({ quoteId }: Props) => {
         </table>
       </div>
 
-      <Dialog 
-        open={deleteConfirmation.isOpen} 
-        onOpenChange={(open) => 
+      <Dialog
+        open={deleteConfirmation.isOpen}
+        onOpenChange={(open) =>
           setDeleteConfirmation({ isOpen: open, rowId: "", rowName: "" })
         }
       >
@@ -1284,13 +1298,14 @@ const MiscTable = ({ quoteId }: Props) => {
           <DialogHeader>
             <DialogTitle>Delete Row</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete row {deleteConfirmation.rowName}? This action cannot be undone.
+              Are you sure you want to delete row {deleteConfirmation.rowName}?
+              This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => 
+              onClick={() =>
                 setDeleteConfirmation({ isOpen: false, rowId: "", rowName: "" })
               }
             >

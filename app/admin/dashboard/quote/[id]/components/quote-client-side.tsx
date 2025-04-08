@@ -13,7 +13,7 @@ import FlueTable from "./flue-dinition-tab/flue-definition-table";
 import FramilineCountTable from "./frameline-count-tab/frameline-count-table";
 import FlueCountTable from "./flue-count-tab/flue-count";
 import MiscTable from "./misc-count-tab/misc-count";
-import Summary from "./summary-tab/summary";
+import Summary from "./summary-area-tab/summary";
 
 type Props = {
   quoteId: string;

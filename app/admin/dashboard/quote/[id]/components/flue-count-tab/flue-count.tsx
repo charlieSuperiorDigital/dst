@@ -129,7 +129,7 @@ const FlueCountTable = ({ quoteId }: Props) => {
         apiRequest({
           url: `/api/count/frameline/${quoteId}`,
           method: "get",
-        })
+        }),
       ]);
 
       setbayWithRows(flueResponse);
@@ -410,8 +410,16 @@ const FlueCountTable = ({ quoteId }: Props) => {
     const table = tableRef.current?.querySelector("table");
     if (!table) return {};
 
-    const startCell = table.rows[range.startRow + 1].cells[range.startCol + 1];
-    const endCell = table.rows[range.endRow + 1].cells[range.endCol + 1];
+    // Check if rows exist
+    if (!table.rows[range.startRow + 1] || !table.rows[range.endRow + 1])
+      return {};
+
+    const startCell = table.rows[range.startRow + 1]?.cells[range.startCol + 1];
+    const endCell = table.rows[range.endRow + 1]?.cells[range.endCol + 1];
+
+    // Check if cells exist
+    if (!startCell || !endCell) return {};
+
     const tableRect = table.getBoundingClientRect();
     const startRect = startCell.getBoundingClientRect();
     const endRect = endCell.getBoundingClientRect();
@@ -611,7 +619,8 @@ const FlueCountTable = ({ quoteId }: Props) => {
 
         if (sourceBay && targetBay) {
           const newPartsWithBays = [...bayWithRows];
-          newPartsWithBays[targetRow].rows[targetCol].quantity = sourceBay.quantity;
+          newPartsWithBays[targetRow].rows[targetCol].quantity =
+            sourceBay.quantity;
           setbayWithRows(newPartsWithBays);
 
           updateSingleQuantity({
@@ -1088,15 +1097,15 @@ const FlueCountTable = ({ quoteId }: Props) => {
         url: `/api/row/del/${rowId}`,
         method: "delete",
       });
-      
+
       // Update all flues to remove this row
       setbayWithRows((prev) =>
         prev.map((flue) => ({
           ...flue,
-          rows: flue.rows.filter((r) => r.rowId !== rowId)
+          rows: flue.rows.filter((r) => r.rowId !== rowId),
         }))
       );
-      
+
       toast({
         title: "Success",
         description: "Row Deleted",
@@ -1146,7 +1155,10 @@ const FlueCountTable = ({ quoteId }: Props) => {
                 </div>
               </TooltipTrigger>
               <TooltipContent>
-                <p>When this field is checked the delete confirmation is not going show, the deletion is going to happen immediately</p>
+                <p>
+                  When this field is checked the delete confirmation is not
+                  going show, the deletion is going to happen immediately
+                </p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -1178,12 +1190,18 @@ const FlueCountTable = ({ quoteId }: Props) => {
         <table className="border-collapse border border-gray-300 bg-white min-w-full user-select-none">
           <thead>
             <tr>
-              <th colSpan={allBays.length + 2} className="border border-gray-300 p-2 font-bold text-left bg-white z-20">
+              <th
+                colSpan={allBays.length + 2}
+                className="border border-gray-300 p-2 font-bold text-left bg-white z-20"
+              >
                 Total Flues: {bayWithRows.length}
               </th>
             </tr>
             <tr>
-              <th colSpan={allBays.length + 2} className="border border-gray-300 p-2 font-bold text-left bg-white z-20">
+              <th
+                colSpan={allBays.length + 2}
+                className="border border-gray-300 p-2 font-bold text-left bg-white z-20"
+              >
                 Total Framelines: {framelines.length}
               </th>
             </tr>
@@ -1211,9 +1229,11 @@ const FlueCountTable = ({ quoteId }: Props) => {
                         className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
                         onClick={(e) => {
                           e.stopPropagation();
-                          const row = bayWithRows[0]?.rows.find(r => r.rowName === bayName);
+                          const row = bayWithRows[0]?.rows.find(
+                            (r) => r.rowName === bayName
+                          );
                           if (!row) return;
-                          
+
                           if (forceDelete) {
                             handleDeleteRow(row.rowId);
                           } else {
@@ -1382,9 +1402,9 @@ const FlueCountTable = ({ quoteId }: Props) => {
         </table>
       </div>
 
-      <Dialog 
-        open={deleteConfirmation.isOpen} 
-        onOpenChange={(open) => 
+      <Dialog
+        open={deleteConfirmation.isOpen}
+        onOpenChange={(open) =>
           setDeleteConfirmation({ isOpen: open, rowId: "", rowName: "" })
         }
       >
@@ -1392,13 +1412,14 @@ const FlueCountTable = ({ quoteId }: Props) => {
           <DialogHeader>
             <DialogTitle>Delete Row</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete row {deleteConfirmation.rowName}? This action cannot be undone.
+              Are you sure you want to delete row {deleteConfirmation.rowName}?
+              This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => 
+              onClick={() =>
                 setDeleteConfirmation({ isOpen: false, rowId: "", rowName: "" })
               }
             >
