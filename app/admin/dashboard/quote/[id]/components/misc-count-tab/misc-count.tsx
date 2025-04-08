@@ -234,11 +234,11 @@ const MiscTable = ({ quoteId }: Props) => {
   const handleKeyNavigation = (event: React.KeyboardEvent) => {
     if (event.ctrlKey) {
       switch (event.key.toLowerCase()) {
-        case "c": // Copiar
+        case "c": // Copy
           event.preventDefault();
           copySelectedCells();
           break;
-        case "v": // Pegar
+        case "v": // Paste
           event.preventDefault();
           if (selectedCell.row >= 0 && selectedCell.col >= 0) {
             pasteCopiedCells(selectedCell.row, selectedCell.col);
@@ -247,16 +247,40 @@ const MiscTable = ({ quoteId }: Props) => {
         default:
           break;
       }
-      return; // Salir de la función después de manejar Ctrl+C o Ctrl+V
+      return;
     }
 
-    // Navegación con flechas y Enter
+    // Handle arrow keys in edit mode
+    if (editingCell.row !== -1 && editingCell.col !== -1) {
+      switch (event.key) {
+        case "ArrowLeft":
+        case "ArrowRight":
+        case "ArrowUp":
+        case "ArrowDown":
+          handleArrowInEdit(
+            event.key.toLowerCase().replace("arrow", "") as
+              | "up"
+              | "down"
+              | "left"
+              | "right",
+            event
+          );
+          return;
+        case "Enter":
+          event.preventDefault();
+          stopEditing();
+          moveToNextCell("down");
+          return;
+      }
+    }
+
+    // Navigation with arrow keys and Enter
     switch (event.key) {
       case "ArrowUp":
       case "ArrowDown":
       case "ArrowLeft":
       case "ArrowRight":
-        event.preventDefault(); // Evitar el comportamiento predeterminado del navegador
+        event.preventDefault();
         moveToNextCell(
           event.key.toLowerCase().replace("arrow", "") as
             | "up"
@@ -267,12 +291,10 @@ const MiscTable = ({ quoteId }: Props) => {
         );
         return;
       case "Enter":
-        event.preventDefault(); // Evitar el comportamiento predeterminado del navegador
+        event.preventDefault();
         if (editingCell.row === -1 && editingCell.col === -1) {
-          // Si no está en modo de edición, activar la edición
           startEditing(selectedCell.row, selectedCell.col);
         } else {
-          // Si está en modo de edición, fijar el valor y mover el foco a la celda de abajo
           stopEditing();
           moveToNextCell("down");
         }
