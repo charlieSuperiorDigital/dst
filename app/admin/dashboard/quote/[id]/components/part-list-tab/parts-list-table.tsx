@@ -25,7 +25,7 @@ interface Props {
 
 export default function PartsListTable({ quoteId, refresh }: Props) {
   const { isLocked } = useQuote();
-  const [parts, setParts] = useState<PartList[]>([]); 
+  const [parts, setParts] = useState<PartList[]>([]);
   const [filteredParts, setFilteredParts] = useState<PartList[]>([]);
   const [selectedPart, setSelectedPart] = useState<PartList | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -113,7 +113,8 @@ export default function PartsListTable({ quoteId, refresh }: Props) {
 
   const calculateTotalSellValue = () => {
     return filteredParts.reduce((total, part) => {
-      const partTotal = (part.unitCost / (1 - materialMargin)) * (part.qty ?? 0);
+      const partTotal =
+        (part.unitCost / (1 - materialMargin)) * (part.qty ?? 0);
       return total + partTotal;
     }, 0);
   };
@@ -178,7 +179,12 @@ export default function PartsListTable({ quoteId, refresh }: Props) {
           <TableRow className="bg-gray-100">
             <TableHead colSpan={10} className="border" />
             <TableHead colSpan={1} className="text-right border font-bold">
-              {filteredParts.reduce((total, part) => total + ((part.qty || 0 * part.laborEA)), 0).toFixed(2)}
+              {filteredParts
+                .reduce(
+                  (total, part) => total + (part.qty || 0 * part.laborEA),
+                  0
+                )
+                .toFixed(2)}
             </TableHead>
             <TableHead className="text-right border font-bold">
               {formatCurrency(calculateTotalSellValue())}
@@ -220,7 +226,10 @@ export default function PartsListTable({ quoteId, refresh }: Props) {
                   <TableCell className="border">{part.qty || 0}</TableCell>
                   <TableCell className="border">{part.description}</TableCell>
                   <TableCell className="border">
-                    {paintTypes?.find((p) => p.id === part.colorId)?.description}
+                    {
+                      paintTypes?.find((p) => p.id === part.colorId)
+                        ?.description
+                    }
                   </TableCell>
                   <TableCell className="text-right border">
                     {part.unitWeight.toFixed(3)}
@@ -241,7 +250,7 @@ export default function PartsListTable({ quoteId, refresh }: Props) {
                     {formatCurrency(part.unitCost / (1 - materialMargin))}
                   </TableCell>
                   <TableCell className="text-right border">
-                    {(part.qty || 0 * part.laborEA).toFixed(2)}
+                    {((part.qty || 0) * part.laborEA).toFixed(2)}
                   </TableCell>
                   <TableCell className="text-right border">
                     {formatCurrency(
