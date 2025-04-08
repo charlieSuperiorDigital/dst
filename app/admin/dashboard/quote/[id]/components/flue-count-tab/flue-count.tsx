@@ -277,16 +277,40 @@ const FlueCountTable = ({ quoteId }: Props) => {
         default:
           break;
       }
-      return; // Salir de la función después de manejar Ctrl+C o Ctrl+V
+      return;
     }
 
-    // Navegación con flechas y Enter
+    // Handle arrow keys in edit mode
+    if (editingCell.row !== -1 && editingCell.col !== -1) {
+      switch (event.key) {
+        case "ArrowLeft":
+        case "ArrowRight":
+        case "ArrowUp":
+        case "ArrowDown":
+          handleArrowInEdit(
+            event.key.toLowerCase().replace("arrow", "") as
+              | "up"
+              | "down"
+              | "left"
+              | "right",
+            event
+          );
+          return;
+        case "Enter":
+          event.preventDefault();
+          stopEditing();
+          moveToNextCell("down");
+          return;
+      }
+    }
+
+    // Navigation with arrow keys and Enter
     switch (event.key) {
       case "ArrowUp":
       case "ArrowDown":
       case "ArrowLeft":
       case "ArrowRight":
-        event.preventDefault(); // Evitar el comportamiento predeterminado del navegador
+        event.preventDefault();
         moveToNextCell(
           event.key.toLowerCase().replace("arrow", "") as
             | "up"
@@ -297,12 +321,10 @@ const FlueCountTable = ({ quoteId }: Props) => {
         );
         return;
       case "Enter":
-        event.preventDefault(); // Evitar el comportamiento predeterminado del navegador
+        event.preventDefault();
         if (editingCell.row === -1 && editingCell.col === -1) {
-          // Si no está en modo de edición, activar la edición
           startEditing(selectedCell.row, selectedCell.col);
         } else {
-          // Si está en modo de edición, fijar el valor y mover el foco a la celda de abajo
           stopEditing();
           moveToNextCell("down");
         }
@@ -847,23 +869,28 @@ const FlueCountTable = ({ quoteId }: Props) => {
     const currentCellContent =
       bayWithRows[editingCell.row].rows[editingCell.col].quantity.toString();
 
-    // Para movimiento izquierda/derecha, verificar la posición del cursor
-    if (direction === "left") {
-      // Solo mover a la celda anterior si el cursor está al inicio
-      if (input.selectionStart === 0 && input.selectionEnd === 0) {
-        moveToNextCell(direction, event);
-      }
-    } else if (direction === "right") {
-      // Solo mover a la celda siguiente si el cursor está al final
+    // For left/right movement, check cursor position
+    if (direction === "left" || direction === "right") {
+      const selectionStart = input.selectionStart || 0;
+      const selectionEnd = input.selectionEnd || 0;
+      const atStart = selectionStart === 0 && selectionEnd === 0;
+      const atEnd =
+        selectionStart === currentCellContent.length &&
+        selectionEnd === currentCellContent.length;
+
       if (
-        input.selectionStart === currentCellContent.length &&
-        input.selectionEnd === currentCellContent.length
+        (direction === "left" && atStart) ||
+        (direction === "right" && atEnd)
       ) {
-        moveToNextCell(direction, event);
+        event.preventDefault();
+        stopEditing();
+        moveToNextCell(direction);
       }
     } else {
-      // Para movimiento arriba/abajo, siempre mover
-      moveToNextCell(direction, event);
+      // For up/down movement, always move
+      event.preventDefault();
+      stopEditing();
+      moveToNextCell(direction);
     }
   };
 
