@@ -203,7 +203,7 @@ export default function Summary({ quoteId }: Props) {
         <thead>
           <tr>
             <th className="border border-gray-300 p-2 font-bold text-left w-[50px] bg-white z-20">
-              Activo
+              Active
             </th>
             <th className="border border-gray-300 p-2 font-bold text-left w-[150px] bg-white z-20">
               Area
