@@ -30,10 +30,20 @@ export interface SalesTaxes {
   engCalsSalesTaxRate: number;
 }
 
-type TaxToggleKey = 'materialSalesTax' | 'freightSalesTax' | 'installationSalesTax' | 
-                    'rentalsSalesTax' | 'permitsSalesTax' | 'engCalsSalesTax';
-type TaxRateKey = 'materialSalesTaxRate' | 'freightSalesTaxRate' | 'installationSalesTaxRate' | 
-                  'rentalsSalesTaxRate' | 'permitsSalesTaxRate' | 'engCalsSalesTaxRate';
+type TaxToggleKey =
+  | "materialSalesTax"
+  | "freightSalesTax"
+  | "installationSalesTax"
+  | "rentalsSalesTax"
+  | "permitsSalesTax"
+  | "engCalsSalesTax";
+type TaxRateKey =
+  | "materialSalesTaxRate"
+  | "freightSalesTaxRate"
+  | "installationSalesTaxRate"
+  | "rentalsSalesTaxRate"
+  | "permitsSalesTaxRate"
+  | "engCalsSalesTaxRate";
 
 type Props = {
   salesTaxes: SalesTaxes;
@@ -42,34 +52,64 @@ type Props = {
 
 export default function SalesTaxes({ salesTaxes, setSalesTaxes }: Props) {
   const { isLocked, quoteContext, setQuoteContext } = useQuote();
+  console.log("quote context full structure:", quoteContext);
+  console.log("rentals fields:", {
+    rentalsSalesTaxApplicable: quoteContext?.rentalsSalesTaxApplicable,
+    rentalsSalesTax: quoteContext?.rentalsSalesTax,
+  });
+
+  // Map UI field names to API field names
+  const uiToApiFieldMap = {
+    materialSalesTax: "materialSalesTaxApplicable",
+    materialSalesTaxRate: "materialSalesTax",
+    freightSalesTax: "freightSalesTaxApplicable",
+    freightSalesTaxRate: "freightSalesTax",
+    installationSalesTax: "installationSalesTaxApplicable",
+    installationSalesTaxRate: "installationSalesTax",
+    rentalsSalesTax: "rentalsSalesTaxApplicable",
+    rentalsSalesTaxRate: "rentalsSalesTax",
+    permitsSalesTax: "permitsSalesTaxApplicable",
+    permitsSalesTaxRate: "permitsSalesTax",
+    engCalsSalesTax: "engCalcsSalesTaxApplicable",
+    engCalsSalesTaxRate: "engCalcsSalesTax",
+  };
 
   const handleToggleChange = (field: TaxToggleKey, checked: boolean) => {
     const updatedSalesTaxes = { ...salesTaxes };
     updatedSalesTaxes[field] = checked;
     setSalesTaxes(updatedSalesTaxes);
+
+    // Immediately update the API for a more fluid experience
+    handleToggleBlur(field, checked);
   };
 
   const handleRateChange = (field: TaxRateKey, value: string) => {
     const updatedSalesTaxes = { ...salesTaxes };
     updatedSalesTaxes[field] = parseFloat(value) || 0;
     setSalesTaxes(updatedSalesTaxes);
+    
+    // Immediately update the API for a more fluid experience
+    handleRateBlur(field, value);
   };
 
   const handleToggleBlur = async (field: TaxToggleKey, value: boolean) => {
     try {
+      const apiField = uiToApiFieldMap[field];
+
       const response = await apiRequest({
         method: "put",
         url: `/api/Quotation`,
         data: {
           ...quoteContext,
-          [field]: value,
+          [apiField]: value,
         },
       });
-      
+
       setQuoteContext(response);
       toast({
         title: "Success",
         description: "Sales tax toggle updated",
+        duration: 2000,
       });
     } catch (e) {
       console.log(e);
@@ -84,20 +124,22 @@ export default function SalesTaxes({ salesTaxes, setSalesTaxes }: Props) {
   const handleRateBlur = async (field: TaxRateKey, value: string) => {
     try {
       const numValue = parseFloat(value) || 0;
-      
+      const apiField = uiToApiFieldMap[field];
+
       const response = await apiRequest({
         method: "put",
         url: `/api/Quotation`,
         data: {
           ...quoteContext,
-          [field]: numValue,
+          [apiField]: numValue,
         },
       });
-      
+
       setQuoteContext(response);
       toast({
         title: "Success",
         description: "Sales tax rate updated",
+        duration: 2000,
       });
     } catch (e) {
       console.log(e);
@@ -111,13 +153,37 @@ export default function SalesTaxes({ salesTaxes, setSalesTaxes }: Props) {
 
   // Group related fields (toggle and rate) for each item
   const getItemGroups = () => {
-    const groups: { name: string, toggle: TaxToggleKey, rate: TaxRateKey }[] = [
-      { name: "Material", toggle: "materialSalesTax", rate: "materialSalesTaxRate" },
-      { name: "Freight", toggle: "freightSalesTax", rate: "freightSalesTaxRate" },
-      { name: "Installation", toggle: "installationSalesTax", rate: "installationSalesTaxRate" },
-      { name: "Rentals", toggle: "rentalsSalesTax", rate: "rentalsSalesTaxRate" },
-      { name: "Permits", toggle: "permitsSalesTax", rate: "permitsSalesTaxRate" },
-      { name: "Eng Calcs", toggle: "engCalsSalesTax", rate: "engCalsSalesTaxRate" },
+    const groups: { name: string; toggle: TaxToggleKey; rate: TaxRateKey }[] = [
+      {
+        name: "Material",
+        toggle: "materialSalesTax",
+        rate: "materialSalesTaxRate",
+      },
+      {
+        name: "Freight",
+        toggle: "freightSalesTax",
+        rate: "freightSalesTaxRate",
+      },
+      {
+        name: "Installation",
+        toggle: "installationSalesTax",
+        rate: "installationSalesTaxRate",
+      },
+      {
+        name: "Rentals",
+        toggle: "rentalsSalesTax",
+        rate: "rentalsSalesTaxRate",
+      },
+      {
+        name: "Permits",
+        toggle: "permitsSalesTax",
+        rate: "permitsSalesTaxRate",
+      },
+      {
+        name: "Eng Calcs",
+        toggle: "engCalsSalesTax",
+        rate: "engCalsSalesTaxRate",
+      },
     ];
     return groups;
   };
@@ -136,18 +202,13 @@ export default function SalesTaxes({ salesTaxes, setSalesTaxes }: Props) {
           <TableBody>
             {getItemGroups().map((group) => (
               <TableRow key={group.name}>
-                <TableCell className="font-medium">
-                  {group.name}
-                </TableCell>
+                <TableCell className="font-medium">{group.name}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end">
                     <Switch
                       checked={salesTaxes[group.toggle]}
                       onCheckedChange={(checked) =>
                         handleToggleChange(group.toggle, checked)
-                      }
-                      onBlur={() =>
-                        handleToggleBlur(group.toggle, salesTaxes[group.toggle])
                       }
                       disabled={isLocked}
                     />
@@ -158,13 +219,7 @@ export default function SalesTaxes({ salesTaxes, setSalesTaxes }: Props) {
                     type="number"
                     value={salesTaxes[group.rate]}
                     onChange={(e) =>
-                      handleRateChange(
-                        group.rate,
-                        e.target.value
-                      )
-                    }
-                    onBlur={(e) =>
-                      handleRateBlur(group.rate, e.target.value)
+                      handleRateChange(group.rate, e.target.value)
                     }
                     className="w-24 ml-auto"
                     step="0.01"

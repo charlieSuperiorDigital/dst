@@ -33,7 +33,7 @@ interface Props {
 }
 
 export default function RownCountSummary({ quoteId }: Props) {
-  const { quote } = useQuote();
+  const { quote, quoteContext } = useQuote();
   const [materialCost, setMaterialCost] = useState<number>(0);
   const [marginTaxes, setMarginTaxes] = useState<MarginTax>({
     materialMargin: quote.materialMargin,
@@ -43,23 +43,43 @@ export default function RownCountSummary({ quoteId }: Props) {
     permitsMargin: quote.permitsMargin,
     engCalsMargin: quote.engCalsMargin,
   });
-  
-  // Initialize sales taxes with default values
+
+  // Initialize sales taxes with values from quoteContext
   const [salesTaxes, setSalesTaxes] = useState<SalesTaxesType>({
-    materialSalesTax: false,
-    materialSalesTaxRate: 0,
-    freightSalesTax: false,
-    freightSalesTaxRate: 0,
-    installationSalesTax: false,
-    installationSalesTaxRate: 0,
-    rentalsSalesTax: false,
-    rentalsSalesTaxRate: 0,
-    permitsSalesTax: false,
-    permitsSalesTaxRate: 0,
-    engCalsSalesTax: false,
-    engCalsSalesTaxRate: 0,
+    materialSalesTax: quoteContext?.materialSalesTaxApplicable || false,
+    materialSalesTaxRate: quoteContext?.materialSalesTax || 0,
+    freightSalesTax: quoteContext?.freightSalesTaxApplicable || false,
+    freightSalesTaxRate: quoteContext?.freightSalesTax || 0,
+    installationSalesTax: quoteContext?.installationSalesTaxApplicable || false,
+    installationSalesTaxRate: quoteContext?.installationSalesTax || 0,
+    rentalsSalesTax: quoteContext?.rentalsSalesTaxApplicable || false,
+    rentalsSalesTaxRate: quoteContext?.rentalsSalesTax || 0,
+    permitsSalesTax: quoteContext?.permitsSalesTaxApplicable || false,
+    permitsSalesTaxRate: quoteContext?.permitsSalesTax || 0,
+    engCalsSalesTax: quoteContext?.engCalcsSalesTaxApplicable || false,
+    engCalsSalesTaxRate: quoteContext?.engCalcsSalesTax || 0,
   });
-  
+
+  // Update salesTaxes when quoteContext changes
+  useEffect(() => {
+    if (quoteContext) {
+      setSalesTaxes({
+        materialSalesTax: quoteContext.materialSalesTaxApplicable || false,
+        materialSalesTaxRate: quoteContext.materialSalesTax || 0,
+        freightSalesTax: quoteContext.freightSalesTaxApplicable || false,
+        freightSalesTaxRate: quoteContext.freightSalesTax || 0,
+        installationSalesTax: quoteContext.installationSalesTaxApplicable || false,
+        installationSalesTaxRate: quoteContext.installationSalesTax || 0,
+        rentalsSalesTax: quoteContext.rentalsSalesTaxApplicable || false,
+        rentalsSalesTaxRate: quoteContext.rentalsSalesTax || 0,
+        permitsSalesTax: quoteContext.permitsSalesTaxApplicable || false,
+        permitsSalesTaxRate: quoteContext.permitsSalesTax || 0,
+        engCalsSalesTax: quoteContext.engCalcsSalesTaxApplicable || false,
+        engCalsSalesTaxRate: quoteContext.engCalcsSalesTax || 0,
+      });
+    }
+  }, [quoteContext]);
+
   const [costItems, setCostItems] = useState<CostItem>({
     freight: quote.freight,
     installation: quote.installation,
@@ -96,7 +116,7 @@ export default function RownCountSummary({ quoteId }: Props) {
           />
           <Label htmlFor="show-margin-taxes">Show Margin Taxes</Label>
         </div>
-        
+
         <div className="flex items-center space-x-2">
           <Switch
             id="show-sales-taxes"
@@ -134,10 +154,7 @@ export default function RownCountSummary({ quoteId }: Props) {
         )}
         {showSalesTaxes && (
           <div className="w-full">
-            <SalesTaxes
-              salesTaxes={salesTaxes}
-              setSalesTaxes={setSalesTaxes}
-            />
+            <SalesTaxes salesTaxes={salesTaxes} setSalesTaxes={setSalesTaxes} />
           </div>
         )}
       </div>
