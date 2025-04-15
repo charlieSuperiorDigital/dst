@@ -784,8 +784,8 @@ const MiscTable = ({ quoteId }: Props) => {
           stopEditing();
           selectCell(newRow, newCol);
           startEditing(newRow, newCol);
+          return;
         }
-        return;
       }
 
       stopEditing();

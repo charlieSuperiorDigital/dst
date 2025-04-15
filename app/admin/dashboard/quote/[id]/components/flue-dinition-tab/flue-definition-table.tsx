@@ -1,14 +1,14 @@
-import { apiRequest } from "@/utils/client-side-api";
-import React, { useState, useRef, useEffect } from "react";
+import {apiRequest} from '@/utils/client-side-api';
+import React, {useState, useRef, useEffect} from 'react';
 // import { AddBayDefinitonTab } from "./add-bay-definition";
-import { toast } from "@/hooks/use-toast";
-import { useQuote } from "../../context/quote-context";
-import { AddFlueDefinitonTab } from "./add-flue-definition";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Trash2 } from "lucide-react";
-import { ConfirmationModal } from "@/components/ui/confirmation-modal";
+import {toast} from '@/hooks/use-toast';
+import {useQuote} from '../../context/quote-context';
+import {AddFlueDefinitonTab} from './add-flue-definition';
+import {Input} from '@/components/ui/input';
+import {Switch} from '@/components/ui/switch';
+import {Label} from '@/components/ui/label';
+import {Trash2} from 'lucide-react';
+import {ConfirmationModal} from '@/components/ui/confirmation-modal';
 // import { AddFrameLineDefinitonTab } from "./add-frameline-definition";
 
 type Part = {
@@ -42,33 +42,31 @@ type DragSource = {
 type Props = {
   quoteId: string;
 };
-const FlueTable = ({ quoteId }: Props) => {
-  const { setFluesDefinitionContext, quote, isLocked } = useQuote();
+const FlueTable = ({quoteId}: Props) => {
+  const {setFluesDefinitionContext, quote, isLocked} = useQuote();
   const [partsWithBays, setPartsWithBays] = useState<PartWithFlues[]>([]);
-  const [selectedCell, setSelectedCell] = useState({ row: -1, col: -1 });
-  const [editingCell, setEditingCell] = useState({ row: -1, col: -1 });
+  const [selectedCell, setSelectedCell] = useState({row: -1, col: -1});
+  const [editingCell, setEditingCell] = useState({row: -1, col: -1});
   const [selectedRow, setSelectedRow] = useState(-1);
   const [selectedColumn, setSelectedColumn] = useState(-1);
   const tableRef = useRef<HTMLDivElement>(null);
   const activeInput = useRef<HTMLInputElement>(null);
   const [isSelecting, setIsSelecting] = useState(false);
-  const [selectionStart, setSelectionStart] = useState({ row: -1, col: -1 });
-  const [selectionEnd, setSelectionEnd] = useState({ row: -1, col: -1 });
+  const [selectionStart, setSelectionStart] = useState({row: -1, col: -1});
+  const [selectionEnd, setSelectionEnd] = useState({row: -1, col: -1});
   const [isDragging, setIsDragging] = useState(false);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [mousePosition, setMousePosition] = useState({x: 0, y: 0});
   const [dragSource, setDragSource] = useState<DragSource>({
     row: -1,
     col: -1,
   });
-  const [dragTarget, setDragTarget] = useState({ row: -1, col: -1 });
-  const [columnWidths, setColumnWidths] = useState<{ [key: number]: number }>(
-    {}
-  );
-  const [rowHeights, setRowHeights] = useState<{ [key: number]: number }>({});
+  const [dragTarget, setDragTarget] = useState({row: -1, col: -1});
+  const [columnWidths, setColumnWidths] = useState<{[key: number]: number}>({});
+  const [rowHeights, setRowHeights] = useState<{[key: number]: number}>({});
   const [copiedCells, setCopiedCells] = useState<string[][]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
   const [hideZeroQuantity, setHideZeroQuantity] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -79,7 +77,7 @@ const FlueTable = ({ quoteId }: Props) => {
     try {
       const response: PartWithFlues[] = await apiRequest({
         url: `/api/definition/flue/${quoteId}`,
-        method: "get",
+        method: 'get',
       });
 
       console.log(response);
@@ -87,7 +85,7 @@ const FlueTable = ({ quoteId }: Props) => {
       setPartsWithBays(response);
       setLoading(false);
     } catch (err) {
-      setError("Error loading data");
+      setError('Error loading data');
       setLoading(false);
       console.error(err);
     }
@@ -115,7 +113,7 @@ const FlueTable = ({ quoteId }: Props) => {
     const range = getSelectionRange();
     if (!range) return;
 
-    const { startRow, endRow, startCol, endCol } = range;
+    const {startRow, endRow, startCol, endCol} = range;
     const copiedData: string[][] = [];
 
     for (let row = startRow; row <= endRow; row++) {
@@ -123,26 +121,26 @@ const FlueTable = ({ quoteId }: Props) => {
       for (let col = startCol; col <= endCol; col++) {
         const part = partsWithBays[row];
         const bay = part.flues[col];
-        rowData.push(bay ? bay.quantity.toString() : "");
+        rowData.push(bay ? bay.quantity.toString() : '');
       }
       copiedData.push(rowData);
     }
 
     setCopiedCells(copiedData);
     toast({
-      title: "Success",
-      description: "Cells copied successfully",
+      title: 'Success',
+      description: 'Cells copied successfully',
     });
-    console.log("Celdas copiadas:", copiedData); // Para depuración
+    console.log('Celdas copiadas:', copiedData); // Para depuración
   };
   const pasteCopiedCells = (targetRow: number, targetCol: number) => {
     if (copiedCells.length === 0 || copiedCells[0].length === 0) {
-      console.warn("No hay celdas copiadas para pegar.");
+      console.warn('No hay celdas copiadas para pegar.');
       return;
     }
 
     const newPartsWithBays = [...partsWithBays]; // Copia del estado actual
-    const updates: { partId: string; flueId: string; quantity: number }[] = [];
+    const updates: {partId: string; flueId: string; quantity: number}[] = [];
     for (let rowOffset = 0; rowOffset < copiedCells.length; rowOffset++) {
       for (let colOffset = 0; colOffset < copiedCells[0].length; colOffset++) {
         const row = targetRow + rowOffset;
@@ -176,11 +174,11 @@ const FlueTable = ({ quoteId }: Props) => {
     updateMultipleQuantities(updates);
   };
   const selectCell = (row: number, col: number) => {
-    setSelectedCell({ row, col });
+    setSelectedCell({row, col});
     setSelectedRow(-1);
     setSelectedColumn(-1);
-    setSelectionStart({ row: -1, col: -1 });
-    setSelectionEnd({ row: -1, col: -1 });
+    setSelectionStart({row: -1, col: -1});
+    setSelectionEnd({row: -1, col: -1});
     if (tableRef.current) {
       tableRef.current.focus();
     }
@@ -193,19 +191,19 @@ const FlueTable = ({ quoteId }: Props) => {
       col >= 0 &&
       col < allBays.length
     ) {
-      setEditingCell({ row, col });
-      setSelectedCell({ row, col });
+      setEditingCell({row, col});
+      setSelectedCell({row, col});
       setTimeout(() => {
         if (activeInput.current) {
           activeInput.current.focus();
         }
       }, 0);
     } else {
-      console.warn("Intento de editar una celda fuera de los límites.");
+      console.warn('Intento de editar una celda fuera de los límites.');
     }
   };
   const stopEditing = () => {
-    setEditingCell({ row: -1, col: -1 });
+    setEditingCell({row: -1, col: -1});
   };
 
   const isEditingCell = (row: number, col: number): boolean => {
@@ -215,11 +213,11 @@ const FlueTable = ({ quoteId }: Props) => {
   const handleKeyNavigation = (event: React.KeyboardEvent) => {
     if (event.ctrlKey) {
       switch (event.key.toLowerCase()) {
-        case "c": // Copy
+        case 'c': // Copy
           event.preventDefault();
           copySelectedCells();
           break;
-        case "v": // Paste
+        case 'v': // Paste
           event.preventDefault();
           if (selectedCell.row >= 0 && selectedCell.col >= 0) {
             pasteCopiedCells(selectedCell.row, selectedCell.col);
@@ -234,56 +232,56 @@ const FlueTable = ({ quoteId }: Props) => {
     // Handle arrow keys in edit mode
     if (editingCell.row !== -1 && editingCell.col !== -1) {
       switch (event.key) {
-        case "ArrowLeft":
-        case "ArrowRight":
-        case "ArrowUp":
-        case "ArrowDown":
+        case 'ArrowLeft':
+        case 'ArrowRight':
+        case 'ArrowUp':
+        case 'ArrowDown':
           handleArrowInEdit(
-            event.key.toLowerCase().replace("arrow", "") as
-              | "up"
-              | "down"
-              | "left"
-              | "right",
+            event.key.toLowerCase().replace('arrow', '') as
+              | 'up'
+              | 'down'
+              | 'left'
+              | 'right',
             event
           );
           return;
-        case "Enter":
+        case 'Enter':
           event.preventDefault();
           stopEditing();
-          moveToNextCell("down");
+          moveToNextCell('down');
           return;
       }
     }
 
     // Navigation with arrow keys and Enter
     switch (event.key) {
-      case "ArrowUp":
-      case "ArrowDown":
-      case "ArrowLeft":
-      case "ArrowRight":
+      case 'ArrowUp':
+      case 'ArrowDown':
+      case 'ArrowLeft':
+      case 'ArrowRight':
         event.preventDefault();
         moveToNextCell(
-          event.key.toLowerCase().replace("arrow", "") as
-            | "up"
-            | "down"
-            | "left"
-            | "right",
+          event.key.toLowerCase().replace('arrow', '') as
+            | 'up'
+            | 'down'
+            | 'left'
+            | 'right',
           event
         );
         return;
-      case "Enter":
+      case 'Enter':
         event.preventDefault();
         if (editingCell.row === -1 && editingCell.col === -1) {
           startEditing(selectedCell.row, selectedCell.col);
         } else {
           stopEditing();
-          moveToNextCell("down");
+          moveToNextCell('down');
         }
         return;
     }
   };
   const handleArrowInEdit = (
-    direction: "up" | "down" | "left" | "right",
+    direction: 'up' | 'down' | 'left' | 'right',
     event: React.KeyboardEvent
   ) => {
     const input = activeInput.current;
@@ -293,7 +291,7 @@ const FlueTable = ({ quoteId }: Props) => {
       partsWithBays[editingCell.row].flues[editingCell.col].quantity.toString();
 
     // For left/right movement, check cursor position
-    if (direction === "left" || direction === "right") {
+    if (direction === 'left' || direction === 'right') {
       const selectionStart = input.selectionStart || 0;
       const selectionEnd = input.selectionEnd || 0;
       const atStart = selectionStart === 0 && selectionEnd === 0;
@@ -302,8 +300,8 @@ const FlueTable = ({ quoteId }: Props) => {
         selectionEnd === currentCellContent.length;
 
       if (
-        (direction === "left" && atStart) ||
-        (direction === "right" && atEnd)
+        (direction === 'left' && atStart) ||
+        (direction === 'right' && atEnd)
       ) {
         event.preventDefault();
         stopEditing();
@@ -325,7 +323,7 @@ const FlueTable = ({ quoteId }: Props) => {
     const startCol = Math.min(selectionStart.col, selectionEnd.col);
     const endCol = Math.max(selectionStart.col, selectionEnd.col);
 
-    return { startRow, endRow, startCol, endCol };
+    return {startRow, endRow, startCol, endCol};
   };
 
   const isInSelectionRange = (row: number, col: number): boolean => {
@@ -352,14 +350,14 @@ const FlueTable = ({ quoteId }: Props) => {
 
     event.preventDefault();
     setIsSelecting(true);
-    setSelectionStart({ row, col });
-    setSelectionEnd({ row, col });
+    setSelectionStart({row, col});
+    setSelectionEnd({row, col});
 
     setSelectedRow(-1);
     setSelectedColumn(-1);
 
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
   };
 
   const updateSelection = (
@@ -369,7 +367,7 @@ const FlueTable = ({ quoteId }: Props) => {
   ) => {
     if (!isSelecting) return;
 
-    setSelectionEnd({ row, col });
+    setSelectionEnd({row, col});
   };
 
   const handleMouseMove = (event: MouseEvent) => {
@@ -381,7 +379,7 @@ const FlueTable = ({ quoteId }: Props) => {
     const element = document.elementFromPoint(event.clientX, event.clientY);
     if (!element) return;
 
-    const cell = element.closest("td");
+    const cell = element.closest('td');
     if (!cell) return;
 
     const rowElement = cell.parentElement;
@@ -406,15 +404,15 @@ const FlueTable = ({ quoteId }: Props) => {
     if (!isSelecting) return;
 
     setIsSelecting(false);
-    document.removeEventListener("mousemove", handleMouseMove);
-    document.removeEventListener("mouseup", handleMouseUp);
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
   };
 
   const getSelectionStyle = () => {
     const range = getSelectionRange();
     if (!range) return {};
 
-    const table = tableRef.current?.querySelector("table");
+    const table = tableRef.current?.querySelector('table');
     if (!table) return {};
 
     const startCell = table.rows[range.startRow + 1].cells[range.startCol + 1];
@@ -439,7 +437,7 @@ const FlueTable = ({ quoteId }: Props) => {
   };
 
   const getDragText = () => {
-    if (!dragSource) return "Moving cell";
+    if (!dragSource) return 'Moving cell';
 
     // Verificar si dragSource tiene selectionRange
     if (dragSource.selectionRange) {
@@ -451,7 +449,7 @@ const FlueTable = ({ quoteId }: Props) => {
     }
 
     // Si no hay selectionRange, mostrar el contenido de la celda
-    const { row, col } = dragSource;
+    const {row, col} = dragSource;
     if (
       row >= 0 &&
       col >= 0 &&
@@ -460,10 +458,10 @@ const FlueTable = ({ quoteId }: Props) => {
     ) {
       const part = partsWithBays[row];
       const bay = part.flues[col];
-      return bay ? bay.quantity.toString() : "Moving cell";
+      return bay ? bay.quantity.toString() : 'Moving cell';
     }
 
-    return "Moving cell";
+    return 'Moving cell';
   };
 
   const handleDragStart = (
@@ -474,32 +472,32 @@ const FlueTable = ({ quoteId }: Props) => {
     if (!event.dataTransfer) return;
 
     setIsDragging(true);
-    setMousePosition({ x: event.clientX, y: event.clientY });
+    setMousePosition({x: event.clientX, y: event.clientY});
 
     const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
+      setMousePosition({x: e.clientX, y: e.clientY});
     };
 
-    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener(
-      "dragend",
+      'dragend',
       () => {
         setIsDragging(false);
-        document.removeEventListener("mousemove", handleMouseMove);
+        document.removeEventListener('mousemove', handleMouseMove);
       },
-      { once: true }
+      {once: true}
     );
 
     const range = getSelectionRange();
     if (range && isInSelectionRange(row, col)) {
-      setDragSource({ row, col, selectionRange: range });
-      const dragEl = document.createElement("div");
-      dragEl.style.padding = "8px";
-      dragEl.style.background = "white";
-      dragEl.style.border = "1px solid #ccc";
-      dragEl.style.borderRadius = "4px";
-      dragEl.style.position = "absolute";
-      dragEl.style.top = "-1000px";
+      setDragSource({row, col, selectionRange: range});
+      const dragEl = document.createElement('div');
+      dragEl.style.padding = '8px';
+      dragEl.style.background = 'white';
+      dragEl.style.border = '1px solid #ccc';
+      dragEl.style.borderRadius = '4px';
+      dragEl.style.position = 'absolute';
+      dragEl.style.top = '-1000px';
       dragEl.textContent = `Moving ${
         (range.endRow - range.startRow + 1) *
         (range.endCol - range.startCol + 1)
@@ -508,31 +506,31 @@ const FlueTable = ({ quoteId }: Props) => {
       event.dataTransfer.setDragImage(dragEl, 0, 0);
       setTimeout(() => document.body.removeChild(dragEl), 0);
     } else {
-      setDragSource({ row, col });
+      setDragSource({row, col});
       const part = partsWithBays[row];
       const bay = part.flues[col];
-      const content = bay ? bay.quantity.toString() : "";
-      event.dataTransfer.setData("text/plain", content);
-      const dragEl = document.createElement("div");
-      dragEl.textContent = content || "Moving cell";
-      dragEl.style.padding = "8px";
-      dragEl.style.background = "white";
-      dragEl.style.border = "1px solid #ccc";
-      dragEl.style.borderRadius = "4px";
-      dragEl.style.position = "absolute";
-      dragEl.style.top = "-1000px";
+      const content = bay ? bay.quantity.toString() : '';
+      event.dataTransfer.setData('text/plain', content);
+      const dragEl = document.createElement('div');
+      dragEl.textContent = content || 'Moving cell';
+      dragEl.style.padding = '8px';
+      dragEl.style.background = 'white';
+      dragEl.style.border = '1px solid #ccc';
+      dragEl.style.borderRadius = '4px';
+      dragEl.style.position = 'absolute';
+      dragEl.style.top = '-1000px';
       document.body.appendChild(dragEl);
       event.dataTransfer.setDragImage(dragEl, 0, 0);
       setTimeout(() => document.body.removeChild(dragEl), 0);
     }
 
-    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.effectAllowed = 'move';
   };
 
   const handleDragOver = (event: React.DragEvent, row: number, col: number) => {
     event.preventDefault();
-    setDragTarget({ row, col });
-    setMousePosition({ x: event.clientX, y: event.clientY });
+    setDragTarget({row, col});
+    setMousePosition({x: event.clientX, y: event.clientY});
   };
 
   const handleDragLeave = (
@@ -541,7 +539,7 @@ const FlueTable = ({ quoteId }: Props) => {
     col: number
   ) => {
     if (dragTarget.row === row && dragTarget.col === col) {
-      setDragTarget({ row: -1, col: -1 });
+      setDragTarget({row: -1, col: -1});
     }
   };
 
@@ -554,14 +552,13 @@ const FlueTable = ({ quoteId }: Props) => {
 
     if (!dragSource) return;
 
-    if ("selectionRange" in dragSource && dragSource.selectionRange) {
+    if ('selectionRange' in dragSource && dragSource.selectionRange) {
       const range = dragSource.selectionRange;
       const rowOffset = targetRow - dragSource.row;
       const colOffset = targetCol - dragSource.col;
 
       const newPartsWithBays = [...partsWithBays];
-      const updates: { partId: string; flueId: string; quantity: number }[] =
-        [];
+      const updates: {partId: string; flueId: string; quantity: number}[] = [];
 
       for (let row = range.startRow; row <= range.endRow; row++) {
         for (let col = range.startCol; col <= range.endCol; col++) {
@@ -596,7 +593,7 @@ const FlueTable = ({ quoteId }: Props) => {
         updateMultipleQuantities(updates);
       }
     } else {
-      const { row: sourceRow, col: sourceCol } = dragSource;
+      const {row: sourceRow, col: sourceCol} = dragSource;
 
       if (sourceRow === targetRow && sourceCol === targetCol) {
         return;
@@ -632,8 +629,8 @@ const FlueTable = ({ quoteId }: Props) => {
       }
     }
 
-    setDragSource({ row: -1, col: -1 });
-    setDragTarget({ row: -1, col: -1 });
+    setDragSource({row: -1, col: -1});
+    setDragTarget({row: -1, col: -1});
   };
 
   const isDragOver = (row: number, col: number): boolean => {
@@ -642,19 +639,19 @@ const FlueTable = ({ quoteId }: Props) => {
 
   const getColumnStyle = (colIndex: number) => {
     const width = columnWidths[colIndex];
-    return width ? { width: `${width}px` } : {};
+    return width ? {width: `${width}px`} : {};
   };
 
   const getRowStyle = (rowIndex: number) => {
     const height = rowHeights[rowIndex];
-    return height ? { height: `${height}px` } : {};
+    return height ? {height: `${height}px`} : {};
   };
 
   const startColumnResize = (event: React.MouseEvent, colIndex: number) => {
     if (event.button !== 0 || event.detail > 1) return;
 
     event.preventDefault();
-    const table = tableRef.current?.querySelector("table");
+    const table = tableRef.current?.querySelector('table');
     if (!table) return;
 
     const cell = table.rows[0].cells[colIndex + 1];
@@ -664,26 +661,26 @@ const FlueTable = ({ quoteId }: Props) => {
     const handleMouseMove = (e: MouseEvent) => {
       const delta = e.clientX - initialMousePos;
       const newSize = Math.max(20, initialSize + delta);
-      setColumnWidths((prev) => ({ ...prev, [colIndex]: newSize }));
+      setColumnWidths((prev) => ({...prev, [colIndex]: newSize}));
     };
 
     const stopResize = () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", stopResize);
-      table.classList.remove("resizing");
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', stopResize);
+      table.classList.remove('resizing');
     };
 
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", stopResize);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', stopResize);
 
-    table.classList.add("resizing");
+    table.classList.add('resizing');
   };
 
   const autoSizeColumn = (colIndex: number) => {
-    const measureSpan = document.createElement("span");
-    measureSpan.style.visibility = "hidden";
-    measureSpan.style.position = "absolute";
-    measureSpan.style.whiteSpace = "nowrap";
+    const measureSpan = document.createElement('span');
+    measureSpan.style.visibility = 'hidden';
+    measureSpan.style.position = 'absolute';
+    measureSpan.style.whiteSpace = 'nowrap';
     measureSpan.style.font = window.getComputedStyle(tableRef.current!).font;
     document.body.appendChild(measureSpan);
 
@@ -700,7 +697,7 @@ const FlueTable = ({ quoteId }: Props) => {
 
     document.body.removeChild(measureSpan);
 
-    setColumnWidths((prev) => ({ ...prev, [colIndex]: maxWidth }));
+    setColumnWidths((prev) => ({...prev, [colIndex]: maxWidth}));
   };
 
   const isColumnSelected = (col: number): boolean => {
@@ -713,10 +710,10 @@ const FlueTable = ({ quoteId }: Props) => {
 
   const selectEntireRow = (row: number) => {
     setSelectedRow(row);
-    setSelectedCell({ row: -1, col: -1 });
+    setSelectedCell({row: -1, col: -1});
   };
   const moveToNextCell = (
-    direction: "up" | "down" | "left" | "right",
+    direction: 'up' | 'down' | 'left' | 'right',
     event?: React.KeyboardEvent
   ) => {
     if (event) {
@@ -732,22 +729,22 @@ const FlueTable = ({ quoteId }: Props) => {
     let newCol = currentCol;
 
     switch (direction) {
-      case "up":
+      case 'up':
         newRow = Math.max(0, currentRow - 1);
         break;
-      case "down":
+      case 'down':
         newRow = Math.min(partsWithBays.length - 1, currentRow + 1);
         break;
-      case "left":
+      case 'left':
         newCol = Math.max(0, currentCol - 1);
         break;
-      case "right":
+      case 'right':
         newCol = Math.min(allBays.length - 1, currentCol + 1);
         break;
     }
 
     if (editingCell.row !== -1) {
-      const isHorizontalMove = direction === "left" || direction === "right";
+      const isHorizontalMove = direction === 'left' || direction === 'right';
 
       if (isHorizontalMove) {
         const input = activeInput.current;
@@ -759,14 +756,14 @@ const FlueTable = ({ quoteId }: Props) => {
           input.selectionEnd === input.value.length;
 
         if (
-          (direction === "left" && atStart) ||
-          (direction === "right" && atEnd)
+          (direction === 'left' && atStart) ||
+          (direction === 'right' && atEnd)
         ) {
           stopEditing();
           selectCell(newRow, newCol);
           startEditing(newRow, newCol);
+          return;
         }
-        return;
       }
 
       stopEditing();
@@ -778,14 +775,14 @@ const FlueTable = ({ quoteId }: Props) => {
   };
 
   const updateMultipleQuantities = async (
-    updates: { partId: string; flueId: string; quantity: number }[]
+    updates: {partId: string; flueId: string; quantity: number}[]
   ) => {
     try {
       const results = await Promise.allSettled(
         updates.map((update) =>
           apiRequest({
             url: `/api/part/flue/updatePart`,
-            method: "put",
+            method: 'put',
             data: update,
           })
         )
@@ -797,14 +794,14 @@ const FlueTable = ({ quoteId }: Props) => {
         quantity: number;
       }[] = [];
       results.forEach((result, index) => {
-        if (result.status === "fulfilled") {
+        if (result.status === 'fulfilled') {
           successfulUpdates.push(updates[index]);
         } else {
-          console.error("Error updating quantity:", result.reason);
+          console.error('Error updating quantity:', result.reason);
           toast({
-            title: "Error",
+            title: 'Error',
             description: `Failed to update quantity for part ${updates[index].partId} and bay ${updates[index].flueId}.`,
-            variant: "destructive",
+            variant: 'destructive',
           });
         }
       });
@@ -817,9 +814,9 @@ const FlueTable = ({ quoteId }: Props) => {
                 (u) =>
                   u.partId === partWithBays.part.id && u.flueId === bay.flueId
               );
-              return update ? { ...bay, quantity: update.quantity } : bay;
+              return update ? {...bay, quantity: update.quantity} : bay;
             });
-            return { ...partWithBays, flues: updatedBays };
+            return {...partWithBays, flues: updatedBays};
           })
         );
         setFluesDefinitionContext?.((prevPartsWithBays) =>
@@ -829,23 +826,23 @@ const FlueTable = ({ quoteId }: Props) => {
                 (u) =>
                   u.partId === partWithBays.part.id && u.flueId === bay.flueId
               );
-              return update ? { ...bay, quantity: update.quantity } : bay;
+              return update ? {...bay, quantity: update.quantity} : bay;
             });
-            return { ...partWithBays, flues: updatedBays };
+            return {...partWithBays, flues: updatedBays};
           })
         );
 
         toast({
-          title: "Success",
-          description: "Quantities updated successfully",
+          title: 'Success',
+          description: 'Quantities updated successfully',
         });
       }
     } catch (error) {
-      console.error("Error updating quantities:", error);
+      console.error('Error updating quantities:', error);
       toast({
-        title: "Error",
-        description: "Failed to update quantities. Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to update quantities. Please try again.',
+        variant: 'destructive',
       });
     }
   };
@@ -858,7 +855,7 @@ const FlueTable = ({ quoteId }: Props) => {
       // Send a single request to update the quantity
       await apiRequest({
         url: `/api/part/flue/updatePart`,
-        method: "put",
+        method: 'put',
         data: update,
       });
 
@@ -870,11 +867,11 @@ const FlueTable = ({ quoteId }: Props) => {
               bay.flueId === update.flueId &&
               partWithBays.part.id === update.partId
             ) {
-              return { ...bay, quantity: update.quantity }; // Update the quantity
+              return {...bay, quantity: update.quantity}; // Update the quantity
             }
             return bay; // Return the unchanged bay
           });
-          return { ...partWithBays, flues: updatedBays }; // Return the updated part
+          return {...partWithBays, flues: updatedBays}; // Return the updated part
         })
       );
       setFluesDefinitionContext?.((prevPartsWithBays) =>
@@ -884,26 +881,26 @@ const FlueTable = ({ quoteId }: Props) => {
               bay.flueId === update.flueId &&
               partWithBays.part.id === update.partId
             ) {
-              return { ...bay, quantity: update.quantity }; // Update the quantity
+              return {...bay, quantity: update.quantity}; // Update the quantity
             }
             return bay; // Return the unchanged bay
           });
-          return { ...partWithBays, flues: updatedBays }; // Return the updated part
+          return {...partWithBays, flues: updatedBays}; // Return the updated part
         })
       );
 
       // Show a success toast
       toast({
-        title: "Success",
-        description: "Quantity updated successfully",
+        title: 'Success',
+        description: 'Quantity updated successfully',
       });
     } catch (error) {
-      console.error("Error updating quantity:", error);
+      console.error('Error updating quantity:', error);
       // Show an error toast
       toast({
-        title: "Error",
-        description: "Failed to update quantity. Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to update quantity. Please try again.',
+        variant: 'destructive',
       });
     }
   };
@@ -912,7 +909,7 @@ const FlueTable = ({ quoteId }: Props) => {
     try {
       const response = await apiRequest({
         url: `/api/definition/flue/${value.name}/${quoteId}`,
-        method: "post",
+        method: 'post',
       });
 
       setPartsWithBays((prevState) =>
@@ -920,7 +917,7 @@ const FlueTable = ({ quoteId }: Props) => {
           ...partWithBays,
           flues: [
             ...partWithBays.flues,
-            { flueName: value.name, flueId: response, quantity: 0 },
+            {flueName: value.name, flueId: response, quantity: 0},
           ],
         }))
       );
@@ -929,21 +926,21 @@ const FlueTable = ({ quoteId }: Props) => {
           ...partWithBays,
           flues: [
             ...partWithBays.flues,
-            { flueName: value.name, flueId: response, quantity: 0 },
+            {flueName: value.name, flueId: response, quantity: 0},
           ],
         }))
       );
 
       toast({
-        title: "Success",
-        description: "Flue added successfully",
+        title: 'Success',
+        description: 'Flue added successfully',
       });
     } catch (error) {
-      console.error("Error adding flue:", error);
+      console.error('Error adding flue:', error);
       toast({
-        title: "Error",
-        description: "Failed to add flue. Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to add flue. Please try again.',
+        variant: 'destructive',
       });
     }
   };
@@ -1014,7 +1011,7 @@ const FlueTable = ({ quoteId }: Props) => {
 
       const response = await apiRequest({
         url: `/api/Definition/flue/${quote.id}?FlueId=${itemToDelete}`,
-        method: "delete",
+        method: 'delete',
       });
       console.log(response);
       setPartsWithBays((prevState) =>
@@ -1034,7 +1031,7 @@ const FlueTable = ({ quoteId }: Props) => {
         }))
       );
       toast({
-        title: "Success",
+        title: 'Success',
         description: ` deleted successfully.`,
       });
 
@@ -1042,9 +1039,9 @@ const FlueTable = ({ quoteId }: Props) => {
     } catch (error) {
       console.error(`Error deleting `, error);
       toast({
-        title: "Error",
+        title: 'Error',
         description: `Failed to delete Please try again.`,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setIsDeleting(false);
@@ -1113,9 +1110,9 @@ const FlueTable = ({ quoteId }: Props) => {
                 <th
                   key={colIndex}
                   className={`border border-gray-300 p-2 font-bold text-center cursor-pointer relative ${
-                    isColumnSelected(colIndex) ? "bg-blue-100" : "bg-gray-100"
+                    isColumnSelected(colIndex) ? 'bg-blue-100' : 'bg-gray-100'
                   }`}
-                  style={{ minWidth: "100px", ...getColumnStyle(colIndex) }}
+                  style={{minWidth: '100px', ...getColumnStyle(colIndex)}}
                 >
                   <div className="flex items-center justify-between">
                     <span className="flex-grow text-center">{bayName}</span>
@@ -1141,10 +1138,6 @@ const FlueTable = ({ quoteId }: Props) => {
                   ></div>
                 </th>
               ))}
-              {/* New Total Column */}
-              <th className="border border-gray-300 p-2 font-bold text-center sticky right-0 bg-white z-20">
-                Total
-              </th>
             </tr>
           </thead>
           <tbody>
@@ -1154,13 +1147,13 @@ const FlueTable = ({ quoteId }: Props) => {
                 <tr key={partWithBays.part.id}>
                   <td
                     className={`border w-[350px] border-gray-300 p-2 text-left cursor-pointer sticky left-0 bg-white z-10 flex items-center ${
-                      isRowSelected(rowIndex) ? "bg-blue-100" : "bg-gray-100"
+                      isRowSelected(rowIndex) ? 'bg-blue-100' : 'bg-gray-100'
                     }`}
                     style={{
-                      height: "60px", // Fixed height
-                      overflow: "hidden", // Hide overflowing content
-                      whiteSpace: "nowrap", // Prevent text from wrapping
-                      textOverflow: "ellipsis", // Add ellipsis for overflow
+                      height: '60px', // Fixed height
+                      overflow: 'hidden', // Hide overflowing content
+                      whiteSpace: 'nowrap', // Prevent text from wrapping
+                      textOverflow: 'ellipsis', // Add ellipsis for overflow
                     }}
                     title={`${partWithBays.part.partNumber} - ${partWithBays.part.description}`} // Tooltip for full text
                     onClick={() => selectEntireRow(rowIndex)}
@@ -1189,19 +1182,19 @@ const FlueTable = ({ quoteId }: Props) => {
                 ${
                   isSelectedCell(rowIndex, colIndex) ||
                   isInSelectionRange(rowIndex, colIndex)
-                    ? "bg-blue-50 outline outline-2 outline-blue-500"
-                    : ""
+                    ? 'bg-blue-50 outline outline-2 outline-blue-500'
+                    : ''
                 }
-                ${isRowSelected(rowIndex) ? "bg-blue-50" : ""}
-                ${isColumnSelected(colIndex) ? "bg-blue-50" : ""}
+                ${isRowSelected(rowIndex) ? 'bg-blue-50' : ''}
+                ${isColumnSelected(colIndex) ? 'bg-blue-50' : ''}
                 ${
                   isDragOver(rowIndex, colIndex)
-                    ? "bg-green-100 outline-dashed outline-2 outline-green-500"
-                    : ""
+                    ? 'bg-green-100 outline-dashed outline-2 outline-green-500'
+                    : ''
                 }
               `}
                         style={{
-                          minWidth: "100px",
+                          minWidth: '100px',
                           ...getColumnStyle(colIndex),
                         }}
                         onClick={(e) => {
@@ -1253,22 +1246,22 @@ const FlueTable = ({ quoteId }: Props) => {
                                 });
                               } else {
                                 console.error(
-                                  "Bay not found for the given row and column."
+                                  'Bay not found for the given row and column.'
                                 );
                                 toast({
-                                  title: "Error",
+                                  title: 'Error',
                                   description:
-                                    "Bay not found. Please try again.",
-                                  variant: "destructive",
+                                    'Bay not found. Please try again.',
+                                  variant: 'destructive',
                                 });
                               }
                             }}
                             onBlur={handleBlur}
                             onKeyDown={(e) => {
-                              if (e.key === "Enter") {
+                              if (e.key === 'Enter') {
                                 e.preventDefault();
                                 stopEditing();
-                                moveToNextCell("down");
+                                moveToNextCell('down');
                               }
                             }}
                             className="cell-input absolute top-0 left-0 w-full h-full border-none p-2 box-border font-inherit text-inherit bg-white z-20 focus:outline-2 focus:outline-blue-500 focus:shadow-[0_0_0_4px_rgba(33,150,243,0.2)]"
@@ -1284,10 +1277,6 @@ const FlueTable = ({ quoteId }: Props) => {
                       </td>
                     );
                   })}
-                  {/* New Total Column Cell */}
-                  <td className="border border-gray-300 p-2 text-center sticky right-0 bg-white z-10">
-                    {totalQuantity}
-                  </td>
                 </tr>
               );
             })}

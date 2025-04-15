@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   Table,
@@ -7,15 +7,15 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useQuote } from "../../context/quote-context";
-import { useState, useEffect, useCallback } from "react";
-import { toast } from "@/hooks/use-toast";
-import { apiRequest } from "@/utils/client-side-api";
-import { formatCurrency } from "@/utils/format-currency";
+} from '@/components/ui/table';
+import {Input} from '@/components/ui/input';
+import {Card} from '@/components/ui/card';
+import {Tabs, TabsContent, TabsList, TabsTrigger} from '@/components/ui/tabs';
+import {useQuote} from '../../context/quote-context';
+import {useState, useEffect, useCallback} from 'react';
+import {toast} from '@/hooks/use-toast';
+import {apiRequest} from '@/utils/client-side-api';
+import {formatCurrency} from '@/utils/format-currency';
 
 export interface CostItem {
   freight?: number;
@@ -49,14 +49,14 @@ export default function CostBreakdownTable({
   setCostItems,
   materialCost,
 }: Props) {
-  const { isLocked, quoteContext, setQuoteContext, areaMaterialcost } =
+  const {isLocked, quoteContext, setQuoteContext, areaMaterialcost} =
     useQuote();
   const [totalBeforeTaxes, setTotalBeforeTaxes] = useState(0);
   const [grandTotal, setGrandTotal] = useState(0);
-  const [selectedAreaId, setSelectedAreaId] = useState<string>("");
+  const [selectedAreaId, setSelectedAreaId] = useState<string>('');
   const [currentMaterialCost, setCurrentMaterialCost] = useState(materialCost);
 
-  const TOTAL_TAB_ID = "total";
+  const TOTAL_TAB_ID = 'total';
 
   // Set default selected area when component mounts
   useEffect(() => {
@@ -89,14 +89,14 @@ export default function CostBreakdownTable({
   }, [areaMaterialcost, materialCost]);
 
   const handleCostChange = (key: keyof CostItem, value: string) => {
-    const newCostItems = { ...costItems, [key]: Number(value) || 0 };
+    const newCostItems = {...costItems, [key]: Number(value) || 0};
     setCostItems(newCostItems);
   };
 
   const calculateTotalWithMargin = useCallback(
     (cost: number | undefined, margin: number | undefined): number => {
       if (cost === undefined || margin === undefined) return 0;
-      return cost / (1 - margin / 100);
+      return cost + cost * (margin / 100);
     },
     []
   );
@@ -131,21 +131,21 @@ export default function CostBreakdownTable({
     setGrandTotal(total + (costItems.salesTax || 0));
   }, [costItems, marginTaxes, currentMaterialCost, calculateTotalWithMargin]);
 
-  const costItemsArray: { key: keyof CostItem; label: string }[] = [
-    { key: "freight", label: "Freight" },
-    { key: "installation", label: "Installation" },
-    { key: "rentals", label: "Rentals" },
-    { key: "permits", label: "Permits" },
-    { key: "engCals", label: "Engineering Calculations" },
+  const costItemsArray: {key: keyof CostItem; label: string}[] = [
+    {key: 'freight', label: 'Freight'},
+    {key: 'installation', label: 'Installation'},
+    {key: 'rentals', label: 'Rentals'},
+    {key: 'permits', label: 'Permits'},
+    {key: 'engCals', label: 'Engineering Calculations'},
   ];
 
   const handleBlur = async (field: keyof CostItem, value: string) => {
     const updatedValue = Number.parseFloat(value) || 0;
-    const updatedCostItems = { ...costItems, [field]: updatedValue };
+    const updatedCostItems = {...costItems, [field]: updatedValue};
 
     try {
       const response = await apiRequest({
-        method: "put",
+        method: 'put',
         url: `/api/Quotation`,
         data: {
           ...quoteContext,
@@ -154,8 +154,8 @@ export default function CostBreakdownTable({
       });
 
       toast({
-        title: "Success",
-        description: "Cost item updated successfully",
+        title: 'Success',
+        description: 'Cost item updated successfully',
       });
 
       setQuoteContext(response);
@@ -163,9 +163,9 @@ export default function CostBreakdownTable({
     } catch (e) {
       console.error(e);
       toast({
-        title: "Error",
-        description: "Error updating cost item",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Error updating cost item',
+        variant: 'destructive',
       });
     }
   };
@@ -219,7 +219,7 @@ export default function CostBreakdownTable({
                         )}
                       </TableCell>
                     </TableRow>
-                    {costItemsArray.map(({ key, label }) => (
+                    {costItemsArray.map(({key, label}) => (
                       <TableRow key={key}>
                         <TableCell className="font-medium">{label}</TableCell>
                         <TableCell className="text-right">
@@ -259,9 +259,9 @@ export default function CostBreakdownTable({
                           type="number"
                           value={costItems.salesTax || 0}
                           onChange={(e) =>
-                            handleCostChange("salesTax", e.target.value)
+                            handleCostChange('salesTax', e.target.value)
                           }
-                          onBlur={(e) => handleBlur("salesTax", e.target.value)}
+                          onBlur={(e) => handleBlur('salesTax', e.target.value)}
                           className="w-32 ml-auto"
                           disabled={isLocked}
                         />
@@ -307,7 +307,7 @@ export default function CostBreakdownTable({
                       )}
                     </TableCell>
                   </TableRow>
-                  {costItemsArray.map(({ key, label }) => (
+                  {costItemsArray.map(({key, label}) => (
                     <TableRow key={key}>
                       <TableCell className="font-medium">{label}</TableCell>
                       <TableCell className="text-right">
@@ -347,9 +347,9 @@ export default function CostBreakdownTable({
                         type="number"
                         value={costItems.salesTax || 0}
                         onChange={(e) =>
-                          handleCostChange("salesTax", e.target.value)
+                          handleCostChange('salesTax', e.target.value)
                         }
-                        onBlur={(e) => handleBlur("salesTax", e.target.value)}
+                        onBlur={(e) => handleBlur('salesTax', e.target.value)}
                         className="w-32 ml-auto"
                         disabled={isLocked}
                       />
@@ -390,7 +390,7 @@ export default function CostBreakdownTable({
                   )}
                 </TableCell>
               </TableRow>
-              {costItemsArray.map(({ key, label }) => (
+              {costItemsArray.map(({key, label}) => (
                 <TableRow key={key}>
                   <TableCell className="font-medium">{label}</TableCell>
                   <TableCell className="text-right">
@@ -428,9 +428,9 @@ export default function CostBreakdownTable({
                     type="number"
                     value={costItems.salesTax || 0}
                     onChange={(e) =>
-                      handleCostChange("salesTax", e.target.value)
+                      handleCostChange('salesTax', e.target.value)
                     }
-                    onBlur={(e) => handleBlur("salesTax", e.target.value)}
+                    onBlur={(e) => handleBlur('salesTax', e.target.value)}
                     className="w-32 ml-auto"
                     disabled={isLocked}
                   />

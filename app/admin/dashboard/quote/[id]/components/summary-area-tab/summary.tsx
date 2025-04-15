@@ -1,8 +1,8 @@
-"use client";
-import axios from "axios";
-import React, { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
-import { useQuote } from "../../context/quote-context";
+'use client';
+import axios from 'axios';
+import React, {useEffect, useState} from 'react';
+import {useSession} from 'next-auth/react';
+import {useQuote} from '../../context/quote-context';
 
 type Props = {
   quoteId: string;
@@ -57,28 +57,26 @@ interface AreaWithStatus extends AreaData {
   active: boolean;
 }
 
-
 const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(value);
 };
 
-
 const formatWeight = (value: number) => {
-  return `${value.toLocaleString("en-US", {
+  return `${value.toLocaleString('en-US', {
     minimumFractionDigits: 3,
     maximumFractionDigits: 3,
   })} lbs`;
 };
 
-export default function Summary({ quoteId }: Props) {
-  const { data: session, status } = useSession();
+export default function Summary({quoteId}: Props) {
+  const {data: session, status} = useSession();
   const token = session?.user?.token;
-  const { quoteContext } = useQuote();
+  const {quoteContext} = useQuote();
   const [areas, setAreas] = useState<AreaWithStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -98,7 +96,7 @@ export default function Summary({ quoteId }: Props) {
           },
         }
       );
-
+      console.log('response.data', response.data);
       const areasWithStatus = response.data.map((area) => ({
         ...area,
         active: true,
@@ -106,8 +104,8 @@ export default function Summary({ quoteId }: Props) {
 
       setAreas(areasWithStatus);
     } catch (error) {
-      console.error("Failed to fetch summary:", error);
-      setError("Failed to load area data");
+      console.error('Failed to fetch summary:', error);
+      setError('Failed to load area data');
     } finally {
       setLoading(false);
     }
@@ -118,14 +116,16 @@ export default function Summary({ quoteId }: Props) {
     fetchAreaSummary();
   }, [token, quoteId]);
 
-
-  const calculateSalesTax = (value: number, applicable: boolean, taxRate: number) => {
+  const calculateSalesTax = (
+    value: number,
+    applicable: boolean,
+    taxRate: number
+  ) => {
     if (!applicable || !value) return 0;
     return (value * taxRate) / 100;
   };
 
   const calculateTotal = (area: AreaData) => {
-
     let total =
       area.totalMaterialCostWithMargin +
       area.freightWithMargin +
@@ -135,9 +135,7 @@ export default function Summary({ quoteId }: Props) {
       area.engCalcsWithMargin +
       (area.miscellaneous || 0);
 
-   
     if (quoteContext) {
-     
       // Material sales tax
       if (quoteContext.materialSalesTaxApplicable) {
         const materialTax = calculateSalesTax(
@@ -148,7 +146,6 @@ export default function Summary({ quoteId }: Props) {
         total += materialTax;
       }
 
- 
       // Freight sales tax
       if (quoteContext.freightSalesTaxApplicable) {
         const freightTax = calculateSalesTax(
@@ -159,7 +156,6 @@ export default function Summary({ quoteId }: Props) {
         total += freightTax;
       }
 
-      
       // Installation sales tax
       if (quoteContext.installationSalesTaxApplicable) {
         const installationTax = calculateSalesTax(
@@ -170,7 +166,6 @@ export default function Summary({ quoteId }: Props) {
         total += installationTax;
       }
 
-   
       // Rentals sales tax
       if (quoteContext.rentalsSalesTaxApplicable) {
         const rentalsTax = calculateSalesTax(
@@ -181,7 +176,6 @@ export default function Summary({ quoteId }: Props) {
         total += rentalsTax;
       }
 
-  
       // Permits sales tax
       if (quoteContext.permitsSalesTaxApplicable) {
         const permitsTax = calculateSalesTax(
@@ -192,7 +186,6 @@ export default function Summary({ quoteId }: Props) {
         total += permitsTax;
       }
 
-    
       // Eng Calcs sales tax
       if (quoteContext.engCalcsSalesTaxApplicable) {
         const engCalcsTax = calculateSalesTax(
@@ -225,41 +218,53 @@ export default function Summary({ quoteId }: Props) {
       if (!area.active) return;
 
       // Calcular los impuestos para cada categoría usando el contexto
-      const materialTax = quoteContext ? calculateSalesTax(
-        area.totalMaterialCostWithMargin,
-        quoteContext.materialSalesTaxApplicable || false,
-        quoteContext.materialSalesTax || 0
-      ) : 0;
+      const materialTax = quoteContext
+        ? calculateSalesTax(
+            area.totalMaterialCostWithMargin,
+            quoteContext.materialSalesTaxApplicable || false,
+            quoteContext.materialSalesTax || 0
+          )
+        : 0;
 
-      const freightTax = quoteContext ? calculateSalesTax(
-        area.freightWithMargin,
-        quoteContext.freightSalesTaxApplicable || false,
-        quoteContext.freightSalesTax || 0
-      ) : 0;
+      const freightTax = quoteContext
+        ? calculateSalesTax(
+            area.freightWithMargin,
+            quoteContext.freightSalesTaxApplicable || false,
+            quoteContext.freightSalesTax || 0
+          )
+        : 0;
 
-      const installationTax = quoteContext ? calculateSalesTax(
-        area.installationWithMargin,
-        quoteContext.installationSalesTaxApplicable || false,
-        quoteContext.installationSalesTax || 0
-      ) : 0;
+      const installationTax = quoteContext
+        ? calculateSalesTax(
+            area.installationWithMargin,
+            quoteContext.installationSalesTaxApplicable || false,
+            quoteContext.installationSalesTax || 0
+          )
+        : 0;
 
-      const rentalsTax = quoteContext ? calculateSalesTax(
-        area.rentalsWithMargin || 0,
-        quoteContext.rentalsSalesTaxApplicable || false,
-        quoteContext.rentalsSalesTax || 0
-      ) : 0;
+      const rentalsTax = quoteContext
+        ? calculateSalesTax(
+            area.rentalsWithMargin || 0,
+            quoteContext.rentalsSalesTaxApplicable || false,
+            quoteContext.rentalsSalesTax || 0
+          )
+        : 0;
 
-      const permitsTax = quoteContext ? calculateSalesTax(
-        area.permitsWithMargin,
-        quoteContext.permitsSalesTaxApplicable || false,
-        quoteContext.permitsSalesTax || 0
-      ) : 0;
+      const permitsTax = quoteContext
+        ? calculateSalesTax(
+            area.permitsWithMargin,
+            quoteContext.permitsSalesTaxApplicable || false,
+            quoteContext.permitsSalesTax || 0
+          )
+        : 0;
 
-      const engCalcsTax = quoteContext ? calculateSalesTax(
-        area.engCalcsWithMargin,
-        quoteContext.engCalcsSalesTaxApplicable || false,
-        quoteContext.engCalcsSalesTax || 0
-      ) : 0;
+      const engCalcsTax = quoteContext
+        ? calculateSalesTax(
+            area.engCalcsWithMargin,
+            quoteContext.engCalcsSalesTaxApplicable || false,
+            quoteContext.engCalcsSalesTax || 0
+          )
+        : 0;
 
       totals.weight += area.totalMaterialWeight;
       totals.material += area.totalMaterialCost;
@@ -278,12 +283,12 @@ export default function Summary({ quoteId }: Props) {
   const toggleAreaActive = (areaId: string) => {
     setAreas((prevAreas) =>
       prevAreas.map((area) =>
-        area.areaId === areaId ? { ...area, active: !area.active } : area
+        area.areaId === areaId ? {...area, active: !area.active} : area
       )
     );
   };
 
-  if (status === "loading" || loading) {
+  if (status === 'loading' || loading) {
     return <div>Loading...</div>;
   }
 
@@ -347,8 +352,8 @@ export default function Summary({ quoteId }: Props) {
                   key={area.areaId}
                   className={`border-gray-300 border ${
                     !area.active
-                      ? "bg-gray-100 text-gray-500"
-                      : "hover:bg-gray-50"
+                      ? 'bg-gray-100 text-gray-500'
+                      : 'hover:bg-gray-50'
                   }`}
                 >
                   <td className="border border-gray-300 p-2 text-center">
@@ -373,62 +378,75 @@ export default function Summary({ quoteId }: Props) {
                   </td>
                   <td className="border border-gray-300 p-2 text-right">
                     {formatCurrency(
-                      area.freightWithMargin + 
-                      (quoteContext ? calculateSalesTax(
-                        area.freightWithMargin,
-                        quoteContext.freightSalesTaxApplicable || false,
-                        quoteContext.freightSalesTax || 0
-                      ) : 0)
+                      area.freightWithMargin +
+                        (quoteContext
+                          ? calculateSalesTax(
+                              area.freightWithMargin,
+                              quoteContext.freightSalesTaxApplicable || false,
+                              quoteContext.freightSalesTax || 0
+                            )
+                          : 0)
                     )}
                   </td>
                   <td className="border border-gray-300 p-2 text-right">
                     {formatCurrency(
-                      area.installationWithMargin + 
-                      (quoteContext ? calculateSalesTax(
-                        area.installationWithMargin,
-                        quoteContext.installationSalesTaxApplicable || false,
-                        quoteContext.installationSalesTax || 0
-                      ) : 0)
+                      area.installationWithMargin +
+                        (quoteContext
+                          ? calculateSalesTax(
+                              area.installationWithMargin,
+                              quoteContext.installationSalesTaxApplicable ||
+                                false,
+                              quoteContext.installationSalesTax || 0
+                            )
+                          : 0)
                     )}
                   </td>
                   <td className="border border-gray-300 p-2 text-right">
                     {formatCurrency(
-                      (area.rentalsWithMargin || 0) + 
-                      (quoteContext ? calculateSalesTax(
-                        area.rentalsWithMargin || 0,
-                        quoteContext.rentalsSalesTaxApplicable || false,
-                        quoteContext.rentalsSalesTax || 0
-                      ) : 0)
+                      (area.rentalsWithMargin || 0) +
+                        (quoteContext
+                          ? calculateSalesTax(
+                              area.rentalsWithMargin || 0,
+                              quoteContext.rentalsSalesTaxApplicable || false,
+                              quoteContext.rentalsSalesTax || 0
+                            )
+                          : 0)
                     )}
                   </td>
                   <td className="border border-gray-300 p-2 text-right">
                     {formatCurrency(
-                      area.permitsWithMargin + 
-                      (quoteContext ? calculateSalesTax(
-                        area.permitsWithMargin,
-                        quoteContext.permitsSalesTaxApplicable || false,
-                        quoteContext.permitsSalesTax || 0
-                      ) : 0)
+                      area.permitsWithMargin +
+                        (quoteContext
+                          ? calculateSalesTax(
+                              area.permitsWithMargin,
+                              quoteContext.permitsSalesTaxApplicable || false,
+                              quoteContext.permitsSalesTax || 0
+                            )
+                          : 0)
                     )}
                   </td>
                   <td className="border border-gray-300 p-2 text-right">
                     {formatCurrency(
-                      area.engCalcsWithMargin + 
-                      (quoteContext ? calculateSalesTax(
-                        area.engCalcsWithMargin,
-                        quoteContext.engCalcsSalesTaxApplicable || false,
-                        quoteContext.engCalcsSalesTax || 0
-                      ) : 0)
+                      area.engCalcsWithMargin +
+                        (quoteContext
+                          ? calculateSalesTax(
+                              area.engCalcsWithMargin,
+                              quoteContext.engCalcsSalesTaxApplicable || false,
+                              quoteContext.engCalcsSalesTax || 0
+                            )
+                          : 0)
                     )}
                   </td>
                   <td className="border border-gray-300 p-2 text-right">
                     {formatCurrency(
                       (area.miscellaneous || 0) +
-                      (quoteContext ? calculateSalesTax(
-                        area.totalMaterialCostWithMargin,
-                        quoteContext.materialSalesTaxApplicable || false,
-                        quoteContext.materialSalesTax || 0
-                      ) : 0)
+                        (quoteContext
+                          ? calculateSalesTax(
+                              area.totalMaterialCostWithMargin,
+                              quoteContext.materialSalesTaxApplicable || false,
+                              quoteContext.materialSalesTax || 0
+                            )
+                          : 0)
                     )}
                   </td>
                   <td className="border border-gray-300 p-2 text-right font-bold">

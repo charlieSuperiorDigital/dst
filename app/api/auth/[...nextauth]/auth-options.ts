@@ -1,10 +1,10 @@
-import CredentialsProvider from "next-auth/providers/credentials";
+import CredentialsProvider from 'next-auth/providers/credentials';
 import type {
   AuthOptions,
   User as NextAuthUser,
   Session as NextAuthSession,
-} from "next-auth";
-import axios from "axios";
+} from 'next-auth';
+import axios from 'axios';
 
 interface User extends NextAuthUser {
   role: string;
@@ -16,21 +16,21 @@ interface Session extends NextAuthSession {
     id: string;
     role: string;
     token: string;
-  } & NextAuthSession["user"];
+  } & NextAuthSession['user'];
 }
 
 export const authOptions: AuthOptions = {
   providers: [
     CredentialsProvider({
-      name: "Credentials",
+      name: 'Credentials',
       credentials: {
-        email: { label: "Email", type: "text" },
-        password: { label: "Password", type: "password" },
+        email: {label: 'Email', type: 'text'},
+        password: {label: 'Password', type: 'password'},
       },
-      
+
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error("Email and password are required");
+          throw new Error('Email and password are required');
         }
 
         try {
@@ -44,7 +44,7 @@ export const authOptions: AuthOptions = {
 
           if (response.data.errorMessage) {
             throw new Error(
-              response.data.errorMessage || "Authentication failed"
+              response.data.errorMessage || 'Authentication failed'
             );
           }
 
@@ -56,14 +56,14 @@ export const authOptions: AuthOptions = {
             token: response.data.token,
           };
         } catch (error) {
-          console.error("Authorization error:", error);
-          throw new Error("Failed to connect to the authentication server");
+          console.error('Authorization error:', error);
+          throw new Error('Failed to connect to the authentication server');
         }
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({token, user}) {
       if (user) {
         const extendedUser = user as User;
         token.id = extendedUser.id;
@@ -74,7 +74,7 @@ export const authOptions: AuthOptions = {
       }
       return token;
     },
-    async session({ session, token }) {
+    async session({session, token}) {
       const extendedSession = session as Session;
       if (extendedSession.user) {
         extendedSession.user.id = token.id as string;
@@ -84,17 +84,17 @@ export const authOptions: AuthOptions = {
       }
       return extendedSession;
     },
-    async redirect({ url, baseUrl }) {
-      if (url.startsWith("/")) return `${baseUrl}${url}`
-      else if (new URL(url).origin === baseUrl) return url
-      return `${baseUrl}/admin/dashboard/quotes`
+    async redirect({url, baseUrl}) {
+      if (url.startsWith('/')) return `${baseUrl}${url}`;
+      else if (new URL(url).origin === baseUrl) return url;
+      return `${baseUrl}/admin/dashboard/quotes`;
     },
   },
   pages: {
-    signIn: "/",
+    signIn: '/',
   },
   session: {
-    strategy: "jwt",
+    strategy: 'jwt',
   },
 
   secret: process.env.NEXTAUTH_SECRET,

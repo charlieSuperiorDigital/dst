@@ -1,6 +1,6 @@
-import { adaptRequest } from "@/adapters/axios-request-adapter";
+import {adaptRequest} from '@/adapters/axios-request-adapter';
 
-import { getServerSideApiClient } from "@/utils/server-side-api-client";
+import {getServerSideApiClient} from '@/utils/server-side-api-client';
 
 export const getAreaMaterialCost = async (id) => {
   const apiClient = await getServerSideApiClient();

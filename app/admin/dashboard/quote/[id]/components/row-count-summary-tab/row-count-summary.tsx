@@ -1,13 +1,13 @@
-"use client";
-import { useEffect, useState } from "react";
-import CostBreakdownTable from "./cost-breakdown-table";
-import MarginTaxes from "./margin-taxes";
-import SalesTaxes, { SalesTaxes as SalesTaxesType } from "./sales-taxes";
-import ScopeItemsAndNotes from "./scope-and-notes.";
-import { apiRequest } from "@/utils/client-side-api";
-import { useQuote } from "../../context/quote-context";
-import { Switch } from "@/components/ui/switch"; // Importa el componente Switch
-import { Label } from "@/components/ui/label"; // Importa el componente Label
+'use client';
+import {useEffect, useState} from 'react';
+import CostBreakdownTable from './cost-breakdown-table';
+import MarginTaxes from './margin-taxes';
+import SalesTaxes, {SalesTaxes as SalesTaxesType} from './sales-taxes';
+import ScopeItemsAndNotes from './scope-and-notes.';
+import {apiRequest} from '@/utils/client-side-api';
+import {useQuote} from '../../context/quote-context';
+import {Switch} from '@/components/ui/switch'; // Importa el componente Switch
+import {Label} from '@/components/ui/label'; // Importa el componente Label
 
 export interface MarginTax {
   freightMargin?: number;
@@ -32,8 +32,8 @@ interface Props {
   quoteId: string;
 }
 
-export default function RownCountSummary({ quoteId }: Props) {
-  const { quote, quoteContext } = useQuote();
+export default function RownCountSummary({quoteId}: Props) {
+  const {quote, quoteContext} = useQuote();
   const [materialCost, setMaterialCost] = useState<number>(0);
   const [marginTaxes, setMarginTaxes] = useState<MarginTax>({
     materialMargin: quote.materialMargin,
@@ -68,7 +68,8 @@ export default function RownCountSummary({ quoteId }: Props) {
         materialSalesTaxRate: quoteContext.materialSalesTax || 0,
         freightSalesTax: quoteContext.freightSalesTaxApplicable || false,
         freightSalesTaxRate: quoteContext.freightSalesTax || 0,
-        installationSalesTax: quoteContext.installationSalesTaxApplicable || false,
+        installationSalesTax:
+          quoteContext.installationSalesTaxApplicable || false,
         installationSalesTaxRate: quoteContext.installationSalesTax || 0,
         rentalsSalesTax: quoteContext.rentalsSalesTaxApplicable || false,
         rentalsSalesTaxRate: quoteContext.rentalsSalesTax || 0,
@@ -95,7 +96,7 @@ export default function RownCountSummary({ quoteId }: Props) {
   useEffect(() => {
     const fetchMaterialCost = async () => {
       const response = await apiRequest({
-        method: "get",
+        method: 'get',
         url: `/api/Part/TotalMaterialCost/${quoteId}`,
       });
       setMaterialCost(response);
@@ -130,10 +131,10 @@ export default function RownCountSummary({ quoteId }: Props) {
       <div
         className={`grid ${
           !showMarginTaxes && !showSalesTaxes
-            ? "grid-cols-1"
+            ? 'grid-cols-1'
             : showMarginTaxes && showSalesTaxes
-            ? "grid-cols-3"
-            : "grid-cols-2"
+            ? 'grid-cols-3'
+            : 'grid-cols-2'
         } gap-4`}
       >
         <div className="w-full">

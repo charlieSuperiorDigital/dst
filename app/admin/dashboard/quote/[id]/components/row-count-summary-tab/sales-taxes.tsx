@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   Table,
@@ -7,13 +7,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { useQuote } from "../../context/quote-context";
-import { apiRequest } from "@/utils/client-side-api";
-import { toast } from "@/hooks/use-toast";
-import { Switch } from "@/components/ui/switch";
+} from '@/components/ui/table';
+import {Input} from '@/components/ui/input';
+import {Card} from '@/components/ui/card';
+import {useQuote} from '../../context/quote-context';
+import {apiRequest} from '@/utils/client-side-api';
+import {toast} from '@/hooks/use-toast';
+import {Switch} from '@/components/ui/switch';
 
 export interface SalesTaxes {
   materialSalesTax: boolean;
@@ -31,51 +31,46 @@ export interface SalesTaxes {
 }
 
 type TaxToggleKey =
-  | "materialSalesTax"
-  | "freightSalesTax"
-  | "installationSalesTax"
-  | "rentalsSalesTax"
-  | "permitsSalesTax"
-  | "engCalsSalesTax";
+  | 'materialSalesTax'
+  | 'freightSalesTax'
+  | 'installationSalesTax'
+  | 'rentalsSalesTax'
+  | 'permitsSalesTax'
+  | 'engCalsSalesTax';
 type TaxRateKey =
-  | "materialSalesTaxRate"
-  | "freightSalesTaxRate"
-  | "installationSalesTaxRate"
-  | "rentalsSalesTaxRate"
-  | "permitsSalesTaxRate"
-  | "engCalsSalesTaxRate";
+  | 'materialSalesTaxRate'
+  | 'freightSalesTaxRate'
+  | 'installationSalesTaxRate'
+  | 'rentalsSalesTaxRate'
+  | 'permitsSalesTaxRate'
+  | 'engCalsSalesTaxRate';
 
 type Props = {
   salesTaxes: SalesTaxes;
   setSalesTaxes: (salesTaxes: SalesTaxes) => void;
 };
 
-export default function SalesTaxes({ salesTaxes, setSalesTaxes }: Props) {
-  const { isLocked, quoteContext, setQuoteContext } = useQuote();
-  console.log("quote context full structure:", quoteContext);
-  console.log("rentals fields:", {
-    rentalsSalesTaxApplicable: quoteContext?.rentalsSalesTaxApplicable,
-    rentalsSalesTax: quoteContext?.rentalsSalesTax,
-  });
+export default function SalesTaxes({salesTaxes, setSalesTaxes}: Props) {
+  const {isLocked, quoteContext, setQuoteContext} = useQuote();
 
   // Map UI field names to API field names
   const uiToApiFieldMap = {
-    materialSalesTax: "materialSalesTaxApplicable",
-    materialSalesTaxRate: "materialSalesTax",
-    freightSalesTax: "freightSalesTaxApplicable",
-    freightSalesTaxRate: "freightSalesTax",
-    installationSalesTax: "installationSalesTaxApplicable",
-    installationSalesTaxRate: "installationSalesTax",
-    rentalsSalesTax: "rentalsSalesTaxApplicable",
-    rentalsSalesTaxRate: "rentalsSalesTax",
-    permitsSalesTax: "permitsSalesTaxApplicable",
-    permitsSalesTaxRate: "permitsSalesTax",
-    engCalsSalesTax: "engCalcsSalesTaxApplicable",
-    engCalsSalesTaxRate: "engCalcsSalesTax",
+    materialSalesTax: 'materialSalesTaxApplicable',
+    materialSalesTaxRate: 'materialSalesTax',
+    freightSalesTax: 'freightSalesTaxApplicable',
+    freightSalesTaxRate: 'freightSalesTax',
+    installationSalesTax: 'installationSalesTaxApplicable',
+    installationSalesTaxRate: 'installationSalesTax',
+    rentalsSalesTax: 'rentalsSalesTaxApplicable',
+    rentalsSalesTaxRate: 'rentalsSalesTax',
+    permitsSalesTax: 'permitsSalesTaxApplicable',
+    permitsSalesTaxRate: 'permitsSalesTax',
+    engCalsSalesTax: 'engCalcsSalesTaxApplicable',
+    engCalsSalesTaxRate: 'engCalcsSalesTax',
   };
 
   const handleToggleChange = (field: TaxToggleKey, checked: boolean) => {
-    const updatedSalesTaxes = { ...salesTaxes };
+    const updatedSalesTaxes = {...salesTaxes};
     updatedSalesTaxes[field] = checked;
     setSalesTaxes(updatedSalesTaxes);
 
@@ -84,10 +79,10 @@ export default function SalesTaxes({ salesTaxes, setSalesTaxes }: Props) {
   };
 
   const handleRateChange = (field: TaxRateKey, value: string) => {
-    const updatedSalesTaxes = { ...salesTaxes };
+    const updatedSalesTaxes = {...salesTaxes};
     updatedSalesTaxes[field] = parseFloat(value) || 0;
     setSalesTaxes(updatedSalesTaxes);
-    
+
     // Immediately update the API for a more fluid experience
     handleRateBlur(field, value);
   };
@@ -97,7 +92,7 @@ export default function SalesTaxes({ salesTaxes, setSalesTaxes }: Props) {
       const apiField = uiToApiFieldMap[field];
 
       const response = await apiRequest({
-        method: "put",
+        method: 'put',
         url: `/api/Quotation`,
         data: {
           ...quoteContext,
@@ -107,16 +102,16 @@ export default function SalesTaxes({ salesTaxes, setSalesTaxes }: Props) {
 
       setQuoteContext(response);
       toast({
-        title: "Success",
-        description: "Sales tax toggle updated",
+        title: 'Success',
+        description: 'Sales tax toggle updated',
         duration: 2000,
       });
     } catch (e) {
       console.log(e);
       toast({
-        title: "Error",
-        description: "Error updating sales tax toggle",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Error updating sales tax toggle',
+        variant: 'destructive',
       });
     }
   };
@@ -127,7 +122,7 @@ export default function SalesTaxes({ salesTaxes, setSalesTaxes }: Props) {
       const apiField = uiToApiFieldMap[field];
 
       const response = await apiRequest({
-        method: "put",
+        method: 'put',
         url: `/api/Quotation`,
         data: {
           ...quoteContext,
@@ -137,52 +132,52 @@ export default function SalesTaxes({ salesTaxes, setSalesTaxes }: Props) {
 
       setQuoteContext(response);
       toast({
-        title: "Success",
-        description: "Sales tax rate updated",
+        title: 'Success',
+        description: 'Sales tax rate updated',
         duration: 2000,
       });
     } catch (e) {
       console.log(e);
       toast({
-        title: "Error",
-        description: "Error updating sales tax rate",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Error updating sales tax rate',
+        variant: 'destructive',
       });
     }
   };
 
   // Group related fields (toggle and rate) for each item
   const getItemGroups = () => {
-    const groups: { name: string; toggle: TaxToggleKey; rate: TaxRateKey }[] = [
+    const groups: {name: string; toggle: TaxToggleKey; rate: TaxRateKey}[] = [
       {
-        name: "Material",
-        toggle: "materialSalesTax",
-        rate: "materialSalesTaxRate",
+        name: 'Material',
+        toggle: 'materialSalesTax',
+        rate: 'materialSalesTaxRate',
       },
       {
-        name: "Freight",
-        toggle: "freightSalesTax",
-        rate: "freightSalesTaxRate",
+        name: 'Freight',
+        toggle: 'freightSalesTax',
+        rate: 'freightSalesTaxRate',
       },
       {
-        name: "Installation",
-        toggle: "installationSalesTax",
-        rate: "installationSalesTaxRate",
+        name: 'Installation',
+        toggle: 'installationSalesTax',
+        rate: 'installationSalesTaxRate',
       },
       {
-        name: "Rentals",
-        toggle: "rentalsSalesTax",
-        rate: "rentalsSalesTaxRate",
+        name: 'Rentals',
+        toggle: 'rentalsSalesTax',
+        rate: 'rentalsSalesTaxRate',
       },
       {
-        name: "Permits",
-        toggle: "permitsSalesTax",
-        rate: "permitsSalesTaxRate",
+        name: 'Permits',
+        toggle: 'permitsSalesTax',
+        rate: 'permitsSalesTaxRate',
       },
       {
-        name: "Eng Calcs",
-        toggle: "engCalsSalesTax",
-        rate: "engCalsSalesTaxRate",
+        name: 'Eng Calcs',
+        toggle: 'engCalsSalesTax',
+        rate: 'engCalsSalesTaxRate',
       },
     ];
     return groups;
