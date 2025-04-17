@@ -1,19 +1,19 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Plus } from "lucide-react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import {useState} from 'react';
+import {Plus} from 'lucide-react';
+import {useForm} from 'react-hook-form';
+import {zodResolver} from '@hookform/resolvers/zod';
+import * as z from 'zod';
 
-import { Button } from "@/components/ui/button";
+import {Button} from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
   Form,
   FormControl,
@@ -21,20 +21,20 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { apiRequest } from "@/utils/client-side-api";
-import { Part } from "@/app/entities/Part";
+} from '@/components/ui/form';
+import {Input} from '@/components/ui/input';
+import {apiRequest} from '@/utils/client-side-api';
+import {Part} from '@/app/entities/Part';
 
 const formSchema = z.object({
-  partId: z.string().min(1, "Please select a part"),
-  partNumber: z.string().min(1, "Please enter a part number"),
+  partId: z.string().min(1, 'Please select a part'),
+  partNumber: z.string().min(1, 'Please enter a part number'),
   laborEA: z.string(),
   unitCost: z.string(),
   unitLabor: z.string(),
   unitMatLb: z.string(),
   unitSell: z.string(),
-  unitWeight: z.string()
+  unitWeight: z.string(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -43,9 +43,9 @@ type Props = {
   onAdd: (part: Part, partNumber: string) => void;
 };
 
-export function PartsDialog({ onAdd }: Props) {
+export function PartsDialog({onAdd}: Props) {
   const [open, setOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [filteredParts, setFilteredParts] = useState<Part[]>([]);
   const [selectedPart, setSelectedPart] = useState<Part | null>(null);
@@ -53,14 +53,14 @@ export function PartsDialog({ onAdd }: Props) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      partId: "",
-      partNumber: "",
-      laborEA: "0.00",
-      unitCost: "0.00",
-      unitLabor: "0.00",
-      unitMatLb: "0.00",
-      unitSell: "0.00",
-      unitWeight: "0.000"
+      partId: '',
+      partNumber: '',
+      laborEA: '0.00',
+      unitCost: '0.00',
+      unitLabor: '0.00',
+      unitMatLb: '0.00',
+      unitSell: '0.00',
+      unitWeight: '0.000',
     },
   });
 
@@ -69,7 +69,7 @@ export function PartsDialog({ onAdd }: Props) {
     if (!open) {
       // Reset all form data when modal is closed
       form.reset();
-      setSearchQuery("");
+      setSearchQuery('');
       setSelectedPart(null);
       setFilteredParts([]);
     }
@@ -82,7 +82,7 @@ export function PartsDialog({ onAdd }: Props) {
     if (query) {
       setLoading(true);
       const response = await apiRequest({
-        method: "get",
+        method: 'get',
         url: `/api/PartLibrary/1/10?search=${encodeURIComponent(query)}`,
       });
 
@@ -95,14 +95,32 @@ export function PartsDialog({ onAdd }: Props) {
 
   const handlePartSelect = (part: Part) => {
     setSelectedPart(part);
-    form.setValue("partId", part.id);
-    form.setValue("partNumber", part.partNumber);
-    form.setValue("laborEA", part.laborEA != null ? Number(part.laborEA).toFixed(2) : "0.00");
-    form.setValue("unitCost", part.unitCost != null ? Number(part.unitCost).toFixed(2) : "0.00");
-    form.setValue("unitLabor", part.unitLabor != null ? Number(part.unitLabor).toFixed(2) : "0.00");
-    form.setValue("unitMatLb", part.unitMatLb != null ? Number(part.unitMatLb).toFixed(2) : "0.00");
-    form.setValue("unitSell", part.unitSell != null ? Number(part.unitSell).toFixed(2) : "0.00");
-    form.setValue("unitWeight", part.unitWeight != null ? Number(part.unitWeight).toFixed(3) : "0.000");
+    form.setValue('partId', part.id);
+    form.setValue('partNumber', part.partNumber);
+    form.setValue(
+      'laborEA',
+      part.laborEA != null ? Number(part.laborEA).toFixed(2) : '0.00'
+    );
+    form.setValue(
+      'unitCost',
+      part.unitCost != null ? Number(part.unitCost).toFixed(2) : '0.00'
+    );
+    form.setValue(
+      'unitLabor',
+      part.unitLabor != null ? Number(part.unitLabor).toFixed(2) : '0.00'
+    );
+    form.setValue(
+      'unitMatLb',
+      part.unitMatLb != null ? Number(part.unitMatLb).toFixed(2) : '0.00'
+    );
+    form.setValue(
+      'unitSell',
+      part.unitSell != null ? Number(part.unitSell).toFixed(2) : '0.00'
+    );
+    form.setValue(
+      'unitWeight',
+      part.unitWeight != null ? Number(part.unitWeight).toFixed(3) : '0.000'
+    );
     setFilteredParts([]);
   };
 
@@ -116,9 +134,43 @@ export function PartsDialog({ onAdd }: Props) {
         unitLabor: parseFloat(values.unitLabor),
         unitMatLb: parseFloat(values.unitMatLb),
         unitSell: parseFloat(values.unitSell),
-        unitWeight: parseFloat(values.unitWeight)
+        unitWeight: parseFloat(values.unitWeight),
       };
       onAdd(newPart, values.partNumber);
+    }
+    setOpen(false);
+  };
+
+  const handleAddToPartsListAndQuote = async (values: FormValues) => {
+    if (selectedPart) {
+      const newPart: Part = {
+        ...selectedPart,
+        partNumber: values.partNumber,
+        laborEA: parseFloat(values.laborEA),
+        unitCost: parseFloat(values.unitCost),
+        unitLabor: parseFloat(values.unitLabor),
+        unitMatLb: parseFloat(values.unitMatLb),
+        unitSell: parseFloat(values.unitSell),
+        unitWeight: parseFloat(values.unitWeight),
+      };
+      onAdd(newPart, values.partNumber);
+      try {
+        // Add to main parts list first
+        await apiRequest({
+          method: 'post',
+          url: '/api/PartLibrary',
+          data: newPart,
+        });
+        // Then add to quote
+        await apiRequest({
+          method: 'post',
+          url: '/api/quote/addPart', // Adjust endpoint as needed
+          data: newPart,
+        });
+        // Optionally show a toast for quote add success
+      } catch (error) {
+        // Optionally show a toast for quote add error
+      }
     }
     setOpen(false);
   };
@@ -183,7 +235,7 @@ export function PartsDialog({ onAdd }: Props) {
             <FormField
               control={form.control}
               name="partNumber"
-              render={({ field }) => (
+              render={({field}) => (
                 <FormItem>
                   <FormLabel>Part Number</FormLabel>
                   <FormControl>
@@ -202,7 +254,7 @@ export function PartsDialog({ onAdd }: Props) {
               <FormField
                 control={form.control}
                 name="laborEA"
-                render={({ field }) => (
+                render={({field}) => (
                   <FormItem className="grid grid-cols-4 items-center gap-4">
                     <FormLabel className="text-right">Labor EA</FormLabel>
                     <div className="col-span-3">
@@ -230,13 +282,15 @@ export function PartsDialog({ onAdd }: Props) {
               <FormField
                 control={form.control}
                 name="unitCost"
-                render={({ field }) => (
+                render={({field}) => (
                   <FormItem className="grid grid-cols-4 items-center gap-4">
                     <FormLabel className="text-right">Unit Cost</FormLabel>
                     <div className="col-span-3">
                       <FormControl>
                         <div className="relative">
-                          <span className="absolute left-3 top-1/2 transform -translate-y-1/2">$</span>
+                          <span className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                            $
+                          </span>
                           <Input
                             type="number"
                             step="0.01"
@@ -262,7 +316,7 @@ export function PartsDialog({ onAdd }: Props) {
               <FormField
                 control={form.control}
                 name="unitLabor"
-                render={({ field }) => (
+                render={({field}) => (
                   <FormItem className="grid grid-cols-4 items-center gap-4">
                     <FormLabel className="text-right">Unit Labor</FormLabel>
                     <div className="col-span-3">
@@ -290,8 +344,11 @@ export function PartsDialog({ onAdd }: Props) {
               <FormField
                 control={form.control}
                 name="unitMatLb"
-                render={({ field }) => (
-                  <FormItem className="grid grid-cols-4 items-center gap-4" style={{ display: "none" }}>
+                render={({field}) => (
+                  <FormItem
+                    className="grid grid-cols-4 items-center gap-4"
+                    style={{display: 'none'}}
+                  >
                     <FormLabel className="text-right">Unit Mat/lb</FormLabel>
                     <div className="col-span-3">
                       <FormControl>
@@ -318,13 +375,15 @@ export function PartsDialog({ onAdd }: Props) {
               <FormField
                 control={form.control}
                 name="unitSell"
-                render={({ field }) => (
+                render={({field}) => (
                   <FormItem className="grid grid-cols-4 items-center gap-4">
                     <FormLabel className="text-right">Unit Sell</FormLabel>
                     <div className="col-span-3">
                       <FormControl>
                         <div className="relative">
-                          <span className="absolute left-3 top-1/2 transform -translate-y-1/2">$</span>
+                          <span className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                            $
+                          </span>
                           <Input
                             type="number"
                             step="0.01"
@@ -350,7 +409,7 @@ export function PartsDialog({ onAdd }: Props) {
               <FormField
                 control={form.control}
                 name="unitWeight"
-                render={({ field }) => (
+                render={({field}) => (
                   <FormItem className="grid grid-cols-4 items-center gap-4">
                     <FormLabel className="text-right">Unit Weight</FormLabel>
                     <div className="col-span-3">
@@ -376,7 +435,15 @@ export function PartsDialog({ onAdd }: Props) {
               />
             </div>
 
-            <Button type="submit">Add</Button>
+            <div className="flex justify-between gap-2 mt-6">
+              <Button type="submit">Add</Button>
+              <Button
+                type="button"
+                onClick={form.handleSubmit(handleAddToPartsListAndQuote)}
+              >
+                Add to Parts List & Quote
+              </Button>
+            </div>
           </form>
         </Form>
       </DialogContent>

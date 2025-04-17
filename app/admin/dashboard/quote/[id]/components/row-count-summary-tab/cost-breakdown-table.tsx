@@ -41,6 +41,20 @@ type Props = {
   costItems: CostItem;
   setCostItems: (costItems: CostItem) => void;
   materialCost: number;
+  salesTaxes: {
+    freightSalesTax: boolean;
+    installationSalesTax: boolean;
+    rentalsSalesTax: boolean;
+    permitsSalesTax: boolean;
+    engCalsSalesTax: boolean;
+    materialSalesTax: boolean;
+    freightSalesTaxRate: number;
+    installationSalesTaxRate: number;
+    rentalsSalesTaxRate: number;
+    permitsSalesTaxRate: number;
+    engCalsSalesTaxRate: number;
+    materialSalesTaxRate: number;
+  };
 };
 
 export default function CostBreakdownTable({
@@ -48,6 +62,7 @@ export default function CostBreakdownTable({
   costItems,
   setCostItems,
   materialCost,
+  salesTaxes,
 }: Props) {
   const {isLocked, quoteContext, setQuoteContext, areaMaterialcost} =
     useQuote();
@@ -100,6 +115,56 @@ export default function CostBreakdownTable({
     },
     []
   );
+
+  // Helper to get sales tax toggle and rate for a given key
+  const getSalesTaxToggleAndRate = (key: keyof CostItem | 'materialCost') => {
+    switch (key) {
+      case 'freight':
+        return {
+          toggle: salesTaxes.freightSalesTax,
+          rate: salesTaxes.freightSalesTaxRate,
+        };
+      case 'installation':
+        return {
+          toggle: salesTaxes.installationSalesTax,
+          rate: salesTaxes.installationSalesTaxRate,
+        };
+      case 'rentals':
+        return {
+          toggle: salesTaxes.rentalsSalesTax,
+          rate: salesTaxes.rentalsSalesTaxRate,
+        };
+      case 'permits':
+        return {
+          toggle: salesTaxes.permitsSalesTax,
+          rate: salesTaxes.permitsSalesTaxRate,
+        };
+      case 'engCals':
+        return {
+          toggle: salesTaxes.engCalsSalesTax,
+          rate: salesTaxes.engCalsSalesTaxRate,
+        };
+      case 'materialCost':
+        return {
+          toggle: salesTaxes.materialSalesTax,
+          rate: salesTaxes.materialSalesTaxRate,
+        };
+      default:
+        return {toggle: false, rate: 0};
+    }
+  };
+
+  // Helper to calculate total with sales tax
+  const calculateTotalWithSales = (
+    totalWithMargin: number,
+    key: keyof CostItem | 'materialCost'
+  ) => {
+    const {toggle, rate} = getSalesTaxToggleAndRate(key);
+    if (toggle) {
+      return totalWithMargin + totalWithMargin * (rate / 100);
+    }
+    return totalWithMargin;
+  };
 
   useEffect(() => {
     let total = calculateTotalWithMargin(
@@ -170,6 +235,34 @@ export default function CostBreakdownTable({
     }
   };
 
+  // --- Area summary table logic ---
+  const areaSummary = (areaMaterialcost || []).map((area) => {
+    const total = area.totalMaterialCost;
+    const totalWithMargin = calculateTotalWithMargin(
+      total,
+      marginTaxes.materialMargin
+    );
+    const totalWithSales = calculateTotalWithSales(
+      totalWithMargin,
+      'materialCost'
+    );
+    return {
+      name: area.areaName,
+      total,
+      totalWithMargin,
+      totalWithSales,
+    };
+  });
+  const areaGrandTotal = areaSummary.reduce(
+    (acc, area) => {
+      acc.total += area.total;
+      acc.totalWithMargin += area.totalWithMargin;
+      acc.totalWithSales += area.totalWithSales;
+      return acc;
+    },
+    {total: 0, totalWithMargin: 0, totalWithSales: 0}
+  );
+
   return (
     <Card className="w-full">
       <div className="p-6">
@@ -200,6 +293,9 @@ export default function CostBreakdownTable({
                       <TableHead className="text-right">
                         Total w/ Margin
                       </TableHead>
+                      <TableHead className="text-right">
+                        Total w/ Sales Tax
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -215,6 +311,17 @@ export default function CostBreakdownTable({
                           calculateTotalWithMargin(
                             area.totalMaterialCost,
                             marginTaxes.materialMargin
+                          )
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(
+                          calculateTotalWithSales(
+                            calculateTotalWithMargin(
+                              area.totalMaterialCost,
+                              marginTaxes.materialMargin
+                            ),
+                            'materialCost'
                           )
                         )}
                       </TableCell>
@@ -242,6 +349,17 @@ export default function CostBreakdownTable({
                             )
                           )}
                         </TableCell>
+                        <TableCell className="text-right">
+                          {formatCurrency(
+                            calculateTotalWithSales(
+                              calculateTotalWithMargin(
+                                costItems[key],
+                                marginTaxes[`${key}Margin` as keyof MarginTax]
+                              ),
+                              key
+                            )
+                          )}
+                        </TableCell>
                       </TableRow>
                     ))}
                     <TableRow className="font-bold">
@@ -250,8 +368,16 @@ export default function CostBreakdownTable({
                       <TableCell className="text-right">
                         {formatCurrency(totalBeforeTaxes)}
                       </TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(
+                          calculateTotalWithSales(
+                            totalBeforeTaxes,
+                            'materialCost'
+                          )
+                        )}
+                      </TableCell>
                     </TableRow>
-                    <TableRow>
+                    {/* <TableRow>
                       <TableCell>Sales Tax</TableCell>
                       <TableCell></TableCell>
                       <TableCell className="text-right">
@@ -266,12 +392,28 @@ export default function CostBreakdownTable({
                           disabled={isLocked}
                         />
                       </TableCell>
-                    </TableRow>
+                      <TableCell className="text-right">
+                        {formatCurrency(
+                          calculateTotalWithSales(
+                            costItems.salesTax || 0,
+                            'salesTax'
+                          )
+                        )}
+                      </TableCell>
+                    </TableRow> */}
                     <TableRow className="font-bold">
                       <TableCell>Grand Total</TableCell>
                       <TableCell></TableCell>
                       <TableCell className="text-right">
-                        {formatCurrency(grandTotal)}
+                        {formatCurrency(areaGrandTotal.total)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(
+                          calculateTotalWithSales(
+                            areaGrandTotal.total,
+                            'materialCost'
+                          )
+                        )}
                       </TableCell>
                     </TableRow>
                   </TableBody>
@@ -288,6 +430,7 @@ export default function CostBreakdownTable({
                     <TableHead className="text-right">
                       Total w/ Margin
                     </TableHead>
+                    <TableHead className="text-right">Total w/ Sales</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -303,6 +446,17 @@ export default function CostBreakdownTable({
                         calculateTotalWithMargin(
                           calculateTotalMaterialCost(),
                           marginTaxes.materialMargin
+                        )
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {formatCurrency(
+                        calculateTotalWithSales(
+                          calculateTotalWithMargin(
+                            calculateTotalMaterialCost(),
+                            marginTaxes.materialMargin
+                          ),
+                          'materialCost'
                         )
                       )}
                     </TableCell>
@@ -330,6 +484,17 @@ export default function CostBreakdownTable({
                           )
                         )}
                       </TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(
+                          calculateTotalWithSales(
+                            calculateTotalWithMargin(
+                              costItems[key],
+                              marginTaxes[`${key}Margin` as keyof MarginTax]
+                            ),
+                            key
+                          )
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))}
                   <TableRow className="font-bold">
@@ -338,8 +503,16 @@ export default function CostBreakdownTable({
                     <TableCell className="text-right">
                       {formatCurrency(totalBeforeTaxes)}
                     </TableCell>
+                    <TableCell className="text-right">
+                      {formatCurrency(
+                        calculateTotalWithSales(
+                          totalBeforeTaxes,
+                          'materialCost'
+                        )
+                      )}
+                    </TableCell>
                   </TableRow>
-                  <TableRow>
+                  {/* <TableRow>
                     <TableCell>Sales Tax</TableCell>
                     <TableCell></TableCell>
                     <TableCell className="text-right">
@@ -354,12 +527,25 @@ export default function CostBreakdownTable({
                         disabled={isLocked}
                       />
                     </TableCell>
-                  </TableRow>
+                    <TableCell className="text-right">
+                      {formatCurrency(
+                        calculateTotalWithSales(
+                          costItems.salesTax || 0,
+                          'salesTax'
+                        )
+                      )}
+                    </TableCell>
+                  </TableRow> */}
                   <TableRow className="font-bold">
                     <TableCell>Grand Total</TableCell>
                     <TableCell></TableCell>
                     <TableCell className="text-right">
                       {formatCurrency(grandTotal)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {formatCurrency(
+                        calculateTotalWithSales(grandTotal, 'materialCost')
+                      )}
                     </TableCell>
                   </TableRow>
                 </TableBody>
@@ -373,6 +559,7 @@ export default function CostBreakdownTable({
                 <TableHead>Item</TableHead>
                 <TableHead className="text-right">Cost</TableHead>
                 <TableHead className="text-right">Total w/ Margin</TableHead>
+                <TableHead className="text-right">Total w/ Sales</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -386,6 +573,17 @@ export default function CostBreakdownTable({
                     calculateTotalWithMargin(
                       materialCost,
                       marginTaxes.materialMargin
+                    )
+                  )}
+                </TableCell>
+                <TableCell className="text-right">
+                  {formatCurrency(
+                    calculateTotalWithSales(
+                      calculateTotalWithMargin(
+                        materialCost,
+                        marginTaxes.materialMargin
+                      ),
+                      'materialCost'
                     )
                   )}
                 </TableCell>
@@ -411,6 +609,17 @@ export default function CostBreakdownTable({
                       )
                     )}
                   </TableCell>
+                  <TableCell className="text-right">
+                    {formatCurrency(
+                      calculateTotalWithSales(
+                        calculateTotalWithMargin(
+                          costItems[key],
+                          marginTaxes[`${key}Margin` as keyof MarginTax]
+                        ),
+                        key
+                      )
+                    )}
+                  </TableCell>
                 </TableRow>
               ))}
               <TableRow className="font-bold">
@@ -419,8 +628,13 @@ export default function CostBreakdownTable({
                 <TableCell className="text-right">
                   {formatCurrency(totalBeforeTaxes)}
                 </TableCell>
+                <TableCell className="text-right">
+                  {formatCurrency(
+                    calculateTotalWithSales(totalBeforeTaxes, 'materialCost')
+                  )}
+                </TableCell>
               </TableRow>
-              <TableRow>
+              {/* <TableRow>
                 <TableCell>Sales Tax</TableCell>
                 <TableCell></TableCell>
                 <TableCell className="text-right">
@@ -435,16 +649,72 @@ export default function CostBreakdownTable({
                     disabled={isLocked}
                   />
                 </TableCell>
-              </TableRow>
+                <TableCell className="text-right">
+                  {formatCurrency(
+                    calculateTotalWithSales(costItems.salesTax || 0, 'salesTax')
+                  )}
+                </TableCell>
+              </TableRow> */}
               <TableRow className="font-bold">
                 <TableCell>Grand Total</TableCell>
                 <TableCell></TableCell>
                 <TableCell className="text-right">
                   {formatCurrency(grandTotal)}
                 </TableCell>
+                <TableCell className="text-right">
+                  {formatCurrency(
+                    calculateTotalWithSales(grandTotal, 'materialCost')
+                  )}
+                </TableCell>
               </TableRow>
             </TableBody>
           </Table>
+        )}
+
+        {/* Area summary table */}
+        {areaMaterialcost && areaMaterialcost.length > 0 && (
+          <div className="mb-6">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Area</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead className="text-right">Total w/ Margin</TableHead>
+                  <TableHead className="text-right">
+                    Total w/ Sales Tax
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {areaSummary.map((area) => (
+                  <TableRow key={area.name}>
+                    <TableCell className="font-medium">{area.name}</TableCell>
+                    <TableCell className="text-right">
+                      {formatCurrency(area.total)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {formatCurrency(area.totalWithMargin)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {formatCurrency(area.totalWithSales)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                <TableRow className="font-bold">
+                  <TableCell>Grand Total</TableCell>
+                  <TableCell className="text-right">
+                    {formatCurrency(areaGrandTotal.total)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {formatCurrency(areaGrandTotal.totalWithMargin)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {formatCurrency(areaGrandTotal.totalWithSales)}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
         )}
       </div>
     </Card>

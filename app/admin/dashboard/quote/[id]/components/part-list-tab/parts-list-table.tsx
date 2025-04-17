@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { use, useEffect, useState } from "react";
+import {use, useEffect, useState} from 'react';
 import {
   Table,
   TableBody,
@@ -8,34 +8,34 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { EditPartDialog } from "./edit-part-modal";
-import type { PartList } from "../../../../../../entities/PartList";
-import { formatCurrency } from "@/utils/format-currency";
-import { Input } from "@/components/ui/input";
-import { paintTypes } from "@/app/entities/colors-enum";
-import { toast } from "@/hooks/use-toast";
-import { apiRequest } from "@/utils/client-side-api";
-import { useQuote } from "../../context/quote-context";
+} from '@/components/ui/table';
+import {EditPartDialog} from './edit-part-modal';
+import type {PartList} from '../../../../../../entities/PartList';
+import {formatCurrency} from '@/utils/format-currency';
+import {Input} from '@/components/ui/input';
+import {paintTypes} from '@/app/entities/colors-enum';
+import {toast} from '@/hooks/use-toast';
+import {apiRequest} from '@/utils/client-side-api';
+import {useQuote} from '../../context/quote-context';
 
 interface Props {
   quoteId: string;
   refresh: number;
 }
 
-export default function PartsListTable({ quoteId, refresh }: Props) {
-  const { isLocked } = useQuote();
+export default function PartsListTable({quoteId, refresh}: Props) {
+  const {isLocked} = useQuote();
   const [parts, setParts] = useState<PartList[]>([]);
   const [filteredParts, setFilteredParts] = useState<PartList[]>([]);
   const [selectedPart, setSelectedPart] = useState<PartList | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [materialMargin, setMaterialMargin] = useState(0.2); // Default value until we fetch from quotation
 
   const fetchParts = async () => {
     const response = await apiRequest({
-      method: "get",
+      method: 'get',
       url: `/api/Part/PartsFromQuotation/${quoteId}`,
     });
     console.log(response);
@@ -58,41 +58,41 @@ export default function PartsListTable({ quoteId, refresh }: Props) {
   const handleSave = async (updatedPart: PartList) => {
     try {
       await apiRequest({
-        method: "put",
+        method: 'put',
         url: `/api/part`,
         data: updatedPart,
       });
       await fetchParts();
 
       toast({
-        title: "Details Updated",
-        description: "Details have been updated successfully",
+        title: 'Details Updated',
+        description: 'Details have been updated successfully',
       });
     } catch (error) {
       console.log(error);
       toast({
-        title: "Error",
-        description: "Error updating part details",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Error updating part details',
+        variant: 'destructive',
       });
     }
   };
   const handleDelete = async (part: PartList) => {
     try {
       await apiRequest({
-        method: "delete",
+        method: 'delete',
         url: `/api/part/${part.id}`,
       });
       await fetchParts();
       toast({
-        title: "Part Deleted",
-        description: "Part has been deleted successfully",
+        title: 'Part Deleted',
+        description: 'Part has been deleted successfully',
       });
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Error deleting part",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Error deleting part',
+        variant: 'destructive',
       });
     }
   };
@@ -100,7 +100,7 @@ export default function PartsListTable({ quoteId, refresh }: Props) {
   const handleSearchPartlist = (search: string) => {
     setSearchTerm(search);
 
-    if (search.trim() === "") {
+    if (search.trim() === '') {
       setFilteredParts(parts);
       return;
     }
@@ -123,16 +123,16 @@ export default function PartsListTable({ quoteId, refresh }: Props) {
     const fetchQuotation = async () => {
       try {
         const response = await apiRequest({
-          method: "get",
+          method: 'get',
           url: `/api/quotation/${quoteId}`,
         });
         setMaterialMargin(response.materialMargin / 100);
       } catch (error) {
-        console.error("Error fetching quotation:", error);
+        console.error('Error fetching quotation:', error);
         toast({
-          title: "Error",
-          description: "Error fetching quotation details",
-          variant: "destructive",
+          title: 'Error',
+          description: 'Error fetching quotation details',
+          variant: 'destructive',
         });
       }
     };
@@ -141,7 +141,7 @@ export default function PartsListTable({ quoteId, refresh }: Props) {
       try {
         setLoading(true);
         const response = await apiRequest({
-          method: "get",
+          method: 'get',
           url: `/api/Part/PartsFromQuotation/${quoteId}`,
         });
         setParts(response.parts);
@@ -149,9 +149,9 @@ export default function PartsListTable({ quoteId, refresh }: Props) {
       } catch (error) {
         console.log(error);
         toast({
-          title: "Error",
-          description: "Error fetching parts",
-          variant: "destructive",
+          title: 'Error',
+          description: 'Error fetching parts',
+          variant: 'destructive',
         });
       } finally {
         setLoading(false);
@@ -259,6 +259,43 @@ export default function PartsListTable({ quoteId, refresh }: Props) {
                   </TableCell>
                 </TableRow>
               ))}
+              {/* Totals Row */}
+              <TableRow className="bg-gray-200 font-bold">
+                <TableCell className="border text-right" colSpan={5}>
+                  Total
+                </TableCell>
+                <TableCell className="text-right border">
+                  {filteredParts
+                    .reduce(
+                      (sum, part) => sum + part.unitWeight * (part.qty ?? 0),
+                      0
+                    )
+                    .toFixed(3)}
+                </TableCell>
+                <TableCell className="border" />
+                <TableCell className="border" />
+                <TableCell className="text-right border">
+                  {formatCurrency(
+                    filteredParts.reduce(
+                      (sum, part) => sum + part.unitCost * (part.qty ?? 0),
+                      0
+                    )
+                  )}
+                </TableCell>
+                <TableCell className="border" />
+                <TableCell className="border" />
+                <TableCell className="text-right border">
+                  {formatCurrency(
+                    filteredParts.reduce(
+                      (sum, part) =>
+                        sum +
+                        (part.unitCost / (1 - materialMargin)) *
+                          (part.qty ?? 0),
+                      0
+                    )
+                  )}
+                </TableCell>
+              </TableRow>
             </>
           )}
         </TableBody>

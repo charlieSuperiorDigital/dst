@@ -1,18 +1,18 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import {useState} from 'react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Part } from "@/app/entities/Part";
-import { PaintTypeDropdown } from "./paint-type-dropdow";
-import { paintTypes } from "@/app/entities/colors-enum";
+} from '@/components/ui/dialog';
+import {Button} from '@/components/ui/button';
+import {Input} from '@/components/ui/input';
+import {Label} from '@/components/ui/label';
+import {Part} from '@/app/entities/Part';
+import {PaintTypeDropdown} from './paint-type-dropdow';
+import {paintTypes} from '@/app/entities/colors-enum';
 
 interface AddPartDialogProps {
   isOpen: boolean;
@@ -20,11 +20,11 @@ interface AddPartDialogProps {
   onAdd: (newPart: Part) => void;
 }
 
-export function AddPartDialog({ isOpen, onClose, onAdd }: AddPartDialogProps) {
+export function AddPartDialog({isOpen, onClose, onAdd}: AddPartDialogProps) {
   const defaultPartState = {
-    description: "",
+    description: '',
     colorId: 1,
-    partNumber: "",
+    partNumber: '',
     laborEA: 0,
     unitCost: 0,
     unitLabor: 0,
@@ -35,24 +35,24 @@ export function AddPartDialog({ isOpen, onClose, onAdd }: AddPartDialogProps) {
 
   const [newPart, setNewPart] = useState<Partial<Part>>(defaultPartState);
   const [tempValues, setTempValues] = useState({
-    laborEA: "0.00",
-    unitCost: "0.00",
-    unitLabor: "0.00",
-    unitMatLb: "0.00",
-    unitSell: "0.00",
-    unitWeight: "0.000"
+    laborEA: '0.00',
+    unitCost: '0.00',
+    unitLabor: '0.00',
+    unitMatLb: '0.00',
+    unitSell: '0.00',
+    unitWeight: '0.000',
   });
 
   const handleCloseModal = (open: boolean) => {
     if (!open) {
       setNewPart(defaultPartState); // Reset form to default values
       setTempValues({
-        laborEA: "0.00",
-        unitCost: "0.00",
-        unitLabor: "0.00",
-        unitMatLb: "0.00",
-        unitSell: "0.00",
-        unitWeight: "0.000"
+        laborEA: '0.00',
+        unitCost: '0.00',
+        unitLabor: '0.00',
+        unitMatLb: '0.00',
+        unitSell: '0.00',
+        unitWeight: '0.000',
       });
     }
     onClose();
@@ -65,25 +65,28 @@ export function AddPartDialog({ isOpen, onClose, onAdd }: AddPartDialogProps) {
         colorId: Number(colorId),
         color: paintTypes.find((p) => p.id === Number(colorId)) || {
           id: 0,
-          name: "Color not found",
-          description: "Color not found",
+          name: 'Color not found',
+          description: 'Color not found',
         },
       });
     }
   };
 
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
+    const {name, value} = e.target;
     setNewPart({
       ...newPart,
       [name]: value,
     });
   };
 
-  const handleNumericChange = (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
+  const handleNumericChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    field: string
+  ) => {
     setTempValues({
       ...tempValues,
-      [field]: e.target.value
+      [field]: e.target.value,
     });
   };
 
@@ -92,11 +95,11 @@ export function AddPartDialog({ isOpen, onClose, onAdd }: AddPartDialogProps) {
     if (!isNaN(value)) {
       setNewPart({
         ...newPart,
-        [field]: value
+        [field]: value,
       });
       setTempValues({
         ...tempValues,
-        [field]: field === 'unitWeight' ? value.toFixed(3) : value.toFixed(2)
+        [field]: field === 'unitWeight' ? value.toFixed(3) : value.toFixed(2),
       });
     }
   };
@@ -137,13 +140,15 @@ export function AddPartDialog({ isOpen, onClose, onAdd }: AddPartDialogProps) {
           <div>
             <Label htmlFor="colorId">Color ID</Label>
             <PaintTypeDropdown
-              value={newPart.colorId?.toString() || "0"}
+              value={newPart.colorId?.toString() || '0'}
               paintTypes={paintTypes}
               onChange={handleColorChange}
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="unitWeight" className="text-right">Unit Weight</Label>
+            <Label htmlFor="unitWeight" className="text-right">
+              Unit Weight
+            </Label>
             <div className="col-span-3">
               <Input
                 id="unitWeight"
@@ -157,8 +162,13 @@ export function AddPartDialog({ isOpen, onClose, onAdd }: AddPartDialogProps) {
               />
             </div>
           </div>
-          <div className="grid grid-cols-4 items-center gap-4" style={{ display: "none" }}>
-            <Label htmlFor="unitMatLb" className="text-right">Unit Mat/lb</Label>
+          <div
+            className="grid grid-cols-4 items-center gap-4"
+            style={{display: 'none'}}
+          >
+            <Label htmlFor="unitMatLb" className="text-right">
+              Unit Mat/lb
+            </Label>
             <div className="col-span-3">
               <Input
                 id="unitMatLb"
@@ -173,7 +183,9 @@ export function AddPartDialog({ isOpen, onClose, onAdd }: AddPartDialogProps) {
             </div>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="unitLabor" className="text-right">Unit Labor</Label>
+            <Label htmlFor="unitLabor" className="text-right">
+              Unit Labor
+            </Label>
             <div className="col-span-3">
               <Input
                 id="unitLabor"
@@ -188,10 +200,14 @@ export function AddPartDialog({ isOpen, onClose, onAdd }: AddPartDialogProps) {
             </div>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="unitCost" className="text-right">Unit Cost</Label>
+            <Label htmlFor="unitCost" className="text-right">
+              Unit Cost
+            </Label>
             <div className="col-span-3">
               <div className="relative">
-                <span className="absolute left-3 top-1/2 transform -translate-y-1/2">$</span>
+                <span className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                  $
+                </span>
                 <Input
                   id="unitCost"
                   name="unitCost"
@@ -207,10 +223,14 @@ export function AddPartDialog({ isOpen, onClose, onAdd }: AddPartDialogProps) {
             </div>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="unitSell" className="text-right">Unit Sell</Label>
+            <Label htmlFor="unitSell" className="text-right">
+              Unit Sell
+            </Label>
             <div className="col-span-3">
               <div className="relative">
-                <span className="absolute left-3 top-1/2 transform -translate-y-1/2">$</span>
+                <span className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                  $
+                </span>
                 <Input
                   id="unitSell"
                   name="unitSell"
@@ -226,7 +246,9 @@ export function AddPartDialog({ isOpen, onClose, onAdd }: AddPartDialogProps) {
             </div>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="laborEA" className="text-right">Labor EA</Label>
+            <Label htmlFor="laborEA" className="text-right">
+              Labor EA
+            </Label>
             <div className="col-span-3">
               <Input
                 id="laborEA"

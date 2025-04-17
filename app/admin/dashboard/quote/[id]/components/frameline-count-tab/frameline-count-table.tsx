@@ -1,12 +1,12 @@
-import { apiRequest } from "@/utils/client-side-api";
-import React, { useState, useRef, useEffect } from "react";
-import { toast } from "@/hooks/use-toast";
-import { useQuote } from "../../context/quote-context";
-import { AddFrameLineDefinitonTab } from "../frameline-definition-tab/add-frameline-definition";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import {apiRequest} from '@/utils/client-side-api';
+import React, {useState, useRef, useEffect} from 'react';
+import {toast} from '@/hooks/use-toast';
+import {useQuote} from '../../context/quote-context';
+import {AddFrameLineDefinitonTab} from '../frameline-definition-tab/add-frameline-definition';
+import {Input} from '@/components/ui/input';
+import {Switch} from '@/components/ui/switch';
+import {Label} from '@/components/ui/label';
+import {Button} from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -14,19 +14,19 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Trash2 } from "lucide-react";
+} from '@/components/ui/tooltip';
+import {Trash2} from 'lucide-react';
 
 const sortRows = (rows: Row[]): Row[] => {
   return rows.sort((a, b) => {
-    const numA = parseInt(a.rowName.replace("Row-", ""), 10);
-    const numB = parseInt(b.rowName.replace("Row-", ""), 10);
+    const numA = parseInt(a.rowName.replace('Row-', ''), 10);
+    const numB = parseInt(b.rowName.replace('Row-', ''), 10);
 
     return numA - numB;
   });
@@ -75,34 +75,32 @@ type DragSource = {
 type Props = {
   quoteId: string;
 };
-const FramilineCountTable = ({ quoteId }: Props) => {
-  const { setFrameLinesDefinitionContext, isLocked } = useQuote();
+const FramilineCountTable = ({quoteId}: Props) => {
+  const {setFrameLinesDefinitionContext, isLocked} = useQuote();
   const [bayWithRows, setbayWithRows] = useState<FrameWithRows[]>([]);
   const [bays, setBays] = useState<BayWithRows[]>([]);
-  const [selectedCell, setSelectedCell] = useState({ row: -1, col: -1 });
-  const [editingCell, setEditingCell] = useState({ row: -1, col: -1 });
+  const [selectedCell, setSelectedCell] = useState({row: -1, col: -1});
+  const [editingCell, setEditingCell] = useState({row: -1, col: -1});
   const [selectedRow, setSelectedRow] = useState(-1);
   const [selectedColumn, setSelectedColumn] = useState(-1);
   const tableRef = useRef<HTMLDivElement>(null);
   const activeInput = useRef<HTMLInputElement>(null);
   const [isSelecting, setIsSelecting] = useState(false);
-  const [selectionStart, setSelectionStart] = useState({ row: -1, col: -1 });
-  const [selectionEnd, setSelectionEnd] = useState({ row: -1, col: -1 });
+  const [selectionStart, setSelectionStart] = useState({row: -1, col: -1});
+  const [selectionEnd, setSelectionEnd] = useState({row: -1, col: -1});
   const [isDragging, setIsDragging] = useState(false);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [mousePosition, setMousePosition] = useState({x: 0, y: 0});
   const [dragSource, setDragSource] = useState<DragSource>({
     row: -1,
     col: -1,
   });
-  const [dragTarget, setDragTarget] = useState({ row: -1, col: -1 });
-  const [columnWidths, setColumnWidths] = useState<{ [key: number]: number }>(
-    {}
-  );
-  const [rowHeights, setRowHeights] = useState<{ [key: number]: number }>({});
+  const [dragTarget, setDragTarget] = useState({row: -1, col: -1});
+  const [columnWidths, setColumnWidths] = useState<{[key: number]: number}>({});
+  const [rowHeights, setRowHeights] = useState<{[key: number]: number}>({});
   const [copiedCells, setCopiedCells] = useState<string[][]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [searchTerm, setSearchTerm] = useState<string>('');
   const [hideZeroQuantity, setHideZeroQuantity] = useState(false);
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
   const [forceDelete, setForceDelete] = useState(false);
@@ -112,8 +110,8 @@ const FramilineCountTable = ({ quoteId }: Props) => {
     rowName: string;
   }>({
     isOpen: false,
-    rowId: "",
-    rowName: "",
+    rowId: '',
+    rowName: '',
   });
 
   const fetchData = async () => {
@@ -121,11 +119,11 @@ const FramilineCountTable = ({ quoteId }: Props) => {
       const [framelineResponse, bayResponse] = await Promise.all([
         apiRequest({
           url: `/api/count/frameline/${quoteId}`,
-          method: "get",
+          method: 'get',
         }),
         apiRequest({
           url: `/api/count/bay/${quoteId}`,
-          method: "get",
+          method: 'get',
         }),
       ]);
 
@@ -138,7 +136,7 @@ const FramilineCountTable = ({ quoteId }: Props) => {
       setBays(bayResponse);
       setLoading(false);
     } catch (err) {
-      setError("Error Loading data");
+      setError('Error Loading data');
       setLoading(false);
       console.error(err);
     }
@@ -162,7 +160,7 @@ const FramilineCountTable = ({ quoteId }: Props) => {
     const range = getSelectionRange();
     if (!range) return;
 
-    const { startRow, endRow, startCol, endCol } = range;
+    const {startRow, endRow, startCol, endCol} = range;
     const copiedData: string[][] = [];
 
     for (let row = startRow; row <= endRow; row++) {
@@ -170,27 +168,27 @@ const FramilineCountTable = ({ quoteId }: Props) => {
       for (let col = startCol; col <= endCol; col++) {
         const bayWithRows1 = bayWithRows[row];
         const rowDataItem = bayWithRows1.rows[col];
-        rowData.push(rowDataItem ? rowDataItem.quantity.toString() : "");
+        rowData.push(rowDataItem ? rowDataItem.quantity.toString() : '');
       }
       // Para depuración
       copiedData.push(rowData);
     }
-    console.log("Celdas copiadas:", copiedData); // Para depuración
+    console.log('Celdas copiadas:', copiedData); // Para depuración
     setCopiedCells(copiedData);
     toast({
-      title: "Success",
-      description: "Cells copied successfully",
+      title: 'Success',
+      description: 'Cells copied successfully',
     });
-    console.log("Celdas copiadas:", copiedData); // Para depuración
+    console.log('Celdas copiadas:', copiedData); // Para depuración
   };
   const pasteCopiedCells = (targetRow: number, targetCol: number) => {
     if (copiedCells.length === 0 || copiedCells[0].length === 0) {
-      console.warn("No hay celdas copiadas para pegar.");
+      console.warn('No hay celdas copiadas para pegar.');
       return;
     }
 
     const newPartsWithBays = [...bayWithRows]; // Copia del estado actual
-    const updates: { freamelineid: string; rowId: string; quantity: number }[] =
+    const updates: {freamelineid: string; rowId: string; quantity: number}[] =
       [];
     for (let rowOffset = 0; rowOffset < copiedCells.length; rowOffset++) {
       for (let colOffset = 0; colOffset < copiedCells[0].length; colOffset++) {
@@ -216,7 +214,7 @@ const FramilineCountTable = ({ quoteId }: Props) => {
     }
 
     // Actualizar el estado de la tabla
-    console.log("Actualizando celdas:", updates); // Para depuración
+    console.log('Actualizando celdas:', updates); // Para depuración
     setbayWithRows(newPartsWithBays);
     // if (updateBayDefinitionContext) {
     //   updateBayDefinitionContext(newPartsWithBays);
@@ -226,11 +224,11 @@ const FramilineCountTable = ({ quoteId }: Props) => {
     updateMultipleQuantities(updates);
   };
   const selectCell = (row: number, col: number) => {
-    setSelectedCell({ row, col });
+    setSelectedCell({row, col});
     setSelectedRow(-1);
     setSelectedColumn(-1);
-    setSelectionStart({ row: -1, col: -1 });
-    setSelectionEnd({ row: -1, col: -1 });
+    setSelectionStart({row: -1, col: -1});
+    setSelectionEnd({row: -1, col: -1});
     if (tableRef.current) {
       tableRef.current.focus();
     }
@@ -245,19 +243,19 @@ const FramilineCountTable = ({ quoteId }: Props) => {
       col >= 0 &&
       col < allBays.length
     ) {
-      setEditingCell({ row, col });
-      setSelectedCell({ row, col });
+      setEditingCell({row, col});
+      setSelectedCell({row, col});
       setTimeout(() => {
         if (activeInput.current) {
           activeInput.current.focus();
         }
       }, 0);
     } else {
-      console.warn("Intento de editar una celda fuera de los límites.");
+      console.warn('Intento de editar una celda fuera de los límites.');
     }
   };
   const stopEditing = () => {
-    setEditingCell({ row: -1, col: -1 });
+    setEditingCell({row: -1, col: -1});
   };
 
   const isEditingCell = (row: number, col: number): boolean => {
@@ -267,11 +265,11 @@ const FramilineCountTable = ({ quoteId }: Props) => {
   const handleKeyNavigation = (event: React.KeyboardEvent) => {
     if (event.ctrlKey) {
       switch (event.key.toLowerCase()) {
-        case "c": // Copy
+        case 'c': // Copy
           event.preventDefault();
           copySelectedCells();
           break;
-        case "v": // Paste
+        case 'v': // Paste
           event.preventDefault();
           if (selectedCell.row >= 0 && selectedCell.col >= 0) {
             pasteCopiedCells(selectedCell.row, selectedCell.col);
@@ -286,50 +284,50 @@ const FramilineCountTable = ({ quoteId }: Props) => {
     // Handle arrow keys in edit mode
     if (editingCell.row !== -1 && editingCell.col !== -1) {
       switch (event.key) {
-        case "ArrowLeft":
-        case "ArrowRight":
-        case "ArrowUp":
-        case "ArrowDown":
+        case 'ArrowLeft':
+        case 'ArrowRight':
+        case 'ArrowUp':
+        case 'ArrowDown':
           handleArrowInEdit(
-            event.key.toLowerCase().replace("arrow", "") as
-              | "up"
-              | "down"
-              | "left"
-              | "right",
+            event.key.toLowerCase().replace('arrow', '') as
+              | 'up'
+              | 'down'
+              | 'left'
+              | 'right',
             event
           );
           return;
-        case "Enter":
+        case 'Enter':
           event.preventDefault();
           stopEditing();
-          moveToNextCell("down");
+          moveToNextCell('down');
           return;
       }
     }
 
     // Navigation with arrow keys and Enter
     switch (event.key) {
-      case "ArrowUp":
-      case "ArrowDown":
-      case "ArrowLeft":
-      case "ArrowRight":
+      case 'ArrowUp':
+      case 'ArrowDown':
+      case 'ArrowLeft':
+      case 'ArrowRight':
         event.preventDefault();
         moveToNextCell(
-          event.key.toLowerCase().replace("arrow", "") as
-            | "up"
-            | "down"
-            | "left"
-            | "right",
+          event.key.toLowerCase().replace('arrow', '') as
+            | 'up'
+            | 'down'
+            | 'left'
+            | 'right',
           event
         );
         return;
-      case "Enter":
+      case 'Enter':
         event.preventDefault();
         if (editingCell.row === -1 && editingCell.col === -1) {
           startEditing(selectedCell.row, selectedCell.col);
         } else {
           stopEditing();
-          moveToNextCell("down");
+          moveToNextCell('down');
         }
         return;
     }
@@ -376,7 +374,7 @@ const FramilineCountTable = ({ quoteId }: Props) => {
     const startCol = Math.min(selectionStart.col, selectionEnd.col);
     const endCol = Math.max(selectionStart.col, selectionEnd.col);
 
-    return { startRow, endRow, startCol, endCol };
+    return {startRow, endRow, startCol, endCol};
   };
 
   const isInSelectionRange = (row: number, col: number): boolean => {
@@ -403,14 +401,14 @@ const FramilineCountTable = ({ quoteId }: Props) => {
 
     event.preventDefault();
     setIsSelecting(true);
-    setSelectionStart({ row, col });
-    setSelectionEnd({ row, col });
+    setSelectionStart({row, col});
+    setSelectionEnd({row, col});
 
     setSelectedRow(-1);
     setSelectedColumn(-1);
 
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
   };
 
   const updateSelection = (
@@ -420,7 +418,7 @@ const FramilineCountTable = ({ quoteId }: Props) => {
   ) => {
     if (!isSelecting) return;
 
-    setSelectionEnd({ row, col });
+    setSelectionEnd({row, col});
   };
 
   const handleMouseMove = (event: MouseEvent) => {
@@ -432,7 +430,7 @@ const FramilineCountTable = ({ quoteId }: Props) => {
     const element = document.elementFromPoint(event.clientX, event.clientY);
     if (!element) return;
 
-    const cell = element.closest("td");
+    const cell = element.closest('td');
     if (!cell) return;
 
     const rowElement = cell.parentElement;
@@ -457,15 +455,15 @@ const FramilineCountTable = ({ quoteId }: Props) => {
     if (!isSelecting) return;
 
     setIsSelecting(false);
-    document.removeEventListener("mousemove", handleMouseMove);
-    document.removeEventListener("mouseup", handleMouseUp);
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
   };
 
   const getSelectionStyle = () => {
     const range = getSelectionRange();
     if (!range) return {};
 
-    const table = tableRef.current?.querySelector("table");
+    const table = tableRef.current?.querySelector('table');
     if (!table) return {};
 
     // Check if rows exist
@@ -498,7 +496,7 @@ const FramilineCountTable = ({ quoteId }: Props) => {
   };
 
   const getDragText = () => {
-    if (!dragSource) return "Moving cell";
+    if (!dragSource) return 'Moving cell';
 
     // Verificar si dragSource tiene selectionRange
     if (dragSource.selectionRange) {
@@ -510,7 +508,7 @@ const FramilineCountTable = ({ quoteId }: Props) => {
     }
 
     // Si no hay selectionRange, mostrar el contenido de la celda
-    const { row, col } = dragSource;
+    const {row, col} = dragSource;
     if (
       row >= 0 &&
       col >= 0 &&
@@ -519,10 +517,10 @@ const FramilineCountTable = ({ quoteId }: Props) => {
     ) {
       const part = bayWithRows[row];
       const bay = part.rows[col];
-      return bay ? bay.quantity.toString() : "Moving cell";
+      return bay ? bay.quantity.toString() : 'Moving cell';
     }
 
-    return "Moving cell";
+    return 'Moving cell';
   };
 
   const handleDragStart = (
@@ -533,32 +531,32 @@ const FramilineCountTable = ({ quoteId }: Props) => {
     if (!event.dataTransfer) return;
 
     setIsDragging(true);
-    setMousePosition({ x: event.clientX, y: event.clientY });
+    setMousePosition({x: event.clientX, y: event.clientY});
 
     const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
+      setMousePosition({x: e.clientX, y: e.clientY});
     };
 
-    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener(
-      "dragend",
+      'dragend',
       () => {
         setIsDragging(false);
-        document.removeEventListener("mousemove", handleMouseMove);
+        document.removeEventListener('mousemove', handleMouseMove);
       },
-      { once: true }
+      {once: true}
     );
 
     const range = getSelectionRange();
     if (range && isInSelectionRange(row, col)) {
-      setDragSource({ row, col, selectionRange: range });
-      const dragEl = document.createElement("div");
-      dragEl.style.padding = "8px";
-      dragEl.style.background = "white";
-      dragEl.style.border = "1px solid #ccc";
-      dragEl.style.borderRadius = "4px";
-      dragEl.style.position = "absolute";
-      dragEl.style.top = "-1000px";
+      setDragSource({row, col, selectionRange: range});
+      const dragEl = document.createElement('div');
+      dragEl.style.padding = '8px';
+      dragEl.style.background = 'white';
+      dragEl.style.border = '1px solid #ccc';
+      dragEl.style.borderRadius = '4px';
+      dragEl.style.position = 'absolute';
+      dragEl.style.top = '-1000px';
       dragEl.textContent = `Moving ${
         (range.endRow - range.startRow + 1) *
         (range.endCol - range.startCol + 1)
@@ -567,31 +565,31 @@ const FramilineCountTable = ({ quoteId }: Props) => {
       event.dataTransfer.setDragImage(dragEl, 0, 0);
       setTimeout(() => document.body.removeChild(dragEl), 0);
     } else {
-      setDragSource({ row, col });
+      setDragSource({row, col});
       const part = bayWithRows[row];
       const bay = part.rows[col];
-      const content = bay ? bay.quantity.toString() : "";
-      event.dataTransfer.setData("text/plain", content);
-      const dragEl = document.createElement("div");
-      dragEl.textContent = content || "Moving cell";
-      dragEl.style.padding = "8px";
-      dragEl.style.background = "white";
-      dragEl.style.border = "1px solid #ccc";
-      dragEl.style.borderRadius = "4px";
-      dragEl.style.position = "absolute";
-      dragEl.style.top = "-1000px";
+      const content = bay ? bay.quantity.toString() : '';
+      event.dataTransfer.setData('text/plain', content);
+      const dragEl = document.createElement('div');
+      dragEl.textContent = content || 'Moving cell';
+      dragEl.style.padding = '8px';
+      dragEl.style.background = 'white';
+      dragEl.style.border = '1px solid #ccc';
+      dragEl.style.borderRadius = '4px';
+      dragEl.style.position = 'absolute';
+      dragEl.style.top = '-1000px';
       document.body.appendChild(dragEl);
       event.dataTransfer.setDragImage(dragEl, 0, 0);
       setTimeout(() => document.body.removeChild(dragEl), 0);
     }
 
-    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.effectAllowed = 'move';
   };
 
   const handleDragOver = (event: React.DragEvent, row: number, col: number) => {
     event.preventDefault();
-    setDragTarget({ row, col });
-    setMousePosition({ x: event.clientX, y: event.clientY });
+    setDragTarget({row, col});
+    setMousePosition({x: event.clientX, y: event.clientY});
   };
 
   const handleDragLeave = (
@@ -600,7 +598,7 @@ const FramilineCountTable = ({ quoteId }: Props) => {
     col: number
   ) => {
     if (dragTarget.row === row && dragTarget.col === col) {
-      setDragTarget({ row: -1, col: -1 });
+      setDragTarget({row: -1, col: -1});
     }
   };
 
@@ -613,7 +611,7 @@ const FramilineCountTable = ({ quoteId }: Props) => {
 
     if (!dragSource) return;
 
-    if ("selectionRange" in dragSource && dragSource.selectionRange) {
+    if ('selectionRange' in dragSource && dragSource.selectionRange) {
       const range = dragSource.selectionRange;
       const rowOffset = targetRow - dragSource.row;
       const colOffset = targetCol - dragSource.col;
@@ -658,7 +656,7 @@ const FramilineCountTable = ({ quoteId }: Props) => {
         updateMultipleQuantities(updates);
       }
     } else {
-      const { row: sourceRow, col: sourceCol } = dragSource;
+      const {row: sourceRow, col: sourceCol} = dragSource;
 
       if (sourceRow === targetRow && sourceCol === targetCol) {
         return;
@@ -694,8 +692,8 @@ const FramilineCountTable = ({ quoteId }: Props) => {
       }
     }
 
-    setDragSource({ row: -1, col: -1 });
-    setDragTarget({ row: -1, col: -1 });
+    setDragSource({row: -1, col: -1});
+    setDragTarget({row: -1, col: -1});
   };
 
   const isDragOver = (row: number, col: number): boolean => {
@@ -704,19 +702,19 @@ const FramilineCountTable = ({ quoteId }: Props) => {
 
   const getColumnStyle = (colIndex: number) => {
     const width = columnWidths[colIndex];
-    return width ? { width: `${width}px` } : {};
+    return width ? {width: `${width}px`} : {};
   };
 
   const getRowStyle = (rowIndex: number) => {
     const height = rowHeights[rowIndex];
-    return height ? { height: `${height}px` } : {};
+    return height ? {height: `${height}px`} : {};
   };
 
   const startColumnResize = (event: React.MouseEvent, colIndex: number) => {
     if (event.button !== 0 || event.detail > 1) return;
 
     event.preventDefault();
-    const table = tableRef.current?.querySelector("table");
+    const table = tableRef.current?.querySelector('table');
     if (!table) return;
 
     const cell = table.rows[0].cells[colIndex + 1];
@@ -726,24 +724,24 @@ const FramilineCountTable = ({ quoteId }: Props) => {
     const handleMouseMove = (e: MouseEvent) => {
       const delta = e.clientX - initialMousePos;
       const newSize = Math.max(20, initialSize + delta);
-      setColumnWidths((prev) => ({ ...prev, [colIndex]: newSize }));
+      setColumnWidths((prev) => ({...prev, [colIndex]: newSize}));
     };
 
     const stopResize = () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", stopResize);
-      table.classList.remove("resizing");
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', stopResize);
+      table.classList.remove('resizing');
     };
 
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", stopResize);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', stopResize);
 
-    table.classList.add("resizing");
+    table.classList.add('resizing');
   };
 
   const startRowResize = (event: React.MouseEvent, rowIndex: number) => {
     event.preventDefault();
-    const table = tableRef.current?.querySelector("table");
+    const table = tableRef.current?.querySelector('table');
     if (!table) return;
 
     const row = table.rows[rowIndex + 1];
@@ -753,26 +751,26 @@ const FramilineCountTable = ({ quoteId }: Props) => {
     const handleMouseMove = (e: MouseEvent) => {
       const delta = e.clientY - initialMousePos;
       const newSize = Math.max(20, initialSize + delta);
-      setRowHeights((prev) => ({ ...prev, [rowIndex]: newSize }));
+      setRowHeights((prev) => ({...prev, [rowIndex]: newSize}));
     };
 
     const stopResize = () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", stopResize);
-      table.classList.remove("resizing");
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', stopResize);
+      table.classList.remove('resizing');
     };
 
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", stopResize);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', stopResize);
 
-    table.classList.add("resizing");
+    table.classList.add('resizing');
   };
 
   const autoSizeColumn = (colIndex: number) => {
-    const measureSpan = document.createElement("span");
-    measureSpan.style.visibility = "hidden";
-    measureSpan.style.position = "absolute";
-    measureSpan.style.whiteSpace = "nowrap";
+    const measureSpan = document.createElement('span');
+    measureSpan.style.visibility = 'hidden';
+    measureSpan.style.position = 'absolute';
+    measureSpan.style.whiteSpace = 'nowrap';
     measureSpan.style.font = window.getComputedStyle(tableRef.current!).font;
     document.body.appendChild(measureSpan);
 
@@ -789,7 +787,7 @@ const FramilineCountTable = ({ quoteId }: Props) => {
 
     document.body.removeChild(measureSpan);
 
-    setColumnWidths((prev) => ({ ...prev, [colIndex]: maxWidth }));
+    setColumnWidths((prev) => ({...prev, [colIndex]: maxWidth}));
   };
 
   const isColumnSelected = (col: number): boolean => {
@@ -802,10 +800,10 @@ const FramilineCountTable = ({ quoteId }: Props) => {
 
   const selectEntireRow = (row: number) => {
     setSelectedRow(row);
-    setSelectedCell({ row: -1, col: -1 });
+    setSelectedCell({row: -1, col: -1});
   };
   const moveToNextCell = (
-    direction: "up" | "down" | "left" | "right",
+    direction: 'up' | 'down' | 'left' | 'right',
     event?: React.KeyboardEvent
   ) => {
     if (event) {
@@ -821,22 +819,22 @@ const FramilineCountTable = ({ quoteId }: Props) => {
     let newCol = currentCol;
 
     switch (direction) {
-      case "up":
+      case 'up':
         newRow = Math.max(0, currentRow - 1);
         break;
-      case "down":
+      case 'down':
         newRow = Math.min(bayWithRows.length - 1, currentRow + 1);
         break;
-      case "left":
+      case 'left':
         newCol = Math.max(0, currentCol - 1);
         break;
-      case "right":
+      case 'right':
         newCol = Math.min(allBays.length - 1, currentCol + 1);
         break;
     }
 
     if (editingCell.row !== -1) {
-      const isHorizontalMove = direction === "left" || direction === "right";
+      const isHorizontalMove = direction === 'left' || direction === 'right';
 
       if (isHorizontalMove) {
         const input = activeInput.current;
@@ -848,8 +846,8 @@ const FramilineCountTable = ({ quoteId }: Props) => {
           input.selectionEnd === input.value.length;
 
         if (
-          (direction === "left" && atStart) ||
-          (direction === "right" && atEnd)
+          (direction === 'left' && atStart) ||
+          (direction === 'right' && atEnd)
         ) {
           stopEditing();
           selectCell(newRow, newCol);
@@ -867,20 +865,20 @@ const FramilineCountTable = ({ quoteId }: Props) => {
   };
 
   const autoSizeRow = (rowIndex: number) => {
-    const table = tableRef.current?.querySelector("table");
+    const table = tableRef.current?.querySelector('table');
     if (!table) return;
 
     const cells = Array.from(table.rows[rowIndex + 1].cells);
 
     let maxHeight = 40;
     cells.forEach((cell) => {
-      const content = cell.querySelector(".cell-content");
+      const content = cell.querySelector('.cell-content');
       if (content) {
-        const temp = document.createElement("div");
-        temp.style.position = "absolute";
-        temp.style.visibility = "hidden";
-        temp.style.width = cell.offsetWidth + "px";
-        temp.style.whiteSpace = "normal";
+        const temp = document.createElement('div');
+        temp.style.position = 'absolute';
+        temp.style.visibility = 'hidden';
+        temp.style.width = cell.offsetWidth + 'px';
+        temp.style.whiteSpace = 'normal';
         temp.innerHTML = content.innerHTML;
         document.body.appendChild(temp);
 
@@ -891,16 +889,16 @@ const FramilineCountTable = ({ quoteId }: Props) => {
       }
     });
 
-    setRowHeights((prev) => ({ ...prev, [rowIndex]: maxHeight }));
+    setRowHeights((prev) => ({...prev, [rowIndex]: maxHeight}));
   };
 
   const handleEnterKey = (rowIndex: number) => {
     // Mover a la siguiente fila al presionar Enter
-    moveToNextCell("down");
+    moveToNextCell('down');
   };
 
   const handleArrowInEdit = (
-    direction: "up" | "down" | "left" | "right",
+    direction: 'up' | 'down' | 'left' | 'right',
     event: React.KeyboardEvent
   ) => {
     const input = activeInput.current;
@@ -910,12 +908,12 @@ const FramilineCountTable = ({ quoteId }: Props) => {
       bayWithRows[editingCell.row].rows[editingCell.col].quantity.toString();
 
     // Para movimiento izquierda/derecha, verificar la posición del cursor
-    if (direction === "left") {
+    if (direction === 'left') {
       // Solo mover a la celda anterior si el cursor está al inicio
       if (input.selectionStart === 0 && input.selectionEnd === 0) {
         moveToNextCell(direction, event);
       }
-    } else if (direction === "right") {
+    } else if (direction === 'right') {
       // Solo mover a la celda siguiente si el cursor está al final
       if (
         input.selectionStart === currentCellContent.length &&
@@ -930,7 +928,7 @@ const FramilineCountTable = ({ quoteId }: Props) => {
   };
 
   const updateMultipleQuantities = async (
-    updates: { freamelineid: string; rowId: string; quantity: number }[]
+    updates: {freamelineid: string; rowId: string; quantity: number}[]
   ) => {
     try {
       console.log(updates);
@@ -938,7 +936,7 @@ const FramilineCountTable = ({ quoteId }: Props) => {
         updates.map((update) =>
           apiRequest({
             url: `/api/row/frameline/update`,
-            method: "put",
+            method: 'put',
             data: update,
           })
         )
@@ -950,14 +948,14 @@ const FramilineCountTable = ({ quoteId }: Props) => {
         quantity: number;
       }[] = [];
       results.forEach((result, index) => {
-        if (result.status === "fulfilled") {
+        if (result.status === 'fulfilled') {
           successfulUpdates.push(updates[index]);
         } else {
-          console.error("Error updating quantity:", result.reason);
+          console.error('Error updating quantity:', result.reason);
           toast({
-            title: "Error",
+            title: 'Error',
             description: `Failed to update quantity for part ${updates[index].freamelineid} and bay ${updates[index].rowId}.`,
-            variant: "destructive",
+            variant: 'destructive',
           });
         }
       });
@@ -971,9 +969,9 @@ const FramilineCountTable = ({ quoteId }: Props) => {
                   u.freamelineid === partWithBays.frameline.id &&
                   u.freamelineid === bay.rowId
               );
-              return update ? { ...bay, quantity: update.quantity } : bay;
+              return update ? {...bay, quantity: update.quantity} : bay;
             });
-            return { ...partWithBays, bays: updatedBays };
+            return {...partWithBays, bays: updatedBays};
           })
         );
         setFrameLinesDefinitionContext?.((prevPartsWithBays) =>
@@ -984,23 +982,23 @@ const FramilineCountTable = ({ quoteId }: Props) => {
                   u.freamelineid === partWithBays.part.id &&
                   u.freamelineid === bay.framelineId
               );
-              return update ? { ...bay, quantity: update.quantity } : bay;
+              return update ? {...bay, quantity: update.quantity} : bay;
             });
-            return { ...partWithBays, bays: updatedBays };
+            return {...partWithBays, bays: updatedBays};
           })
         );
 
         toast({
-          title: "Success",
-          description: "Quantities updated successfully",
+          title: 'Success',
+          description: 'Quantities updated successfully',
         });
       }
     } catch (error) {
-      console.error("Error updating quantities:", error);
+      console.error('Error updating quantities:', error);
       toast({
-        title: "Error",
-        description: "Failed to update quantities. Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to update quantities. Please try again.',
+        variant: 'destructive',
       });
     }
   };
@@ -1013,7 +1011,7 @@ const FramilineCountTable = ({ quoteId }: Props) => {
       // Send a single request to update the quantity
       await apiRequest({
         url: `/api/row/frameline/update`,
-        method: "put",
+        method: 'put',
         data: update,
       });
 
@@ -1025,11 +1023,11 @@ const FramilineCountTable = ({ quoteId }: Props) => {
               bay.rowId === update.freamelineid &&
               partWithBays.frameline.id === update.freamelineid
             ) {
-              return { ...bay, quantity: update.quantity }; // Update the quantity
+              return {...bay, quantity: update.quantity}; // Update the quantity
             }
             return bay; // Return the unchanged bay
           });
-          return { ...partWithBays, bays: updatedBays }; // Return the updated part
+          return {...partWithBays, bays: updatedBays}; // Return the updated part
         })
       );
       setFrameLinesDefinitionContext?.((prevPartsWithBays) =>
@@ -1039,26 +1037,26 @@ const FramilineCountTable = ({ quoteId }: Props) => {
               bay.framelineId === update.freamelineid &&
               partWithBays.part.id === update.freamelineid
             ) {
-              return { ...bay, quantity: update.quantity }; // Update the quantity
+              return {...bay, quantity: update.quantity}; // Update the quantity
             }
             return bay; // Return the unchanged bay
           });
-          return { ...partWithBays, bays: updatedBays }; // Return the updated part
+          return {...partWithBays, bays: updatedBays}; // Return the updated part
         })
       );
 
       // Show a success toast
       toast({
-        title: "Success",
-        description: "Quantity updated successfully",
+        title: 'Success',
+        description: 'Quantity updated successfully',
       });
     } catch (error) {
-      console.error("Error updating quantity:", error);
+      console.error('Error updating quantity:', error);
       // Show an error toast
       toast({
-        title: "Error",
-        description: "Failed to update quantity. Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to update quantity. Please try again.',
+        variant: 'destructive',
       });
     }
   };
@@ -1071,10 +1069,10 @@ const FramilineCountTable = ({ quoteId }: Props) => {
     try {
       const response = await apiRequest({
         url: `/api/definition/frameline/${value.name}/${quoteId}`,
-        method: "post",
+        method: 'post',
       });
 
-      const newFrame = { id: response, name: value.name, quotationId: quoteId };
+      const newFrame = {id: response, name: value.name, quotationId: quoteId};
       const newRows =
         bayWithRows.length > 0
           ? bayWithRows[0].rows.map((row) => ({
@@ -1086,7 +1084,7 @@ const FramilineCountTable = ({ quoteId }: Props) => {
 
       setbayWithRows((prevState) => [
         ...prevState,
-        { frameline: newFrame, rows: newRows },
+        {frameline: newFrame, rows: newRows},
       ]);
 
       setFrameLinesDefinitionContext?.((prevState) =>
@@ -1094,21 +1092,21 @@ const FramilineCountTable = ({ quoteId }: Props) => {
           ...partWithBays,
           framelines: [
             ...partWithBays.framelines,
-            { framelineName: value.name, framelineId: response, quantity: 0 },
+            {framelineName: value.name, framelineId: response, quantity: 0},
           ],
         }))
       );
 
       toast({
-        title: "Success",
-        description: "Frameline added successfully",
+        title: 'Success',
+        description: 'Frameline added successfully',
       });
     } catch (error) {
-      console.error("Error adding Frameline:", error);
+      console.error('Error adding Frameline:', error);
       toast({
-        title: "Error",
-        description: "Failed to add frameline. Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to add frameline. Please try again.',
+        variant: 'destructive',
       });
     }
   };
@@ -1163,7 +1161,7 @@ const FramilineCountTable = ({ quoteId }: Props) => {
     try {
       await apiRequest({
         url: `/api/row/del/${rowId}`,
-        method: "delete",
+        method: 'delete',
       });
 
       // Update all framelines to remove this row
@@ -1175,18 +1173,30 @@ const FramilineCountTable = ({ quoteId }: Props) => {
       );
 
       toast({
-        title: "Success",
-        description: "Row Deleted",
+        title: 'Success',
+        description: 'Row Deleted',
       });
-      setDeleteConfirmation({ isOpen: false, rowId: "", rowName: "" });
+      setDeleteConfirmation({isOpen: false, rowId: '', rowName: ''});
     } catch (err) {
       console.error(err);
       toast({
-        title: "Error",
-        description: "Something went wrong",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Something went wrong',
+        variant: 'destructive',
       });
     }
+  };
+
+  // Add this function to sum the total quantity for a bay (column) across all framelines
+  const sumFramelineQuantitiesForColumn = (
+    bayName: string,
+    framelines: FrameWithRows[]
+  ): number => {
+    const total = framelines.reduce((sum, frameline) => {
+      const row = frameline.rows.find((row) => row.rowName === bayName);
+      return sum + (row ? row.quantity : 0);
+    }, 0);
+    return total;
   };
 
   return (
@@ -1257,21 +1267,42 @@ const FramilineCountTable = ({ quoteId }: Props) => {
 
         <table className="border-collapse border border-gray-300 bg-white min-w-full user-select-none">
           <thead>
+            {/* Add a row to show the total framelines for each bay (column) */}
             <tr>
-              <th
-                colSpan={allBays.length + 2}
-                className="border border-gray-300 p-2 font-bold text-left bg-white z-20"
-              >
-                Total Framelines: {bayWithRows.length}
+              <th className="border border-gray-300 p-2 font-bold text-left w-[350px] sticky left-0 bg-white z-20">
+                Total Framelines
               </th>
+              <th className="border border-gray-300 p-2 font-bold text-center sticky left-[350px] bg-white z-20"></th>
+              {allBays.map((bayName, colIndex) => (
+                <th
+                  key={colIndex}
+                  className="border border-gray-300 p-2 font-bold text-center bg-white z-20"
+                >
+                  {sumFramelineQuantitiesForColumn(bayName, bayWithRows)}
+                </th>
+              ))}
             </tr>
+            {/* Existing Total Bays row */}
             <tr>
-              <th
-                colSpan={allBays.length + 2}
-                className="border border-gray-300 p-2 font-bold text-left bg-white z-20"
-              >
-                Total Bays: {bays.length}
+              <th className="border border-gray-300 p-2 font-bold text-left w-[350px] sticky left-0 bg-white z-20">
+                Total Bays
               </th>
+              <th className="border border-gray-300 p-2 font-bold text-center sticky left-[350px] bg-white z-20"></th>
+              {allBays.map((bayName, colIndex) => {
+                // Sum for this column, only for filtered (visible) framelines
+                const colTotal = bays.reduce((sum, part) => {
+                  const bay = part.rows.find((b) => b.rowName === bayName);
+                  return sum + (bay ? bay.quantity : 0);
+                }, 0);
+                return (
+                  <th
+                    key={colIndex}
+                    className="border border-gray-300 p-2 font-bold text-center bg-white z-20"
+                  >
+                    {colTotal}
+                  </th>
+                );
+              })}
             </tr>
             <tr>
               <th className="border border-gray-300 p-2 font-bold text-left w-[350px] sticky left-0 bg-white z-20">
@@ -1284,9 +1315,9 @@ const FramilineCountTable = ({ quoteId }: Props) => {
                 <th
                   key={colIndex}
                   className={`border border-gray-300 p-2 font-bold text-center cursor-pointer relative ${
-                    isColumnSelected(colIndex) ? "bg-blue-100" : "bg-gray-100"
+                    isColumnSelected(colIndex) ? 'bg-blue-100' : 'bg-gray-100'
                   }`}
-                  style={{ minWidth: "100px", ...getColumnStyle(colIndex) }}
+                  style={{minWidth: '100px', ...getColumnStyle(colIndex)}}
                 >
                   <div className="flex items-center justify-between">
                     <span className="flex-1">{bayName}</span>
@@ -1336,13 +1367,13 @@ const FramilineCountTable = ({ quoteId }: Props) => {
                 <tr key={partWithBays.frameline.id}>
                   <td
                     className={`border w-[350px] border-gray-300 p-2 text-left cursor-pointer sticky left-0 bg-white z-10 flex items-center ${
-                      isRowSelected(rowIndex) ? "bg-blue-100" : "bg-gray-100"
+                      isRowSelected(rowIndex) ? 'bg-blue-100' : 'bg-gray-100'
                     }`}
                     style={{
-                      height: "60px",
-                      overflow: "hidden",
-                      whiteSpace: "nowrap",
-                      textOverflow: "ellipsis",
+                      height: '60px',
+                      overflow: 'hidden',
+                      whiteSpace: 'nowrap',
+                      textOverflow: 'ellipsis',
                     }}
                     title={`${partWithBays.frameline.name}`}
                     onClick={() => selectEntireRow(rowIndex)}
@@ -1368,19 +1399,19 @@ const FramilineCountTable = ({ quoteId }: Props) => {
                           ${
                             isSelectedCell(rowIndex, colIndex) ||
                             isInSelectionRange(rowIndex, colIndex)
-                              ? "bg-blue-50 outline outline-2 outline-blue-500"
-                              : ""
+                              ? 'bg-blue-50 outline outline-2 outline-blue-500'
+                              : ''
                           }
-                          ${isRowSelected(rowIndex) ? "bg-blue-50" : ""}
-                          ${isColumnSelected(colIndex) ? "bg-blue-50" : ""}
+                          ${isRowSelected(rowIndex) ? 'bg-blue-50' : ''}
+                          ${isColumnSelected(colIndex) ? 'bg-blue-50' : ''}
                           ${
                             isDragOver(rowIndex, colIndex)
-                              ? "bg-green-100 outline-dashed outline-2 outline-green-500"
-                              : ""
+                              ? 'bg-green-100 outline-dashed outline-2 outline-green-500'
+                              : ''
                           }
                         `}
                         style={{
-                          minWidth: "100px",
+                          minWidth: '100px',
                           ...getColumnStyle(colIndex),
                         }}
                         onClick={(e) => {
@@ -1432,22 +1463,22 @@ const FramilineCountTable = ({ quoteId }: Props) => {
                                 });
                               } else {
                                 console.error(
-                                  "Bay not found for the given row and column."
+                                  'Bay not found for the given row and column.'
                                 );
                                 toast({
-                                  title: "Error",
+                                  title: 'Error',
                                   description:
-                                    "Bay not found. Please try again.",
-                                  variant: "destructive",
+                                    'Bay not found. Please try again.',
+                                  variant: 'destructive',
                                 });
                               }
                             }}
                             onBlur={handleBlur}
                             onKeyDown={(e) => {
-                              if (e.key === "Enter") {
+                              if (e.key === 'Enter') {
                                 e.preventDefault();
                                 stopEditing();
-                                moveToNextCell("down");
+                                moveToNextCell('down');
                               }
                             }}
                             className="cell-input absolute top-0 left-0 w-full h-full border-none p-2 box-border font-inherit text-inherit bg-white z-20 focus:outline-2 focus:outline-blue-500 focus:shadow-[0_0_0_4px_rgba(33,150,243,0.2)]"
@@ -1473,7 +1504,7 @@ const FramilineCountTable = ({ quoteId }: Props) => {
       <Dialog
         open={deleteConfirmation.isOpen}
         onOpenChange={(open) =>
-          setDeleteConfirmation({ isOpen: open, rowId: "", rowName: "" })
+          setDeleteConfirmation({isOpen: open, rowId: '', rowName: ''})
         }
       >
         <DialogContent>
@@ -1488,7 +1519,7 @@ const FramilineCountTable = ({ quoteId }: Props) => {
             <Button
               variant="outline"
               onClick={() =>
-                setDeleteConfirmation({ isOpen: false, rowId: "", rowName: "" })
+                setDeleteConfirmation({isOpen: false, rowId: '', rowName: ''})
               }
             >
               Cancel

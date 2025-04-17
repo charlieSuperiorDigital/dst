@@ -108,6 +108,16 @@ export default function RownCountSummary({quoteId}: Props) {
     <div className="flex flex-col p-6 gap-6 w-full">
       <ScopeItemsAndNotes />
 
+      <div className="w-full">
+        <CostBreakdownTable
+          marginTaxes={marginTaxes}
+          costItems={costItems}
+          setCostItems={setCostItems}
+          materialCost={materialCost}
+          salesTaxes={salesTaxes}
+        />
+      </div>
+
       <div className="flex items-center space-x-4">
         <div className="flex items-center space-x-2">
           <Switch
@@ -128,23 +138,7 @@ export default function RownCountSummary({quoteId}: Props) {
         </div>
       </div>
 
-      <div
-        className={`grid ${
-          !showMarginTaxes && !showSalesTaxes
-            ? 'grid-cols-1'
-            : showMarginTaxes && showSalesTaxes
-            ? 'grid-cols-3'
-            : 'grid-cols-2'
-        } gap-4`}
-      >
-        <div className="w-full">
-          <CostBreakdownTable
-            marginTaxes={marginTaxes}
-            costItems={costItems}
-            setCostItems={setCostItems}
-            materialCost={materialCost}
-          />
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
         {showMarginTaxes && (
           <div className="w-full">
             <MarginTaxes
