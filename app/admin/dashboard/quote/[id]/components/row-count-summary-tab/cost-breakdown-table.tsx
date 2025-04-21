@@ -24,6 +24,7 @@ export interface CostItem {
   permits?: number;
   engCals?: number;
   salesTax?: number;
+  miscellaneous?: number;
 }
 
 export interface MarginTax {
@@ -237,18 +238,27 @@ export default function CostBreakdownTable({
 
   // --- Area summary table logic ---
   const areaSummary = (areaMaterialcost || []).map((area) => {
-    const total = area.totalMaterialCost;
-    const totalWithMargin = calculateTotalWithMargin(
-      total,
-      marginTaxes.materialMargin
-    );
+    const areaCosts = costItems[area.areaId] || {};
+    const material = area.totalMaterialCost;
+    const freight = areaCosts.freight ?? 0;
+    const installation = areaCosts.installation ?? 0;
+    const rentals = areaCosts.rentals ?? 0;
+    const permits = areaCosts.permits ?? 0;
+    const engCals = areaCosts.engCals ?? 0;
+    const totalWithMargin =
+      calculateTotalWithMargin(material, marginTaxes.materialMargin) +
+      calculateTotalWithMargin(freight, marginTaxes.freightMargin) +
+      calculateTotalWithMargin(installation, marginTaxes.installationMargin) +
+      calculateTotalWithMargin(rentals, marginTaxes.rentalsMargin) +
+      calculateTotalWithMargin(permits, marginTaxes.permitsMargin) +
+      calculateTotalWithMargin(engCals, marginTaxes.engCalsMargin);
     const totalWithSales = calculateTotalWithSales(
       totalWithMargin,
       'materialCost'
     );
     return {
       name: area.areaName,
-      total,
+      total: material,
       totalWithMargin,
       totalWithSales,
     };
@@ -267,454 +277,315 @@ export default function CostBreakdownTable({
     <Card className="w-full">
       <div className="p-6">
         {areaMaterialcost && areaMaterialcost.length > 0 ? (
-          <Tabs
-            defaultValue={areaMaterialcost[0].areaId}
-            onValueChange={handleTabChange}
-            className="mb-6"
-          >
-            <TabsList className="w-full grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
-              {areaMaterialcost.map((area) => (
-                <TabsTrigger key={area.areaId} value={area.areaId}>
-                  {area.areaName}
-                </TabsTrigger>
-              ))}
-              <TabsTrigger value={TOTAL_TAB_ID} className="font-bold">
-                Total
-              </TabsTrigger>
-            </TabsList>
-
-            {areaMaterialcost.map((area) => (
-              <TabsContent key={area.areaId} value={area.areaId}>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Item</TableHead>
-                      <TableHead className="text-right">Cost</TableHead>
-                      <TableHead className="text-right">
-                        Total w/ Margin
-                      </TableHead>
-                      <TableHead className="text-right">
-                        Total w/ Sales Tax
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell className="font-medium">
-                        Material Cost ({area.areaName})
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {formatCurrency(area.totalMaterialCost)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {formatCurrency(
-                          calculateTotalWithMargin(
-                            area.totalMaterialCost,
-                            marginTaxes.materialMargin
-                          )
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {formatCurrency(
-                          calculateTotalWithSales(
-                            calculateTotalWithMargin(
-                              area.totalMaterialCost,
-                              marginTaxes.materialMargin
-                            ),
-                            'materialCost'
-                          )
-                        )}
-                      </TableCell>
-                    </TableRow>
-                    {costItemsArray.map(({key, label}) => (
-                      <TableRow key={key}>
-                        <TableCell className="font-medium">{label}</TableCell>
-                        <TableCell className="text-right">
-                          <Input
-                            type="number"
-                            value={costItems[key] || 0}
-                            onChange={(e) =>
-                              handleCostChange(key, e.target.value)
-                            }
-                            onBlur={(e) => handleBlur(key, e.target.value)}
-                            className="w-32 ml-auto"
-                            disabled={isLocked}
-                          />
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {formatCurrency(
-                            calculateTotalWithMargin(
-                              costItems[key],
-                              marginTaxes[`${key}Margin` as keyof MarginTax]
-                            )
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {formatCurrency(
-                            calculateTotalWithSales(
-                              calculateTotalWithMargin(
-                                costItems[key],
-                                marginTaxes[`${key}Margin` as keyof MarginTax]
-                              ),
-                              key
-                            )
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    <TableRow className="font-bold">
-                      <TableCell>Total Before Taxes</TableCell>
-                      <TableCell></TableCell>
-                      <TableCell className="text-right">
-                        {formatCurrency(totalBeforeTaxes)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {formatCurrency(
-                          calculateTotalWithSales(
-                            totalBeforeTaxes,
-                            'materialCost'
-                          )
-                        )}
-                      </TableCell>
-                    </TableRow>
-                    {/* <TableRow>
-                      <TableCell>Sales Tax</TableCell>
-                      <TableCell></TableCell>
-                      <TableCell className="text-right">
-                        <Input
-                          type="number"
-                          value={costItems.salesTax || 0}
-                          onChange={(e) =>
-                            handleCostChange('salesTax', e.target.value)
-                          }
-                          onBlur={(e) => handleBlur('salesTax', e.target.value)}
-                          className="w-32 ml-auto"
-                          disabled={isLocked}
-                        />
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {formatCurrency(
-                          calculateTotalWithSales(
-                            costItems.salesTax || 0,
-                            'salesTax'
-                          )
-                        )}
-                      </TableCell>
-                    </TableRow> */}
-                    <TableRow className="font-bold">
-                      <TableCell>Grand Total</TableCell>
-                      <TableCell></TableCell>
-                      <TableCell className="text-right">
-                        {formatCurrency(areaGrandTotal.total)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {formatCurrency(
-                          calculateTotalWithSales(
-                            areaGrandTotal.total,
-                            'materialCost'
-                          )
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </TabsContent>
-            ))}
-
-            <TabsContent value={TOTAL_TAB_ID}>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Item</TableHead>
-                    <TableHead className="text-right">Cost</TableHead>
-                    <TableHead className="text-right">
-                      Total w/ Margin
-                    </TableHead>
-                    <TableHead className="text-right">Total w/ Sales</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow>
-                    <TableCell className="font-medium">
-                      Total Material Cost (All Areas)
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {formatCurrency(calculateTotalMaterialCost())}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {formatCurrency(
-                        calculateTotalWithMargin(
-                          calculateTotalMaterialCost(),
-                          marginTaxes.materialMargin
-                        )
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {formatCurrency(
-                        calculateTotalWithSales(
-                          calculateTotalWithMargin(
-                            calculateTotalMaterialCost(),
-                            marginTaxes.materialMargin
-                          ),
-                          'materialCost'
-                        )
-                      )}
-                    </TableCell>
-                  </TableRow>
-                  {costItemsArray.map(({key, label}) => (
-                    <TableRow key={key}>
-                      <TableCell className="font-medium">{label}</TableCell>
-                      <TableCell className="text-right">
-                        <Input
-                          type="number"
-                          value={costItems[key] || 0}
-                          onChange={(e) =>
-                            handleCostChange(key, e.target.value)
-                          }
-                          onBlur={(e) => handleBlur(key, e.target.value)}
-                          className="w-32 ml-auto"
-                          disabled={isLocked}
-                        />
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {formatCurrency(
-                          calculateTotalWithMargin(
-                            costItems[key],
-                            marginTaxes[`${key}Margin` as keyof MarginTax]
-                          )
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {formatCurrency(
-                          calculateTotalWithSales(
-                            calculateTotalWithMargin(
-                              costItems[key],
-                              marginTaxes[`${key}Margin` as keyof MarginTax]
-                            ),
-                            key
-                          )
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  <TableRow className="font-bold">
-                    <TableCell>Total Before Taxes</TableCell>
-                    <TableCell></TableCell>
-                    <TableCell className="text-right">
-                      {formatCurrency(totalBeforeTaxes)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {formatCurrency(
-                        calculateTotalWithSales(
-                          totalBeforeTaxes,
-                          'materialCost'
-                        )
-                      )}
-                    </TableCell>
-                  </TableRow>
-                  {/* <TableRow>
-                    <TableCell>Sales Tax</TableCell>
-                    <TableCell></TableCell>
-                    <TableCell className="text-right">
-                      <Input
-                        type="number"
-                        value={costItems.salesTax || 0}
-                        onChange={(e) =>
-                          handleCostChange('salesTax', e.target.value)
-                        }
-                        onBlur={(e) => handleBlur('salesTax', e.target.value)}
-                        className="w-32 ml-auto"
-                        disabled={isLocked}
-                      />
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {formatCurrency(
-                        calculateTotalWithSales(
-                          costItems.salesTax || 0,
-                          'salesTax'
-                        )
-                      )}
-                    </TableCell>
-                  </TableRow> */}
-                  <TableRow className="font-bold">
-                    <TableCell>Grand Total</TableCell>
-                    <TableCell></TableCell>
-                    <TableCell className="text-right">
-                      {formatCurrency(grandTotal)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {formatCurrency(
-                        calculateTotalWithSales(grandTotal, 'materialCost')
-                      )}
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </TabsContent>
-          </Tabs>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Item</TableHead>
-                <TableHead className="text-right">Cost</TableHead>
-                <TableHead className="text-right">Total w/ Margin</TableHead>
-                <TableHead className="text-right">Total w/ Sales</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow>
-                <TableCell className="font-medium">Material Cost</TableCell>
-                <TableCell className="text-right">
-                  {formatCurrency(materialCost)}
-                </TableCell>
-                <TableCell className="text-right">
-                  {formatCurrency(
-                    calculateTotalWithMargin(
-                      materialCost,
-                      marginTaxes.materialMargin
-                    )
-                  )}
-                </TableCell>
-                <TableCell className="text-right">
-                  {formatCurrency(
-                    calculateTotalWithSales(
-                      calculateTotalWithMargin(
-                        materialCost,
-                        marginTaxes.materialMargin
-                      ),
-                      'materialCost'
-                    )
-                  )}
-                </TableCell>
-              </TableRow>
-              {costItemsArray.map(({key, label}) => (
-                <TableRow key={key}>
-                  <TableCell className="font-medium">{label}</TableCell>
-                  <TableCell className="text-right">
-                    <Input
-                      type="number"
-                      value={costItems[key] || 0}
-                      onChange={(e) => handleCostChange(key, e.target.value)}
-                      onBlur={(e) => handleBlur(key, e.target.value)}
-                      className="w-32 ml-auto"
-                      disabled={isLocked}
-                    />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {formatCurrency(
-                      calculateTotalWithMargin(
-                        costItems[key],
-                        marginTaxes[`${key}Margin` as keyof MarginTax]
-                      )
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {formatCurrency(
-                      calculateTotalWithSales(
-                        calculateTotalWithMargin(
-                          costItems[key],
-                          marginTaxes[`${key}Margin` as keyof MarginTax]
-                        ),
-                        key
-                      )
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-              <TableRow className="font-bold">
-                <TableCell>Total Before Taxes</TableCell>
-                <TableCell></TableCell>
-                <TableCell className="text-right">
-                  {formatCurrency(totalBeforeTaxes)}
-                </TableCell>
-                <TableCell className="text-right">
-                  {formatCurrency(
-                    calculateTotalWithSales(totalBeforeTaxes, 'materialCost')
-                  )}
-                </TableCell>
-              </TableRow>
-              {/* <TableRow>
-                <TableCell>Sales Tax</TableCell>
-                <TableCell></TableCell>
-                <TableCell className="text-right">
-                  <Input
-                    type="number"
-                    value={costItems.salesTax || 0}
-                    onChange={(e) =>
-                      handleCostChange('salesTax', e.target.value)
-                    }
-                    onBlur={(e) => handleBlur('salesTax', e.target.value)}
-                    className="w-32 ml-auto"
-                    disabled={isLocked}
-                  />
-                </TableCell>
-                <TableCell className="text-right">
-                  {formatCurrency(
-                    calculateTotalWithSales(costItems.salesTax || 0, 'salesTax')
-                  )}
-                </TableCell>
-              </TableRow> */}
-              <TableRow className="font-bold">
-                <TableCell>Grand Total</TableCell>
-                <TableCell></TableCell>
-                <TableCell className="text-right">
-                  {formatCurrency(grandTotal)}
-                </TableCell>
-                <TableCell className="text-right">
-                  {formatCurrency(
-                    calculateTotalWithSales(grandTotal, 'materialCost')
-                  )}
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        )}
-
-        {/* Area summary table */}
-        {areaMaterialcost && areaMaterialcost.length > 0 && (
-          <div className="mb-6">
-            <Table>
+          <div className="table-component overflow-auto max-w-full max-h-full outline-none relative">
+            <Table className="border-collapse border border-gray-300 bg-white min-w-full user-select-none">
               <TableHeader>
                 <TableRow>
-                  <TableHead>Area</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                  <TableHead className="text-right">Total w/ Margin</TableHead>
-                  <TableHead className="text-right">
+                  <TableHead className="border border-gray-300 p-2 font-bold text-left bg-white z-20">
+                    Area
+                  </TableHead>
+                  <TableHead className="border border-gray-300 p-2 font-bold text-center">
+                    Material
+                  </TableHead>
+                  <TableHead className="border border-gray-300 p-2 font-bold text-center">
+                    Freight
+                  </TableHead>
+                  <TableHead className="border border-gray-300 p-2 font-bold text-center">
+                    Installation
+                  </TableHead>
+                  <TableHead className="border border-gray-300 p-2 font-bold text-center">
+                    Rentals
+                  </TableHead>
+                  <TableHead className="border border-gray-300 p-2 font-bold text-center">
+                    Permits
+                  </TableHead>
+                  <TableHead className="border border-gray-300 p-2 font-bold text-center">
+                    Engineering
+                  </TableHead>
+                  <TableHead className="border border-gray-300 p-2 font-bold text-center">
+                    Total w/ Margin
+                  </TableHead>
+                  <TableHead className="border border-gray-300 p-2 font-bold text-center">
                     Total w/ Sales Tax
                   </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {areaSummary.map((area) => (
-                  <TableRow key={area.name}>
-                    <TableCell className="font-medium">{area.name}</TableCell>
-                    <TableCell className="text-right">
-                      {formatCurrency(area.total)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {formatCurrency(area.totalWithMargin)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {formatCurrency(area.totalWithSales)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                <TableRow className="font-bold">
-                  <TableCell>Grand Total</TableCell>
-                  <TableCell className="text-right">
-                    {formatCurrency(areaGrandTotal.total)}
+                {areaMaterialcost.map((area, idx) => {
+                  // For each area, allow editing of cost items
+                  const areaCosts = costItems[area.areaId] || {};
+                  const handleAreaCostChange = (
+                    key: keyof CostItem,
+                    value: string
+                  ) => {
+                    const newAreaCosts = {
+                      ...areaCosts,
+                      [key]: Number(value) || 0,
+                    };
+                    setCostItems({...costItems, [area.areaId]: newAreaCosts});
+                  };
+                  // Calculate totals for this area
+                  const material = area.totalMaterialCost;
+                  const freight = areaCosts.freight ?? 0;
+                  const installation = areaCosts.installation ?? 0;
+                  const rentals = areaCosts.rentals ?? 0;
+                  const permits = areaCosts.permits ?? 0;
+                  const engCals = areaCosts.engCals ?? 0;
+                  const totalWithMargin =
+                    calculateTotalWithMargin(
+                      material,
+                      marginTaxes.materialMargin
+                    ) +
+                    calculateTotalWithMargin(
+                      freight,
+                      marginTaxes.freightMargin
+                    ) +
+                    calculateTotalWithMargin(
+                      installation,
+                      marginTaxes.installationMargin
+                    ) +
+                    calculateTotalWithMargin(
+                      rentals,
+                      marginTaxes.rentalsMargin
+                    ) +
+                    calculateTotalWithMargin(
+                      permits,
+                      marginTaxes.permitsMargin
+                    ) +
+                    calculateTotalWithMargin(
+                      engCals,
+                      marginTaxes.engCalsMargin
+                    );
+                  // For sales tax, use the same logic as before
+                  const totalWithSalesTax = calculateTotalWithSales(
+                    totalWithMargin,
+                    'materialCost'
+                  );
+                  return (
+                    <TableRow key={area.areaId}>
+                      <TableCell className="border border-gray-300 p-2 text-left">
+                        {area.areaName}
+                      </TableCell>
+                      <TableCell className="border border-gray-300 p-2 text-center">
+                        {formatCurrency(material)}
+                      </TableCell>
+                      <TableCell className="border border-gray-300 p-2 text-center">
+                        <Input
+                          type="number"
+                          value={freight}
+                          onChange={(e) =>
+                            handleAreaCostChange('freight', e.target.value)
+                          }
+                          className="w-24 mx-auto"
+                          disabled={isLocked}
+                        />
+                      </TableCell>
+                      <TableCell className="border border-gray-300 p-2 text-center">
+                        <Input
+                          type="number"
+                          value={installation}
+                          onChange={(e) =>
+                            handleAreaCostChange('installation', e.target.value)
+                          }
+                          className="w-24 mx-auto"
+                          disabled={isLocked}
+                        />
+                      </TableCell>
+                      <TableCell className="border border-gray-300 p-2 text-center">
+                        <Input
+                          type="number"
+                          value={rentals}
+                          onChange={(e) =>
+                            handleAreaCostChange('rentals', e.target.value)
+                          }
+                          className="w-24 mx-auto"
+                          disabled={isLocked}
+                        />
+                      </TableCell>
+                      <TableCell className="border border-gray-300 p-2 text-center">
+                        <Input
+                          type="number"
+                          value={permits}
+                          onChange={(e) =>
+                            handleAreaCostChange('permits', e.target.value)
+                          }
+                          className="w-24 mx-auto"
+                          disabled={isLocked}
+                        />
+                      </TableCell>
+                      <TableCell className="border border-gray-300 p-2 text-center">
+                        <Input
+                          type="number"
+                          value={engCals}
+                          onChange={(e) =>
+                            handleAreaCostChange('engCals', e.target.value)
+                          }
+                          className="w-24 mx-auto"
+                          disabled={isLocked}
+                        />
+                      </TableCell>
+                      <TableCell className="border border-gray-300 p-2 text-center font-bold">
+                        {formatCurrency(totalWithMargin)}
+                      </TableCell>
+                      <TableCell className="border border-gray-300 p-2 text-center font-bold">
+                        {formatCurrency(totalWithSalesTax)}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+                {/* Grand Total Row */}
+                <TableRow className="font-bold bg-blue-50">
+                  <TableCell className="border border-gray-300 p-2 text-center">
+                    Total
                   </TableCell>
-                  <TableCell className="text-right">
-                    {formatCurrency(areaGrandTotal.totalWithMargin)}
+                  {/* Sum each column for all areas */}
+                  <TableCell className="border border-gray-300 p-2 text-center">
+                    {formatCurrency(
+                      areaMaterialcost.reduce(
+                        (sum, area) => sum + area.totalMaterialCost,
+                        0
+                      )
+                    )}
                   </TableCell>
-                  <TableCell className="text-right">
-                    {formatCurrency(areaGrandTotal.totalWithSales)}
+                  {/* Repeat for each cost item */}
+                  <TableCell className="border border-gray-300 p-2 text-center">
+                    {formatCurrency(
+                      areaMaterialcost.reduce(
+                        (sum, area, idx) =>
+                          sum + (costItems[area.areaId]?.freight ?? 0),
+                        0
+                      )
+                    )}
+                  </TableCell>
+                  <TableCell className="border border-gray-300 p-2 text-center">
+                    {formatCurrency(
+                      areaMaterialcost.reduce(
+                        (sum, area, idx) =>
+                          sum + (costItems[area.areaId]?.installation ?? 0),
+                        0
+                      )
+                    )}
+                  </TableCell>
+                  <TableCell className="border border-gray-300 p-2 text-center">
+                    {formatCurrency(
+                      areaMaterialcost.reduce(
+                        (sum, area, idx) =>
+                          sum + (costItems[area.areaId]?.rentals ?? 0),
+                        0
+                      )
+                    )}
+                  </TableCell>
+                  <TableCell className="border border-gray-300 p-2 text-center">
+                    {formatCurrency(
+                      areaMaterialcost.reduce(
+                        (sum, area, idx) =>
+                          sum + (costItems[area.areaId]?.permits ?? 0),
+                        0
+                      )
+                    )}
+                  </TableCell>
+                  <TableCell className="border border-gray-300 p-2 text-center">
+                    {formatCurrency(
+                      areaMaterialcost.reduce(
+                        (sum, area, idx) =>
+                          sum + (costItems[area.areaId]?.engCals ?? 0),
+                        0
+                      )
+                    )}
+                  </TableCell>
+                  <TableCell className="border border-gray-300 p-2 text-center font-bold">
+                    {/* Sum of all totalWithMargin */}
+                    {formatCurrency(
+                      areaMaterialcost.reduce((sum, area, idx) => {
+                        const areaCosts = costItems[area.areaId] || {};
+                        const material = area.totalMaterialCost;
+                        const freight = areaCosts.freight ?? 0;
+                        const installation = areaCosts.installation ?? 0;
+                        const rentals = areaCosts.rentals ?? 0;
+                        const permits = areaCosts.permits ?? 0;
+                        const engCals = areaCosts.engCals ?? 0;
+                        return (
+                          sum +
+                          calculateTotalWithMargin(
+                            material,
+                            marginTaxes.materialMargin
+                          ) +
+                          calculateTotalWithMargin(
+                            freight,
+                            marginTaxes.freightMargin
+                          ) +
+                          calculateTotalWithMargin(
+                            installation,
+                            marginTaxes.installationMargin
+                          ) +
+                          calculateTotalWithMargin(
+                            rentals,
+                            marginTaxes.rentalsMargin
+                          ) +
+                          calculateTotalWithMargin(
+                            permits,
+                            marginTaxes.permitsMargin
+                          ) +
+                          calculateTotalWithMargin(
+                            engCals,
+                            marginTaxes.engCalsMargin
+                          )
+                        );
+                      }, 0)
+                    )}
+                  </TableCell>
+                  <TableCell className="border border-gray-300 p-2 text-center font-bold">
+                    {/* Sum of all totalWithSalesTax */}
+                    {formatCurrency(
+                      areaMaterialcost.reduce((sum, area, idx) => {
+                        const areaCosts = costItems[area.areaId] || {};
+                        const material = area.totalMaterialCost;
+                        const freight = areaCosts.freight ?? 0;
+                        const installation = areaCosts.installation ?? 0;
+                        const rentals = areaCosts.rentals ?? 0;
+                        const permits = areaCosts.permits ?? 0;
+                        const engCals = areaCosts.engCals ?? 0;
+                        const totalWithMargin =
+                          calculateTotalWithMargin(
+                            material,
+                            marginTaxes.materialMargin
+                          ) +
+                          calculateTotalWithMargin(
+                            freight,
+                            marginTaxes.freightMargin
+                          ) +
+                          calculateTotalWithMargin(
+                            installation,
+                            marginTaxes.installationMargin
+                          ) +
+                          calculateTotalWithMargin(
+                            rentals,
+                            marginTaxes.rentalsMargin
+                          ) +
+                          calculateTotalWithMargin(
+                            permits,
+                            marginTaxes.permitsMargin
+                          ) +
+                          calculateTotalWithMargin(
+                            engCals,
+                            marginTaxes.engCalsMargin
+                          );
+                        return (
+                          sum +
+                          calculateTotalWithSales(
+                            totalWithMargin,
+                            'materialCost'
+                          )
+                        );
+                      }, 0)
+                    )}
                   </TableCell>
                 </TableRow>
               </TableBody>
             </Table>
           </div>
+        ) : (
+          <div>No area data available</div>
         )}
       </div>
     </Card>
